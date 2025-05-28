@@ -52,10 +52,8 @@ export default function Landing() {
         <section className="relative py-20 px-6">
           <div className="max-w-6xl mx-auto text-center">
             <div className="mb-8">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative">
-                <span className="bg-gradient-to-r from-matrix via-accent to-matrix bg-clip-text text-transparent glow-pulse block">
-                  MILLENNIUM REMOTE ADMIN TOOLS
-                </span>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative text-matrix glow-pulse">
+                MILLENNIUM REMOTE ADMIN TOOLS
               </h1>
               <div className="font-mono text-xl text-gray-400 typing-animation">
                 Unleash Your Power with Premium Cyber Weapons
