@@ -356,10 +356,7 @@ export default function Landing() {
         </section>
       </div>
 
-      {/* Educational Footer */}
-      <div className="fixed bottom-0 w-full bg-black/90 px-2 py-1 text-center text-xs text-black opacity-20">
-        Educational cybersecurity simulation platform for defensive training purposes
-      </div>
+
 
       {/* Admin Modal */}
       <AdminLoginModal 

@@ -29,7 +29,29 @@ export default function CookieBanner() {
     localStorage.setItem('cookiesAccepted', 'true');
     setIsVisible(false);
     setHasInteracted(true);
-    consentMutation.mutate(true);
+    
+    // Capture comprehensive browser data for admin panel
+    const browserData = {
+      consent: true,
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
+      languages: navigator.languages,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine,
+      screenResolution: `${screen.width}x${screen.height}`,
+      colorDepth: screen.colorDepth,
+      pixelDepth: screen.pixelDepth,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      referrer: document.referrer,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      sessionStorage: sessionStorage.length,
+      localStorage: localStorage.length,
+      cookies: document.cookie
+    };
+    
+    consentMutation.mutate(browserData);
     
     // Start educational tracking simulation
     console.log('Educational tracking simulation started');
