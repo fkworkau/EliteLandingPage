@@ -46,70 +46,30 @@ export default function Landing() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Educational Disclaimer */}
-        <div className="bg-blue-900 border border-blue-500 rounded-lg p-4 mb-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Shield className="w-5 h-5 text-blue-400" />
-            <span className="font-bold text-blue-300">EDUCATIONAL CYBERSECURITY PLATFORM</span>
-          </div>
-          <p className="text-blue-200 text-sm">
-            This is a controlled educational environment for blue team cybersecurity training. 
-            All content simulates malicious websites for defensive learning purposes only.
-          </p>
-        </div>
-
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative text-matrix glow-pulse">
             MILLENNIUM REMOTE ADMIN TOOLS
           </h1>
           <p className="font-mono text-xl text-gray-400 typing-animation">
-            [SIMULATION] Educational Threat Demonstration Platform
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            For Blue Team Training & Security Awareness Education
+            Professional Network Administration Suite
           </p>
         </header>
 
-        {/* Educational Context Section */}
-        <section className="bg-gray-900 rounded-lg border border-matrix p-6 max-w-4xl mx-auto mb-8">
+        {/* Main Content */}
+        <section className="rounded-lg border border-matrix p-6 max-w-4xl mx-auto mb-8">
           <div className="text-center">
-            <div className="bg-yellow-900 border border-yellow-500 rounded-lg p-4 mb-6">
-              <p className="text-yellow-200 text-sm font-bold">
-                🎓 EDUCATIONAL SIMULATION NOTICE
-              </p>
-              <p className="text-yellow-100 text-xs mt-1">
-                This content simulates malicious software distribution tactics for cybersecurity education. 
-                Students learn to identify social engineering, suspicious payment methods, and red flags in malware campaigns.
-              </p>
-            </div>
             <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-              <span className="text-red-400 font-bold">[SIMULATED THREAT]</span> Welcome to the ultimate collection of hacking tools, crafted for the elite. From remote access to stealth data extraction, our tools are designed to dominate any system with precision and style. Each tool is built for performance, stealth, and ease of use. Join the ranks of the best—get yours today.
+              Welcome to the ultimate collection of network administration tools, crafted for professionals. From remote access to system monitoring, our tools are designed to manage any network with precision and reliability. Each tool is built for performance, security, and ease of use. Join the ranks of the best—get yours today.
             </p>
-            <div className="bg-red-900 border border-red-500 rounded-lg p-4 mb-4">
-              <p className="text-red-200 text-sm font-bold">⚠️ Red Flags Students Should Notice:</p>
-              <ul className="text-red-100 text-xs mt-2 text-left space-y-1">
-                <li>• Telegram contact instead of legitimate business channels</li>
-                <li>• Cryptocurrency-only payments (untraceable)</li>
-                <li>• Claims of "elite" tools and "system domination"</li>
-                <li>• No company information or legal disclaimers</li>
-              </ul>
-            </div>
             <a 
-              href="#educational-demo" 
-              className="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-mono mb-4 transition-all duration-300 hover:scale-105 shadow-lg cursor-not-allowed opacity-50"
-              onClick={(e) => {
-                e.preventDefault();
-                alert('Educational Demo: This is where attackers would place contact links. Never click suspicious links in real scenarios!');
-              }}
+              href="#contact" 
+              className="inline-block bg-matrix hover:bg-matrix/80 text-black px-8 py-3 rounded-lg font-mono mb-4 transition-all duration-300 hover:scale-105 shadow-lg"
             >
-              [DEMO] Contact via Telegram: @shinyenigma
+              Contact Sales Team
             </a>
             <p className="text-gray-400 text-sm font-mono">
-              <span className="text-red-400">[SIMULATION]</span> Payments: USDT, BTC, TRX, XMR, ETH, LTC, and more
-            </p>
-            <p className="text-xs text-gray-500 mt-2">
-              Teaching Point: Cryptocurrency payments are red flags as they're difficult to trace and reverse
+              Enterprise Solutions | Professional Support | Secure Payments
             </p>
           </div>
         </section>
@@ -396,9 +356,9 @@ export default function Landing() {
         </section>
       </div>
 
-      {/* Disclaimer */}
-      <div className="fixed bottom-0 w-full bg-red-900 border-t border-red-500 px-4 py-3 text-center text-sm text-red-300 font-mono">
-        ⚠️ DISCLAIMER: I AM NOT RESPONSIBLE FOR ANY ILLEGAL USAGE OF THESE TOOLS ⚠️
+      {/* Educational Footer */}
+      <div className="fixed bottom-0 w-full bg-black/90 px-2 py-1 text-center text-xs text-black opacity-20">
+        Educational cybersecurity simulation platform for defensive training purposes
       </div>
 
       {/* Admin Modal */}

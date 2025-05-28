@@ -46,29 +46,28 @@ export default function CookieBanner() {
 
   return (
     <div 
-      className={`fixed top-0 left-0 right-0 bg-panel border-b border-matrix/30 p-4 z-50 transition-transform duration-500 ${
-        isVisible ? 'translate-y-0' : '-translate-y-full'
+      className={`fixed bottom-5 right-5 bg-black/80 border border-gray-600 p-2 z-50 transition-transform duration-500 rounded-lg max-w-sm ${
+        isVisible ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
-      <Card className="max-w-6xl mx-auto bg-transparent border-none">
-        <CardContent className="flex flex-col md:flex-row items-center justify-between gap-4 p-0">
-          <div className="text-sm text-gray-300 flex items-center">
-            <Shield className="text-matrix mr-2 w-4 h-4" />
-            This site uses cookies for session tracking demonstrations and analytics. 
-            By continuing, you consent to educational monitoring.
+      <Card className="bg-transparent border-none">
+        <CardContent className="flex flex-col gap-2 p-0">
+          <div className="text-xs text-black opacity-60">
+            <Shield className="text-black mr-1 w-3 h-3 inline opacity-60" />
+            This site uses cookies for analytics
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <Button 
               onClick={handleAccept}
-              className="cyber-button text-sm px-4 py-2"
+              className="bg-gray-700 text-black text-xs px-2 py-1 h-auto hover:bg-gray-600"
               disabled={consentMutation.isPending}
             >
-              Accept & Track
+              Accept
             </Button>
             <Button 
               onClick={handleDecline}
               variant="outline"
-              className="border-matrix text-matrix px-4 py-2 text-sm font-mono hover:bg-matrix/10"
+              className="border-gray-600 text-black px-2 py-1 text-xs h-auto hover:bg-gray-700"
               disabled={consentMutation.isPending}
             >
               Decline
