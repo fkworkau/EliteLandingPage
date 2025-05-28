@@ -218,6 +218,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Browser fingerprint data endpoint
+  app.get("/api/admin/browser-data", requireAuth, async (req, res) => {
+    try {
+      const browserFingerprints = await storage.getAnalyticsByMetric('browser_fingerprint');
+      const cookieConsents = await storage.getAnalyticsByMetric('cookie_consent');
+      
+      res.json({
+        fingerprints: browserFingerprints.map(item => ({
+          id: item.id,
+          timestamp: item.timestamp,
+          data: JSON.parse(item.value)
+        })),
+        consents: cookieConsents
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch browser data" });
+    }
+  });
+
   // Packet capture simulation endpoint
   app.post("/api/admin/simulate-packet", requireAuth, async (req: any, res) => {
     try {
@@ -245,16 +264,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cookie consent tracking
   app.post("/api/cookie-consent", async (req: any, res) => {
     try {
-      const { consent } = req.body;
+      const browserData = req.body;
       
+      // Store comprehensive browser fingerprint data
       await storage.createAnalytics({
-        metric: 'cookie_consent',
-        value: consent ? 'accepted' : 'declined',
+        metric: 'browser_fingerprint',
+        value: JSON.stringify(browserData),
       });
 
-      res.json({ message: "Consent recorded" });
+      // Also store cookie consent status
+      await storage.createAnalytics({
+        metric: 'cookie_consent',
+        value: browserData.consent ? 'accepted' : 'declined',
+      });
+
+      // Emit real-time browser data to admin panel
+      io.to('admin').emit('newBrowserData', {
+        timestamp: new Date(),
+        data: browserData
+      });
+
+      res.json({ message: "Browser data captured" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to record consent" });
+      res.status(500).json({ message: "Failed to record browser data" });
     }
   });
 

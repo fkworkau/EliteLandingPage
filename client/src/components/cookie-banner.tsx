@@ -10,8 +10,8 @@ export default function CookieBanner() {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const consentMutation = useMutation({
-    mutationFn: async (consent: boolean) => {
-      const response = await apiRequest("POST", "/api/cookie-consent", { consent });
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/cookie-consent", data);
       return response.json();
     },
   });
@@ -61,7 +61,7 @@ export default function CookieBanner() {
     localStorage.setItem('cookiesAccepted', 'false');
     setIsVisible(false);
     setHasInteracted(true);
-    consentMutation.mutate(false);
+    consentMutation.mutate({ consent: false });
   };
 
   if (!isVisible) return null;
