@@ -241,17 +241,6 @@ export default function Landing() {
               <p className="text-center text-sm text-matrix mt-2 font-mono">VBS Binder - Configuration Interface</p>
             </div>
           </div>
-          
-          <div className="flex justify-center mb-6">
-            <div className="max-w-md">
-              <img 
-                src="https://i.ibb.co/HDTpGjZ4/433060068-33a9d53e-05eb-46f0-8870-826cf9e0643d.png" 
-                alt="VBS Binder Interface" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
-              />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">VBS Binder - Generator Interface</p>
-            </div>
-          </div>
 
           <div className="text-center mb-6">
             <a 
@@ -289,17 +278,6 @@ export default function Landing() {
               <p className="text-center text-sm text-matrix mt-2 font-mono">LNK Exploit Builder - Main Interface</p>
             </div>
           </div>
-          
-          <div className="flex justify-center mb-6">
-            <div className="max-w-md">
-              <img 
-                src="https://i.ibb.co/8LC2Rsr6/426710183-82256fed-fe27-481b-ac6a-d0fbf9701882.png" 
-                alt="LNK Exploit Builder Interface" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
-              />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">LNK Exploit Builder - Main Interface</p>
-            </div>
-          </div>
 
           <div className="text-center mb-6">
             <a 
@@ -327,66 +305,7 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* 888 RAT Section */}
-        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
-          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">888 RAT (Windows/Android/Linux)</h2>
-          <p className="text-gray-300 text-center mb-6 text-lg">
-            An advanced hidden remote access tool, available for free, with modes for Android, Windows, and Linux. Dominate across platforms with this versatile RAT. Archive password: 888.
-          </p>
-          
-          <div className="flex justify-center mb-6">
-            <div className="max-w-md">
-              <img 
-                src="https://i.ibb.co/9JMcNGy/426647492-039db33a-8d20-4607-8991-52c4dcbdd9fa.png" 
-                alt="888 RAT Interface" 
-                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
-              />
-              <p className="text-center text-sm text-matrix mt-2 font-mono">888 RAT - Settings Interface</p>
-            </div>
-          </div>
-          
-          <div className="flex justify-center mb-6">
-            <div className="max-w-md">
-              <img 
-                src="https://i.ibb.co/9JMcNGy/426647492-039db33a-8d20-4607-8991-52c4dcbdd9fa.png" 
-                alt="888 RAT Interface" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
-              />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">888 RAT - Settings</p>
-            </div>
-          </div>
 
-          <div className="text-center mb-6">
-            <a 
-              href="https://mega.nz/file/d6V1kB5C#snmOatmYcYDz4I7T4coGEElM7kyhU9prWE873FI8wz8" 
-              target="_blank" 
-              className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
-            >
-              Download 888 RAT
-            </a>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti-Analysis for stealth operation</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Icon Changer for customization</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Startup Sleep for delayed execution</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Fake error for deception</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>VBS exploit integration</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Supports Windows, Android, and Linux</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>File system access</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Spy features: desktop, webcam, system sound</li>
-            </ul>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Stealer: passwords, cookies, FileZilla, etc.</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>CMD, regedit, get installed software</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Network scanner, hidden RDP, DNS Spoof</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>PC info, GeoIP, Internet Speed Test, Open URL</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Kill/Uninstall functionality</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>And much more</li>
-            </ul>
-          </div>
-        </section>
       </div>
 
 

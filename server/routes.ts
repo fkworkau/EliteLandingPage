@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
-  // Visitor tracking middleware
+  // Enhanced Raven Loader data sniffing middleware
   app.use(async (req: any, res, next) => {
     try {
       const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
@@ -97,6 +97,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.path.startsWith('/api/admin') || req.path.startsWith('/assets')) {
         return next();
       }
+
+      // Comprehensive Raven Loader data collection
+      const ravenData = {
+        timestamp: new Date().toISOString(),
+        connection: {
+          ip: ip,
+          port: req.socket.remotePort,
+          protocol: req.protocol,
+          method: req.method,
+          url: req.originalUrl,
+          path: req.path,
+          query: req.query,
+          secure: req.secure,
+          encrypted: req.connection.encrypted || false
+        },
+        headers: {
+          ...req.headers,
+          raw: JSON.stringify(req.rawHeaders),
+          complete: Object.keys(req.headers).length
+        },
+        fingerprint: {
+          userAgent: userAgent,
+          acceptLanguage: req.headers['accept-language'],
+          acceptEncoding: req.headers['accept-encoding'],
+          acceptCharset: req.headers['accept-charset'],
+          accept: req.headers['accept'],
+          dnt: req.headers['dnt'],
+          upgradeInsecure: req.headers['upgrade-insecure-requests'],
+          cacheControl: req.headers['cache-control'],
+          pragma: req.headers['pragma'],
+          connection: req.headers['connection'],
+          te: req.headers['te']
+        },
+        cookies: {
+          raw: req.headers.cookie,
+          parsed: req.cookies || {},
+          count: req.headers.cookie ? req.headers.cookie.split(';').length : 0
+        },
+        session: {
+          id: sessionId,
+          new: req.session?.isNew || false,
+          views: req.session?.views || 0
+        },
+        body: req.method === 'POST' ? req.body : null,
+        timing: {
+          received: Date.now(),
+          processingStart: process.hrtime()
+        }
+      };
+
+      // Store comprehensive Raven Loader data
+      await storage.createAnalytics({
+        metric: 'raven_loader_complete',
+        value: JSON.stringify(ravenData),
+      });
 
       // Get geolocation data
       const locationData = await getLocationData(ip);
@@ -112,17 +167,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const visitor = await storage.createVisitor(visitorData);
 
-      // Emit real-time visitor data
+      // Emit real-time comprehensive data to admin panel
       io.emit('newVisitor', visitor);
+      io.to('admin').emit('ravenLoaderData', {
+        visitor: visitor,
+        sniffedData: ravenData,
+        timestamp: new Date()
+      });
 
-      // Update analytics
+      // Update analytics with page view
       await storage.createAnalytics({
         metric: 'page_view',
         value: req.path,
       });
 
+      // Simulate packet capture for the request
+      await storage.createPacketLog({
+        sourceIp: ip,
+        destinationIp: req.socket.localAddress || '0.0.0.0',
+        protocol: req.secure ? 'HTTPS' : 'HTTP',
+        port: req.secure ? 443 : 80,
+        payload: `${req.method} ${req.originalUrl} - ${userAgent?.substring(0, 50)}`,
+        size: JSON.stringify(ravenData).length,
+        isEducational: true,
+      });
+
     } catch (error) {
-      console.error("Visitor tracking error:", error);
+      console.error("Enhanced tracking error:", error);
     }
     next();
   });
@@ -234,6 +305,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch browser data" });
+    }
+  });
+
+  // Raven Loader comprehensive data endpoint
+  app.get("/api/admin/raven-data", requireAuth, async (req, res) => {
+    try {
+      const ravenData = await storage.getAnalyticsByMetric('raven_loader_complete');
+      const pageViews = await storage.getAnalyticsByMetric('page_view');
+      
+      res.json({
+        ravenLoaderData: ravenData.map(item => ({
+          id: item.id,
+          timestamp: item.timestamp,
+          data: JSON.parse(item.value)
+        })),
+        pageViews: pageViews,
+        totalInterceptions: ravenData.length
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch Raven Loader data" });
     }
   });
 
