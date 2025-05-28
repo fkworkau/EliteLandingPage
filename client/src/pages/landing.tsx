@@ -74,65 +74,83 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* Millennium RAT Section */}
-        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
-          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">Millennium RAT v4.0</h2>
+        {/* Educational Tools Panel */}
+        <section className="bg-gray-800 rounded-lg border border-matrix/30 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">Blue Team Training Tools</h2>
           <p className="text-gray-300 text-center mb-6 text-lg">
-            A battle-tested Remote Access Tool with a 2-year legacy, now fully rewritten in C++ for unmatched performance. Control via Telegram with no server or port forwarding needed. Steal data, log keys, and own systems effortlessly.
+            Comprehensive cybersecurity education platform for defensive security training. Practice threat detection, incident response, and network monitoring in a controlled environment.
           </p>
           
-          <div className="flex justify-center mb-6">
-            <div className="max-w-md">
-              <img 
-                src="https://i.ibb.co/PZSZ98XD/8g4be4sa.png" 
-                alt="Millennium RAT Builder" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
-              />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">Millennium RAT - Control Panel</p>
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {/* Network Monitoring */}
+            <div className="terminal-window p-4">
+              <div className="terminal-header">
+                <div className="terminal-dot terminal-dot-red"></div>
+                <div className="terminal-dot terminal-dot-yellow"></div>
+                <div className="terminal-dot terminal-dot-green"></div>
+                <span className="text-xs font-mono ml-2">network_monitor.exe</span>
+              </div>
+              <div className="p-4">
+                <h3 className="text-matrix font-mono text-lg mb-2">Network Monitor</h3>
+                <p className="text-gray-400 text-sm mb-3">Real-time network traffic analysis and packet inspection tools</p>
+                <button className="cyber-button w-full">Launch Monitor</button>
+              </div>
+            </div>
+
+            {/* Threat Detection */}
+            <div className="terminal-window p-4">
+              <div className="terminal-header">
+                <div className="terminal-dot terminal-dot-red"></div>
+                <div className="terminal-dot terminal-dot-yellow"></div>
+                <div className="terminal-dot terminal-dot-green"></div>
+                <span className="text-xs font-mono ml-2">threat_detect.exe</span>
+              </div>
+              <div className="p-4">
+                <h3 className="text-matrix font-mono text-lg mb-2">Threat Detection</h3>
+                <p className="text-gray-400 text-sm mb-3">AI-powered threat analysis and behavioral detection</p>
+                <button className="cyber-button w-full">Start Analysis</button>
+              </div>
+            </div>
+
+            {/* Incident Response */}
+            <div className="terminal-window p-4">
+              <div className="terminal-header">
+                <div className="terminal-dot terminal-dot-red"></div>
+                <div className="terminal-dot terminal-dot-yellow"></div>
+                <div className="terminal-dot terminal-dot-green"></div>
+                <span className="text-xs font-mono ml-2">incident_resp.exe</span>
+              </div>
+              <div className="p-4">
+                <h3 className="text-matrix font-mono text-lg mb-2">Incident Response</h3>
+                <p className="text-gray-400 text-sm mb-3">Forensic analysis and threat containment protocols</p>
+                <button className="cyber-button w-full">Access Console</button>
+              </div>
             </div>
           </div>
 
-          <div className="text-center mb-6">
-            <a 
-              href="https://t.me/shinyenigma" 
-              target="_blank" 
-              className="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
-            >
-              Buy Now
-            </a>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Fully rewritten in C++ for speed and stealth</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Small native executable, zero dependencies</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>No Microsoft Visual C++ required</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Works on Windows 7+ (32/64-bit)</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Auto StartUp for persistent access</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti double-launch protection</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>AutoStealer for effortless data theft</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Keylogger for capturing every keystroke</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti-VM and Anti-Debug for ultimate evasion</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Compact, user-friendly builder</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Self-installing or non-installing options</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Auto command execution on first run</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Adjustable startup/request delay</li>
-            </ul>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Remote PowerShell/CMD execution</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>System info grabbing (CPU, GPU, RAM, location, IP, MAC)</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Discord token theft (client and browsers)</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Telegram data extraction</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Browser data theft (downloads, cookies, passwords, credit cards, history)</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Crypto wallet recovery</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Webcamera capture for surveillance</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Privilege elevation for deeper control</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Messageboxes, wallpaper changes, display rotation</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>One-command desktop file grabbing</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>File encryption/decryption</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Window minimize/maximize control</li>
-              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Bot gifting and much more</li>
-            </ul>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-matrix font-mono mb-3">Training Modules</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start"><span className="text-matrix mr-2">📚</span>Network Security Fundamentals</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">📚</span>Malware Analysis Techniques</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">📚</span>Digital Forensics Procedures</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">📚</span>Vulnerability Assessment</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">📚</span>Security Incident Handling</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">📚</span>Threat Intelligence Analysis</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-matrix font-mono mb-3">Lab Environments</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-start"><span className="text-matrix mr-2">🔬</span>Isolated Virtual Networks</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">🔬</span>Real-time Attack Simulations</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">🔬</span>SIEM Dashboard Training</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">🔬</span>Network Traffic Analysis</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">🔬</span>Malware Sandbox Testing</li>
+                <li className="flex items-start"><span className="text-matrix mr-2">🔬</span>Incident Response Drills</li>
+              </ul>
+            </div>
           </div>
         </section>
 
