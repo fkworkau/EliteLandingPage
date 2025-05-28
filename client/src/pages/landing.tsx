@@ -1,360 +1,376 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import CookieBanner from "@/components/cookie-banner";
-import AdminLoginModal from "@/components/admin-login-modal";
-import { Terminal, Bug, VenetianMask, Shield, ChevronDown, ExternalLink } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Shield, Activity, Eye, Zap } from 'lucide-react';
+import AdminLoginModal from '@/components/admin-login-modal';
+import CookieBanner from '@/components/cookie-banner';
 
 export default function Landing() {
-  const [, setLocation] = useLocation();
   const [showAdminModal, setShowAdminModal] = useState(false);
-  const [expandedFeatures, setExpandedFeatures] = useState<string | null>(null);
+  const [visitorCount, setVisitorCount] = useState(0);
 
-  const toggleFeatures = (toolName: string) => {
-    setExpandedFeatures(expandedFeatures === toolName ? null : toolName);
-  };
+  useEffect(() => {
+    // Track visitor
+    fetch('/api/visitor-tracking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userAgent: navigator.userAgent,
+        referrer: document.referrer,
+        language: navigator.language,
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      })
+    }).then(res => res.json())
+      .then(data => setVisitorCount(data.totalVisitors || 0))
+      .catch(console.error);
 
-  const handleAdminAccess = () => {
-    setLocation("/admin-portal");
-  };
+    console.log('Educational tracking simulation started');
+  }, []);
 
   return (
-    <div className="min-h-screen bg-terminal text-matrix overflow-x-hidden">
-      <CookieBanner />
-      
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 bg-panel/95 backdrop-blur-sm border-b border-matrix/20 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Terminal className="text-matrix text-xl" />
-            <span className="font-mono text-lg font-bold">MILLENNIUM-RAT.NET</span>
-          </div>
-          <div className="hidden md:flex items-center space-x-6 font-mono text-sm">
-            <a href="#tools" className="hover:text-matrix transition-colors">Tools</a>
-            <a href="#features" className="hover:text-matrix transition-colors">Features</a>
-            <a href="#contact" className="hover:text-matrix transition-colors">Contact</a>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAdminModal(true)}
-              className="text-gray-500 hover:text-matrix"
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 text-white relative overflow-x-hidden">
+      {/* Admin Access (Hidden) */}
+      <div className="absolute top-4 right-4 z-50">
+        <button
+          onClick={() => setShowAdminModal(true)}
+          className="text-gray-600 hover:text-matrix transition-colors opacity-30 hover:opacity-100"
+          title="Admin Access"
+        >
+          <Shield size={20} />
+        </button>
+      </div>
+
+      {/* Visitor Counter */}
+      <div className="absolute top-4 left-4 text-xs text-gray-500 font-mono">
+        <Activity size={12} className="inline mr-1" />
+        {visitorCount} visitors
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <header className="text-center mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative text-matrix glow-pulse">
+            MILLENNIUM REMOTE ADMIN TOOLS
+          </h1>
+          <p className="font-mono text-xl text-gray-400 typing-animation">
+            Unleash Your Power with Premium Cyber Weapons
+          </p>
+        </header>
+
+        {/* Intro Section */}
+        <section className="bg-gray-900 rounded-lg border border-matrix p-6 max-w-4xl mx-auto mb-8">
+          <div className="text-center">
+            <p className="text-gray-300 mb-6 text-lg leading-relaxed">
+              Welcome to the ultimate collection of hacking tools, crafted for the elite. From remote access to stealth data extraction, our tools are designed to dominate any system with precision and style. Each tool is built for performance, stealth, and ease of use. Join the ranks of the best—get yours today.
+            </p>
+            <a 
+              href="https://t.me/shinyenigma" 
+              target="_blank" 
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-mono mb-4 transition-all duration-300 hover:scale-105 shadow-lg"
             >
-              <Shield className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="pt-20">
-        {/* Hero Section */}
-        <section className="relative py-20 px-6">
-          <div className="max-w-6xl mx-auto text-center">
-            <div className="mb-8">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative text-matrix glow-pulse">
-                MILLENNIUM REMOTE ADMIN TOOLS
-              </h1>
-              <div className="font-mono text-xl text-gray-400 typing-animation">
-                Unleash Your Power with Premium Cyber Weapons
-              </div>
-            </div>
-            
-            {/* Terminal Window */}
-            <div className="max-w-4xl mx-auto terminal-window overflow-hidden shadow-2xl">
-              <div className="terminal-header">
-                <div className="terminal-dot terminal-dot-red"></div>
-                <div className="terminal-dot terminal-dot-yellow"></div>
-                <div className="terminal-dot terminal-dot-green"></div>
-                <span className="text-gray-400 text-sm font-mono ml-4">elite-terminal v4.0</span>
-              </div>
-              <div className="p-6 font-mono text-left">
-                <div className="text-matrix">&gt; Welcome to the ultimate collection of hacking tools...</div>
-                <div className="text-gray-400 mt-2">&gt; Crafted for the elite cybersecurity professionals</div>
-                <div className="text-accent mt-2">&gt; From remote access to stealth data extraction</div>
-                <div className="text-gray-400 mt-2">&gt; Tools designed to dominate any system with precision</div>
-                <div className="text-matrix mt-4 matrix-pulse">&gt; System ready. Choose your weapon._</div>
-              </div>
-            </div>
-
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Button asChild className="cyber-button">
-                <a href="https://t.me/shinyenigma" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Contact: @shinyenigma
-                </a>
-              </Button>
-              <Card className="bg-panel border-matrix/30">
-                <CardContent className="px-6 py-3 font-mono text-sm">
-                  <span className="text-warning mr-2">💰</span>
-                  Payments: USDT, BTC, TRX, XMR, ETH, LTC
-                </CardContent>
-              </Card>
-            </div>
+              Contact via Telegram: @shinyenigma
+            </a>
+            <p className="text-gray-400 text-sm font-mono">
+              Payments: USDT, BTC, TRX, XMR, ETH, LTC, and more
+            </p>
           </div>
         </section>
 
-        {/* Tools Section */}
-        <section id="tools" className="py-16 px-6">
-          <div className="max-w-6xl mx-auto">
-            
-            {/* Millennium RAT */}
-            <Card className="mb-16 bg-panel border-matrix/20 hover:border-matrix/40 transition-all duration-300">
-              <CardContent className="p-8">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <h2 className="text-3xl font-mono font-bold text-matrix mb-4 flex items-center">
-                      <Bug className="mr-3" />
-                      Millennium RAT v4.0
-                    </h2>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
-                      A battle-tested Remote Access Tool with a 2-year legacy, now fully rewritten in C++ for unmatched performance. Control via Telegram with no server or port forwarding needed. Steal data, log keys, and own systems effortlessly.
-                    </p>
-                    
-                    {/* Feature Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                      {[
-                        "C++ Rewritten for Speed",
-                        "Zero Dependencies", 
-                        "Windows 7+ Compatible",
-                        "Auto StartUp Persistence",
-                        "Anti-VM & Anti-Debug",
-                        "Keylogger & AutoStealer"
-                      ].map((feature) => (
-                        <div key={feature} className="flex items-center text-sm text-gray-400">
-                          <span className="text-matrix mr-2">✓</span>
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <Button asChild className="cyber-button-accent">
-                      <a href="https://t.me/shinyenigma" target="_blank" rel="noopener noreferrer">
-                        🛒 Buy Now
-                      </a>
-                    </Button>
-                  </div>
-                  
-                  <div className="relative">
-                    <Card className="bg-terminal border-matrix/30 h-64 flex items-center justify-center">
-                      <div className="text-center">
-                        <Terminal className="w-16 h-16 text-matrix mb-4 mx-auto" />
-                        <div className="font-mono text-matrix">Millennium RAT</div>
-                        <div className="font-mono text-sm text-gray-400">Control Panel Interface</div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-                
-                {/* Expandable Features */}
-                <div className="mt-8 border-t border-matrix/20 pt-6">
-                  <Button
-                    variant="ghost"
-                    onClick={() => toggleFeatures('millennium')}
-                    className="flex items-center text-matrix font-mono text-sm hover:text-matrix/80"
-                  >
-                    <ChevronDown 
-                      className={`mr-2 transition-transform ${expandedFeatures === 'millennium' ? 'rotate-180' : ''}`} 
-                    />
-                    View Full Feature List (60+ Features)
-                  </Button>
-                  {expandedFeatures === 'millennium' && (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-400">
-                      {[
-                        "Remote PowerShell/CMD execution",
-                        "System info grabbing (CPU, GPU, RAM)",
-                        "Discord token theft",
-                        "Telegram data extraction",
-                        "Browser data theft",
-                        "Crypto wallet recovery",
-                        "Webcamera capture",
-                        "Privilege elevation",
-                        "File encryption/decryption",
-                        "Process manager",
-                        "System shutdown controls",
-                        "Self-uninstall capability"
-                      ].map((feature) => (
-                        <div key={feature}>• {feature}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* DotStealer */}
-            <Card className="mb-16 bg-panel border-matrix/20 hover:border-matrix/40 transition-all duration-300">
-              <CardContent className="p-8">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div className="order-2 md:order-1 relative">
-                    <Card className="bg-terminal border-matrix/30 h-64 flex items-center justify-center">
-                      <div className="text-center">
-                        <VenetianMask className="w-16 h-16 text-matrix mb-4 mx-auto" />
-                        <div className="font-mono text-matrix">DotStealer</div>
-                        <div className="font-mono text-sm text-gray-400">Configuration Panel</div>
-                      </div>
-                    </Card>
-                  </div>
-                  
-                  <div className="order-1 md:order-2">
-                    <h2 className="text-3xl font-mono font-bold text-matrix mb-4 flex items-center">
-                      <VenetianMask className="mr-3" />
-                      DotStealer
-                    </h2>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
-                      A multifunctional Windows stealer that sends logs via Telegram bot—no dedicated server needed. Lifetime license for only $30 (updates included). Stay updated via my Telegram channel.
-                    </p>
-                    
-                    {/* Price Tag */}
-                    <Card className="bg-matrix/10 border-matrix/30 p-4 mb-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-matrix font-mono font-bold text-2xl">$30</div>
-                          <div className="text-gray-400 text-sm">Lifetime License</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-matrix text-sm font-mono">✓ Free Updates</div>
-                          <div className="text-gray-400 text-sm">✓ Telegram Support</div>
-                        </div>
-                      </div>
-                    </Card>
-                    
-                    <Button asChild className="cyber-button-accent">
-                      <a href="https://t.me/shinyenigma" target="_blank" rel="noopener noreferrer">
-                        🛒 Buy Now - $30
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Vedani-Crypter */}
-            <Card className="mb-16 bg-panel border-matrix/20 hover:border-matrix/40 transition-all duration-300">
-              <CardContent className="p-8">
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div>
-                    <div className="flex items-center mb-4">
-                      <h2 className="text-3xl font-mono font-bold text-matrix flex items-center">
-                        <Shield className="mr-3" />
-                        Vedani-Crypter
-                      </h2>
-                      <Badge className="bg-matrix text-terminal text-xs px-2 py-1 ml-3 font-bold">
-                        FREE
-                      </Badge>
-                    </div>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
-                      A renowned private Runtime & Scantime crypter with an updating stub and lifetime license—available for free. Protect your EXE files from antivirus scans with this powerful tool, complete with a video tutorial.
-                    </p>
-                    
-                    <Card className="bg-matrix/10 border-matrix/30 p-4 mb-6">
-                      <div className="font-mono text-matrix text-lg font-bold mb-2">FREE DOWNLOAD</div>
-                      <div className="text-gray-400 text-sm">✓ Lifetime License</div>
-                      <div className="text-gray-400 text-sm">✓ Video Tutorial Included</div>
-                      <div className="text-gray-400 text-sm">✓ Regular Stub Updates</div>
-                    </Card>
-                    
-                    <Button asChild className="cyber-button">
-                      <a href="https://t.me/shinyenigma" target="_blank" rel="noopener noreferrer">
-                        📥 Download Free
-                      </a>
-                    </Button>
-                  </div>
-                  
-                  <div className="relative">
-                    <Card className="bg-terminal border-matrix/30 h-64 flex items-center justify-center">
-                      <div className="text-center">
-                        <Shield className="w-16 h-16 text-matrix mb-4 mx-auto" />
-                        <div className="font-mono text-matrix">Vedani-Crypter</div>
-                        <div className="font-mono text-sm text-gray-400">Main Interface</div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="py-16 px-6 bg-panel/50">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-              <Card className="bg-panel border-matrix/20 p-6">
-                <div className="text-3xl font-mono font-bold text-matrix mb-2">1,247</div>
-                <div className="text-gray-400 text-sm">Active Users</div>
-              </Card>
-              <Card className="bg-panel border-matrix/20 p-6">
-                <div className="text-3xl font-mono font-bold text-matrix mb-2">89</div>
-                <div className="text-gray-400 text-sm">Countries</div>
-              </Card>
-              <Card className="bg-panel border-matrix/20 p-6">
-                <div className="text-3xl font-mono font-bold text-matrix mb-2">3</div>
-                <div className="text-gray-400 text-sm">Elite Tools</div>
-              </Card>
-              <Card className="bg-panel border-matrix/20 p-6">
-                <div className="text-3xl font-mono font-bold text-matrix mb-2">99.9%</div>
-                <div className="text-gray-400 text-sm">Uptime</div>
-              </Card>
+        {/* Millennium RAT Section */}
+        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">Millennium RAT v4.0</h2>
+          <p className="text-gray-300 text-center mb-6 text-lg">
+            A battle-tested Remote Access Tool with a 2-year legacy, now fully rewritten in C++ for unmatched performance. Control via Telegram with no server or port forwarding needed. Steal data, log keys, and own systems effortlessly.
+          </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/PZSZ98XD/8g4be4sa.png" 
+                alt="Millennium RAT Builder" 
+                className="w-full rounded-lg border border-gray-600 shadow-lg"
+              />
+              <p className="text-center text-sm text-gray-400 mt-2 font-mono">Millennium RAT - Control Panel</p>
             </div>
           </div>
+
+          <div className="text-center mb-6">
+            <a 
+              href="https://t.me/shinyenigma" 
+              target="_blank" 
+              className="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Buy Now
+            </a>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Fully rewritten in C++ for speed and stealth</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Small native executable, zero dependencies</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>No Microsoft Visual C++ required</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Works on Windows 7+ (32/64-bit)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Auto StartUp for persistent access</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti double-launch protection</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>AutoStealer for effortless data theft</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Keylogger for capturing every keystroke</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti-VM and Anti-Debug for ultimate evasion</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Compact, user-friendly builder</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Self-installing or non-installing options</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Auto command execution on first run</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Adjustable startup/request delay</li>
+            </ul>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Remote PowerShell/CMD execution</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>System info grabbing (CPU, GPU, RAM, location, IP, MAC)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Discord token theft (client and browsers)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Telegram data extraction</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Browser data theft (downloads, cookies, passwords, credit cards, history)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Crypto wallet recovery</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Webcamera capture for surveillance</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Privilege elevation for deeper control</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Messageboxes, wallpaper changes, display rotation</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>One-command desktop file grabbing</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>File encryption/decryption</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Window minimize/maximize control</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Bot gifting and much more</li>
+            </ul>
+          </div>
         </section>
 
-        {/* Contact Section */}
-        <section id="contact" className="py-16 px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-mono font-bold text-matrix mb-8">Get in Touch</h2>
-            <Card className="bg-panel border-matrix/20 p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="text-left">
-                  <h3 className="font-mono text-lg text-matrix mb-4">Contact Information</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-gray-300">
-                      <span className="text-matrix mr-3">📱</span>
-                      <span>@shinyenigma</span>
-                    </div>
-                    <div className="flex items-center text-gray-300">
-                      <span className="text-matrix mr-3">🌐</span>
-                      <span>Available 24/7</span>
-                    </div>
-                    <div className="flex items-center text-gray-300">
-                      <span className="text-matrix mr-3">🗣️</span>
-                      <span>English & Russian</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-left">
-                  <h3 className="font-mono text-lg text-matrix mb-4">Payment Methods</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {["USDT (TRC20)", "Bitcoin (BTC)", "Tron (TRX)", "Monero (XMR)", "Ethereum (ETH)", "Litecoin (LTC)"].map((method) => (
-                      <div key={method} className="text-gray-300">• {method}</div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
+        {/* DotStealer Section */}
+        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">DotStealer</h2>
+          <p className="text-gray-300 text-center mb-6 text-lg">
+            A multifunctional Windows stealer that sends logs via Telegram bot—no dedicated server needed. Lifetime license for only $30 (updates included). Stay updated via my Telegram channel.
+          </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/mCnkNsTt/432992187-f48c474b-1e68-4f7d-ba6e-14ad01afdcf4.png" 
+                alt="DotStealer Builder" 
+                className="w-full rounded-lg border border-gray-600 shadow-lg"
+              />
+              <p className="text-center text-sm text-gray-400 mt-2 font-mono">DotStealer - Configuration Panel</p>
+            </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <a 
+              href="https://t.me/shinyenigma" 
+              target="_blank" 
+              className="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Buy Now
+            </a>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>NEW: Significantly decreased file size</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>NEW: Grabs complete list of installed software</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Easy-to-use compact builder</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Client works on Windows 7+ (32/64-bit)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti double-launch protection</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti-VM and Anti-Debug for evasion</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Single .NET exe, no dependencies</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Two types of data encryption</li>
+            </ul>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Grabs desktop files</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Run from start directory or install</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Browser data stealing (cookies, downloads, passwords, etc.)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>App-Bound cookie protection bypass (no admin privileges)</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Discord token grabbing</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Telegram session grabbing</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Desktop screenshot capture</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Metamask and Exodus data stealing</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* Vedani-Crypter Section */}
+        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">Vedani-Crypter</h2>
+          <p className="text-gray-300 text-center mb-6 text-lg">
+            A renowned private Runtime & Scantime crypter with an updating stub and lifetime license—available for free. Protect your EXE files from antivirus scans with this powerful tool, complete with a video tutorial.
+          </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/BK3SgSQX/56c2nd8g.png" 
+                alt="Vedani-Crypter Interface" 
+                className="w-full rounded-lg border border-gray-600 shadow-lg"
+              />
+              <p className="text-center text-sm text-gray-400 mt-2 font-mono">Vedani-Crypter - Main Interface</p>
+            </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <a 
+              href="https://github.com/ardentus/Vedani-Crypter.git" 
+              target="_blank" 
+              className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Download Vedani-Crypter
+            </a>
+          </div>
+
+          <ul className="space-y-2 text-sm max-w-2xl mx-auto">
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Runtime & Scantime crypter for EXE protection</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Updating stub for continuous effectiveness</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Lifetime license, free to use</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Includes a video tutorial for setup</li>
+          </ul>
+        </section>
+
+        {/* VBS Binder Section */}
+        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">VBS Binder</h2>
+          <p className="text-gray-300 text-center mb-6 text-lg">
+            A cutting-edge VBS binder generator that runs non-crypted builds without detection by Windows Defender. Adds Defender exclusions, downloads, and executes files while avoiding SmartScreen alerts.
+          </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/HDTpGjZ4/433060068-33a9d53e-05eb-46f0-8870-826cf9e0643d.png" 
+                alt="VBS Binder Interface" 
+                className="w-full rounded-lg border border-gray-600 shadow-lg"
+              />
+              <p className="text-center text-sm text-gray-400 mt-2 font-mono">VBS Binder - Generator Interface</p>
+            </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <a 
+              href="https://t.me/shinyenigma" 
+              target="_blank" 
+              className="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Buy Now
+            </a>
+          </div>
+
+          <ul className="space-y-2 text-sm max-w-2xl mx-auto">
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Random obfuscation for every generated file</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>No SmartScreen alerts for binder or downloaded files</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>No Windows Defender alerts</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Bind multiple files with ease</li>
+            <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Optional fake error for deception</li>
+          </ul>
+        </section>
+
+        {/* LNK Exploit Builder Section */}
+        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">LNK Exploit Builder</h2>
+          <p className="text-gray-300 text-center mb-6 text-lg">
+            An advanced exploit that generates a fake .txt file with a backdoor to execute EXE/BAT files silently. Designed for Windows 7 and higher, perfect for stealth operations.
+          </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/8LC2Rsr6/426710183-82256fed-fe27-481b-ac6a-d0fbf9701882.png" 
+                alt="LNK Exploit Builder Interface" 
+                className="w-full rounded-lg border border-gray-600 shadow-lg"
+              />
+              <p className="text-center text-sm text-gray-400 mt-2 font-mono">LNK Exploit Builder - Main Interface</p>
+            </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <a 
+              href="https://github.com/shinyelectron/LNK-Exploit.git" 
+              target="_blank" 
+              className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Download LNK Exploit Builder
+            </a>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>NEW: Additional link encoding and obfuscation</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Easy-to-use builder</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Fake description generator</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Hides backdoor code deep inside the binary</li>
+            </ul>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Txt downloading option for long text files</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Silent PowerShell console in the background</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti-analyzing: Property changes disable malicious code</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Bypasses Windows SmartScreen alerts</li>
+            </ul>
+          </div>
+        </section>
+
+        {/* 888 RAT Section */}
+        <section className="bg-gray-800 rounded-lg border border-gray-700 p-8 mb-8">
+          <h2 className="text-3xl font-bold text-center mb-4 text-matrix">888 RAT (Windows/Android/Linux)</h2>
+          <p className="text-gray-300 text-center mb-6 text-lg">
+            An advanced hidden remote access tool, available for free, with modes for Android, Windows, and Linux. Dominate across platforms with this versatile RAT. Archive password: 888.
+          </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/9JMcNGy/426647492-039db33a-8d20-4607-8991-52c4dcbdd9fa.png" 
+                alt="888 RAT Interface" 
+                className="w-full rounded-lg border border-gray-600 shadow-lg"
+              />
+              <p className="text-center text-sm text-gray-400 mt-2 font-mono">888 RAT - Settings</p>
+            </div>
+          </div>
+
+          <div className="text-center mb-6">
+            <a 
+              href="https://mega.nz/file/d6V1kB5C#snmOatmYcYDz4I7T4coGEElM7kyhU9prWE873FI8wz8" 
+              target="_blank" 
+              className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-mono transition-all duration-300 hover:scale-105 shadow-lg"
+            >
+              Download 888 RAT
+            </a>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Anti-Analysis for stealth operation</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Icon Changer for customization</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Startup Sleep for delayed execution</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Fake error for deception</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>VBS exploit integration</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Supports Windows, Android, and Linux</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>File system access</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Spy features: desktop, webcam, system sound</li>
+            </ul>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Stealer: passwords, cookies, FileZilla, etc.</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>CMD, regedit, get installed software</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Network scanner, hidden RDP, DNS Spoof</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>PC info, GeoIP, Internet Speed Test, Open URL</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>Kill/Uninstall functionality</li>
+              <li className="flex items-start"><span className="text-matrix mr-2">✔️</span>And much more</li>
+            </ul>
           </div>
         </section>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-panel border-t border-matrix/20 py-8 px-6 text-center">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-danger text-sm mb-4 font-mono">
-            ⚠️ EDUCATIONAL DISCLAIMER: These tools are for authorized security testing and educational purposes only. 
-            Unauthorized access to computer systems is illegal and unethical.
-          </div>
-          <div className="text-gray-400 text-sm">
-            © 2024 Elite Hacking Tools. For educational and authorized security testing purposes only.
-          </div>
-        </div>
-      </footer>
+      {/* Disclaimer */}
+      <div className="fixed bottom-0 w-full bg-red-900 border-t border-red-500 px-4 py-3 text-center text-sm text-red-300 font-mono">
+        ⚠️ DISCLAIMER: I AM NOT RESPONSIBLE FOR ANY ILLEGAL USAGE OF THESE TOOLS ⚠️
+      </div>
 
+      {/* Admin Modal */}
       <AdminLoginModal 
         open={showAdminModal} 
         onOpenChange={setShowAdminModal}
-        onSuccess={handleAdminAccess}
+        onSuccess={() => window.location.href = '/admin'}
       />
+
+      {/* Cookie Banner */}
+      <CookieBanner />
     </div>
   );
 }

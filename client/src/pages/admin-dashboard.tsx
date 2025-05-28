@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import PacketCapture from "@/components/packet-capture";
 import VisitorTracking from "@/components/visitor-tracking";
+import GroqAIAnalysis from "@/components/groq-ai-analysis";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { 
   Shield, 

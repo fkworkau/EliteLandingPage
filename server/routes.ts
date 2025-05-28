@@ -247,7 +247,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI content modification (placeholder for Groq integration)
+  // Groq AI Analysis route
+  app.post('/api/groq-analysis', requireAuth, async (req, res) => {
+    try {
+      const { mode, prompt, context } = req.body;
+      
+      if (!process.env.GROQ_API_KEY) {
+        return res.status(500).json({ message: 'Groq API key not configured' });
+      }
+
+      // Prepare analysis prompt based on mode
+      let systemPrompt = '';
+      let userPrompt = prompt;
+
+      switch (mode) {
+        case 'deploy':
+          systemPrompt = 'You are a cybersecurity expert specializing in educational red team deployment strategies. Analyze the provided traffic data and suggest deployment tactics for educational purposes only. Focus on how attackers typically deploy malicious sites and how to simulate this safely for blue team training.';
+          if (!userPrompt) {
+            userPrompt = `Analyze this visitor traffic data for educational red team deployment strategies: ${JSON.stringify(context)}. Suggest how to effectively deploy this type of site for cybersecurity training and what traffic patterns indicate successful engagement.`;
+          }
+          break;
+        case 'designer':
+          systemPrompt = 'You are an expert web designer specializing in social engineering tactics for educational purposes. Provide HTML/CSS improvements to make educational phishing simulations more effective while maintaining ethical boundaries for cybersecurity training.';
+          if (!userPrompt) {
+            userPrompt = `Based on this visitor engagement data: ${JSON.stringify(context)}, suggest HTML/CSS improvements to make this educational cybersecurity training site more effective. Focus on design elements that demonstrate social engineering tactics for defensive training.`;
+          }
+          break;
+        case 'analysis':
+          systemPrompt = 'You are a cybersecurity analyst providing educational insights on traffic patterns and attack vectors. Your analysis helps blue team students understand how malicious sites track and profile visitors.';
+          if (!userPrompt) {
+            userPrompt = `Analyze this traffic data for educational cybersecurity insights: ${JSON.stringify(context)}. Explain what this data reveals about visitor behavior, potential attack vectors, and how defenders can detect such tracking. Focus on the educational value for blue team training.`;
+          }
+          break;
+      }
+
+      // Make request to Groq API
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'mixtral-8x7b-32768',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          max_tokens: 1024,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Groq API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const analysis = data.choices[0]?.message?.content || 'No analysis generated';
+
+      res.json({ analysis, mode });
+    } catch (error) {
+      console.error('Groq analysis error:', error);
+      res.status(500).json({ message: 'Failed to generate AI analysis' });
+    }
+  });
   app.post("/api/admin/modify-content", requireAuth, async (req: any, res) => {
     try {
       const { section, prompt } = req.body;
