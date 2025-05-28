@@ -52,8 +52,8 @@ export default function Landing() {
         <section className="relative py-20 px-6">
           <div className="max-w-6xl mx-auto text-center">
             <div className="mb-8">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-mono font-bold mb-4 relative whitespace-nowrap">
-                <span className="bg-gradient-to-r from-matrix via-accent to-matrix bg-clip-text text-transparent glow-pulse">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative">
+                <span className="bg-gradient-to-r from-matrix via-accent to-matrix bg-clip-text text-transparent glow-pulse block">
                   MILLENNIUM REMOTE ADMIN TOOLS
                 </span>
               </h1>
