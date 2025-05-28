@@ -71,21 +71,45 @@ export default function Landing() {
           </p>
         </header>
 
-        {/* Intro Section */}
+        {/* Educational Context Section */}
         <section className="bg-gray-900 rounded-lg border border-matrix p-6 max-w-4xl mx-auto mb-8">
           <div className="text-center">
+            <div className="bg-yellow-900 border border-yellow-500 rounded-lg p-4 mb-6">
+              <p className="text-yellow-200 text-sm font-bold">
+                🎓 EDUCATIONAL SIMULATION NOTICE
+              </p>
+              <p className="text-yellow-100 text-xs mt-1">
+                This content simulates malicious software distribution tactics for cybersecurity education. 
+                Students learn to identify social engineering, suspicious payment methods, and red flags in malware campaigns.
+              </p>
+            </div>
             <p className="text-gray-300 mb-6 text-lg leading-relaxed">
-              Welcome to the ultimate collection of hacking tools, crafted for the elite. From remote access to stealth data extraction, our tools are designed to dominate any system with precision and style. Each tool is built for performance, stealth, and ease of use. Join the ranks of the best—get yours today.
+              <span className="text-red-400 font-bold">[SIMULATED THREAT]</span> Welcome to the ultimate collection of hacking tools, crafted for the elite. From remote access to stealth data extraction, our tools are designed to dominate any system with precision and style. Each tool is built for performance, stealth, and ease of use. Join the ranks of the best—get yours today.
             </p>
+            <div className="bg-red-900 border border-red-500 rounded-lg p-4 mb-4">
+              <p className="text-red-200 text-sm font-bold">⚠️ Red Flags Students Should Notice:</p>
+              <ul className="text-red-100 text-xs mt-2 text-left space-y-1">
+                <li>• Telegram contact instead of legitimate business channels</li>
+                <li>• Cryptocurrency-only payments (untraceable)</li>
+                <li>• Claims of "elite" tools and "system domination"</li>
+                <li>• No company information or legal disclaimers</li>
+              </ul>
+            </div>
             <a 
-              href="https://t.me/shinyenigma" 
-              target="_blank" 
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-mono mb-4 transition-all duration-300 hover:scale-105 shadow-lg"
+              href="#educational-demo" 
+              className="inline-block bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-mono mb-4 transition-all duration-300 hover:scale-105 shadow-lg cursor-not-allowed opacity-50"
+              onClick={(e) => {
+                e.preventDefault();
+                alert('Educational Demo: This is where attackers would place contact links. Never click suspicious links in real scenarios!');
+              }}
             >
-              Contact via Telegram: @shinyenigma
+              [DEMO] Contact via Telegram: @shinyenigma
             </a>
             <p className="text-gray-400 text-sm font-mono">
-              Payments: USDT, BTC, TRX, XMR, ETH, LTC, and more
+              <span className="text-red-400">[SIMULATION]</span> Payments: USDT, BTC, TRX, XMR, ETH, LTC, and more
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              Teaching Point: Cryptocurrency payments are red flags as they're difficult to trace and reverse
             </p>
           </div>
         </section>
