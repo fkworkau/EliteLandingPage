@@ -86,9 +86,9 @@ export default function Landing() {
               <img 
                 src="https://i.ibb.co/PZSZ98XD/8g4be4sa.png" 
                 alt="Millennium RAT Builder" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
+                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
               />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">Millennium RAT - Control Panel</p>
+              <p className="text-center text-sm text-matrix mt-2 font-mono">Millennium RAT - Control Panel</p>
             </div>
           </div>
 
@@ -148,9 +148,9 @@ export default function Landing() {
               <img 
                 src="https://i.ibb.co/mCnkNsTt/432992187-f48c474b-1e68-4f7d-ba6e-14ad01afdcf4.png" 
                 alt="DotStealer Builder" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
+                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
               />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">DotStealer - Configuration Panel</p>
+              <p className="text-center text-sm text-matrix mt-2 font-mono">DotStealer - Configuration Panel</p>
             </div>
           </div>
 
@@ -200,9 +200,9 @@ export default function Landing() {
               <img 
                 src="https://i.ibb.co/BK3SgSQX/56c2nd8g.png" 
                 alt="Vedani-Crypter Interface" 
-                className="w-full rounded-lg border border-gray-600 shadow-lg"
+                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
               />
-              <p className="text-center text-sm text-gray-400 mt-2 font-mono">Vedani-Crypter - Main Interface</p>
+              <p className="text-center text-sm text-matrix mt-2 font-mono">Vedani-Crypter - Main Interface</p>
             </div>
           </div>
 
@@ -230,6 +230,17 @@ export default function Landing() {
           <p className="text-gray-300 text-center mb-6 text-lg">
             A cutting-edge VBS binder generator that runs non-crypted builds without detection by Windows Defender. Adds Defender exclusions, downloads, and executes files while avoiding SmartScreen alerts.
           </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/HDTpGjZ4/433060068-33a9d53e-05eb-46f0-8870-826cf9e0643d.png" 
+                alt="VBS Binder Interface" 
+                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
+              />
+              <p className="text-center text-sm text-matrix mt-2 font-mono">VBS Binder - Configuration Interface</p>
+            </div>
+          </div>
           
           <div className="flex justify-center mb-6">
             <div className="max-w-md">
@@ -267,6 +278,17 @@ export default function Landing() {
           <p className="text-gray-300 text-center mb-6 text-lg">
             An advanced exploit that generates a fake .txt file with a backdoor to execute EXE/BAT files silently. Designed for Windows 7 and higher, perfect for stealth operations.
           </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/8LC2Rsr6/426710183-82256fed-fe27-481b-ac6a-d0fbf9701882.png" 
+                alt="LNK Exploit Builder Interface" 
+                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
+              />
+              <p className="text-center text-sm text-matrix mt-2 font-mono">LNK Exploit Builder - Main Interface</p>
+            </div>
+          </div>
           
           <div className="flex justify-center mb-6">
             <div className="max-w-md">
@@ -311,6 +333,17 @@ export default function Landing() {
           <p className="text-gray-300 text-center mb-6 text-lg">
             An advanced hidden remote access tool, available for free, with modes for Android, Windows, and Linux. Dominate across platforms with this versatile RAT. Archive password: 888.
           </p>
+          
+          <div className="flex justify-center mb-6">
+            <div className="max-w-md">
+              <img 
+                src="https://i.ibb.co/9JMcNGy/426647492-039db33a-8d20-4607-8991-52c4dcbdd9fa.png" 
+                alt="888 RAT Interface" 
+                className="w-full rounded-lg border border-matrix shadow-lg matrix-glow"
+              />
+              <p className="text-center text-sm text-matrix mt-2 font-mono">888 RAT - Settings Interface</p>
+            </div>
+          </div>
           
           <div className="flex justify-center mb-6">
             <div className="max-w-md">
