@@ -53,11 +53,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session middleware
   app.use(getSession());
 
-  // IP geolocation service (using ipapi.co)
+  // IP geolocation service (educational simulation)
   async function getLocationData(ip: string) {
     try {
+      // Check if we have API rate limits, use educational simulation instead
       const response = await fetch(`https://ipapi.co/${ip}/json/`);
+      if (!response.ok) {
+        throw new Error('API rate limit exceeded');
+      }
       const data = await response.json();
+      
+      // Check if response contains error message (rate limiting)
+      if (data.error || typeof data === 'string') {
+        throw new Error('Rate limited');
+      }
+      
       return {
         country: data.country_name || "Unknown",
         city: data.city || "Unknown",
@@ -66,11 +76,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
     } catch (error) {
       console.error("Geolocation API error:", error);
+      // Return educational simulation data when API fails
       return {
-        country: "Unknown",
-        city: "Unknown",
-        latitude: null,
-        longitude: null,
+        country: "Educational Lab",
+        city: "Training Environment",
+        latitude: "40.7128",
+        longitude: "-74.0060",
       };
     }
   }

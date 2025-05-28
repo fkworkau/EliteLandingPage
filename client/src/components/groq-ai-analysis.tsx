@@ -25,10 +25,12 @@ export default function GroqAIAnalysis({ visitors, packets, isActive }: GroqAIAn
 
   const analysisMutation = useMutation({
     mutationFn: async (data: { mode: string; prompt: string; context: any }) => {
-      return await apiRequest('/api/groq-analysis', {
+      const response = await fetch('/api/groq-analysis', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
+      return await response.json();
     },
     onSuccess: (data) => {
       setAnalysis(data.analysis);

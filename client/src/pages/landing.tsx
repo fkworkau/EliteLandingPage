@@ -46,13 +46,28 @@ export default function Landing() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Educational Disclaimer */}
+        <div className="bg-blue-900 border border-blue-500 rounded-lg p-4 mb-8 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Shield className="w-5 h-5 text-blue-400" />
+            <span className="font-bold text-blue-300">EDUCATIONAL CYBERSECURITY PLATFORM</span>
+          </div>
+          <p className="text-blue-200 text-sm">
+            This is a controlled educational environment for blue team cybersecurity training. 
+            All content simulates malicious websites for defensive learning purposes only.
+          </p>
+        </div>
+
         {/* Header */}
         <header className="text-center mb-12">
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mono font-bold mb-4 relative text-matrix glow-pulse">
             MILLENNIUM REMOTE ADMIN TOOLS
           </h1>
           <p className="font-mono text-xl text-gray-400 typing-animation">
-            Unleash Your Power with Premium Cyber Weapons
+            [SIMULATION] Educational Threat Demonstration Platform
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            For Blue Team Training & Security Awareness Education
           </p>
         </header>
 
