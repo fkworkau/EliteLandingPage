@@ -53,36 +53,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session middleware
   app.use(getSession());
 
-  // IP geolocation service (educational simulation)
+  // IP geolocation service with caching and rate limiting
+  const locationCache = new Map<string, any>();
+  const lastApiCall = { time: 0 };
+  const API_COOLDOWN = 5000; // 5 seconds between API calls
+
   async function getLocationData(ip: string) {
+    // Check cache first
+    if (locationCache.has(ip)) {
+      return locationCache.get(ip);
+    }
+
+    // Educational simulation data (always available)
+    const simulatedData = {
+      country: "Educational Lab",
+      city: "Training Environment", 
+      latitude: "40.7128",
+      longitude: "-74.0060",
+    };
+
+    // Skip API if we're in cooldown period
+    const now = Date.now();
+    if (now - lastApiCall.time < API_COOLDOWN) {
+      locationCache.set(ip, simulatedData);
+      return simulatedData;
+    }
+
     try {
-      // Check if we have API rate limits, use educational simulation instead
-      const response = await fetch(`https://ipapi.co/${ip}/json/`);
+      lastApiCall.time = now;
+      const response = await fetch(`https://ipapi.co/${ip}/json/`, {
+        timeout: 3000,
+        headers: { 'User-Agent': 'Educational-Cybersecurity-Lab/1.0' }
+      });
+      
       if (!response.ok) {
-        throw new Error('API rate limit exceeded');
+        throw new Error('API unavailable');
       }
+      
       const data = await response.json();
       
-      // Check if response contains error message (rate limiting)
-      if (data.error || typeof data === 'string') {
-        throw new Error('Rate limited');
+      if (data.error || typeof data === 'string' || !data.country_name) {
+        throw new Error('Invalid response');
       }
       
-      return {
-        country: data.country_name || "Unknown",
-        city: data.city || "Unknown",
-        latitude: data.latitude?.toString() || null,
-        longitude: data.longitude?.toString() || null,
+      const locationData = {
+        country: data.country_name || "Educational Lab",
+        city: data.city || "Training Environment",
+        latitude: data.latitude?.toString() || "40.7128",
+        longitude: data.longitude?.toString() || "-74.0060",
       };
+      
+      locationCache.set(ip, locationData);
+      return locationData;
     } catch (error) {
-      console.error("Geolocation API error:", error);
-      // Return educational simulation data when API fails
-      return {
-        country: "Educational Lab",
-        city: "Training Environment",
-        latitude: "40.7128",
-        longitude: "-74.0060",
-      };
+      // Silently use simulation data instead of logging errors
+      locationCache.set(ip, simulatedData);
+      return simulatedData;
     }
   }
 

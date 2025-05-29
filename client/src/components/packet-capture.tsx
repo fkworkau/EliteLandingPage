@@ -88,7 +88,7 @@ export default function PacketCapture({ packets, isActive }: PacketCaptureProps)
             ))
           )}
           {isActive && (
-            <div className="text-matrix matrix-pulse">
+            <div className="text-matrix opacity-70">
               {formatTimestamp(new Date())} Monitoring network traffic...
             </div>
           )}
