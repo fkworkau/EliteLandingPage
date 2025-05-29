@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import PacketCapture from "@/components/packet-capture";
 import VisitorTracking from "@/components/visitor-tracking";
 import GroqAIAnalysis from "@/components/groq-ai-analysis";
+import MillenniumBuilder from "@/components/millennium-builder";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { 
   Shield, 
@@ -256,20 +257,33 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Network Monitoring Dashboard */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Packet Capture */}
-          <PacketCapture 
-            packets={packets} 
-            isActive={simulationStates.packetCapture}
-          />
+        {/* Tabbed Dashboard */}
+        <Tabs defaultValue="monitoring" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-panel border-matrix/30">
+            <TabsTrigger value="monitoring" className="text-matrix">Network Monitoring</TabsTrigger>
+            <TabsTrigger value="builder" className="text-matrix">Millennium Builder</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="monitoring" className="mt-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {/* Packet Capture */}
+              <PacketCapture 
+                packets={packets} 
+                isActive={simulationStates.packetCapture}
+              />
 
-          {/* Visitor Tracking */}
-          <VisitorTracking 
-            visitors={visitors} 
-            isActive={simulationStates.ipGeolocation}
-          />
-        </div>
+              {/* Visitor Tracking */}
+              <VisitorTracking 
+                visitors={visitors} 
+                isActive={simulationStates.ipGeolocation}
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="builder" className="mt-6">
+            <MillenniumBuilder />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

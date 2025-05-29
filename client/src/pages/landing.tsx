@@ -215,7 +215,6 @@ export default function Landing() {
 
       <section className="intro">
         <p>Welcome to the Millennium RAT Toolkit - a comprehensive educational cybersecurity framework designed for authorized red team exercises and blue team training. Our advanced remote access tool features HTTP traffic sniffing, payload deployment, and educational monitoring capabilities. Perfect for cybersecurity education and authorized penetration testing.</p>
-        <a href="#admin-panel" className="contact-btn">Access Educational Panel</a>
         <p>Educational Use Only - Ensure Proper Authorization</p>
       </section>
 
