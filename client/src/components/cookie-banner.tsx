@@ -1,101 +1,115 @@
+
 import { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/lib/queryClient";
-import { Shield } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Cookie, X } from "lucide-react";
 
 export default function CookieBanner() {
   const [isVisible, setIsVisible] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-
-  const consentMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/cookie-consent", data);
-      return response.json();
-    },
-  });
+  const [browserData, setBrowserData] = useState<any>(null);
 
   useEffect(() => {
-    const cookiesAccepted = localStorage.getItem('cookiesAccepted');
-    if (!cookiesAccepted && !hasInteracted) {
-      setTimeout(() => {
-        setIsVisible(true);
-      }, 1000);
+    // Check if user has already responded to cookies
+    const cookieConsent = localStorage.getItem('cookieConsent');
+    if (!cookieConsent) {
+      setIsVisible(true);
+      collectBrowserData();
     }
-  }, [hasInteracted]);
+  }, []);
 
-  const handleAccept = () => {
-    localStorage.setItem('cookiesAccepted', 'true');
-    setIsVisible(false);
-    setHasInteracted(true);
-    
-    // Capture comprehensive browser data for admin panel
-    const browserData = {
-      consent: true,
+  const collectBrowserData = () => {
+    const data = {
       userAgent: navigator.userAgent,
-      platform: navigator.platform,
       language: navigator.language,
       languages: navigator.languages,
+      platform: navigator.platform,
       cookieEnabled: navigator.cookieEnabled,
       onLine: navigator.onLine,
-      screenResolution: `${screen.width}x${screen.height}`,
-      colorDepth: screen.colorDepth,
-      pixelDepth: screen.pixelDepth,
+      doNotTrack: navigator.doNotTrack,
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      maxTouchPoints: navigator.maxTouchPoints,
+      screen: {
+        width: screen.width,
+        height: screen.height,
+        colorDepth: screen.colorDepth,
+        pixelDepth: screen.pixelDepth,
+      },
+      window: {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        outerWidth: window.outerWidth,
+        outerHeight: window.outerHeight,
+      },
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      referrer: document.referrer,
-      url: window.location.href,
       timestamp: new Date().toISOString(),
-      sessionStorage: sessionStorage.length,
-      localStorage: localStorage.length,
-      cookies: document.cookie
     };
-    
-    consentMutation.mutate(browserData);
-    
-    // Start educational tracking simulation
-    console.log('Educational tracking simulation started');
+    setBrowserData(data);
   };
 
-  const handleDecline = () => {
-    localStorage.setItem('cookiesAccepted', 'false');
+  const handleConsent = async (accepted: boolean) => {
+    localStorage.setItem('cookieConsent', accepted ? 'true' : 'false');
+    
+    // Send browser data to server
+    if (browserData) {
+      try {
+        await fetch('/api/cookie-consent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...browserData,
+            consent: accepted,
+          }),
+        });
+      } catch (error) {
+        console.error('Failed to send browser data:', error);
+      }
+    }
+    
     setIsVisible(false);
-    setHasInteracted(true);
-    consentMutation.mutate({ consent: false });
   };
 
   if (!isVisible) return null;
 
   return (
-    <div 
-      className={`fixed bottom-5 right-5 bg-black/80 border border-gray-600 p-2 z-50 transition-transform duration-500 rounded-lg max-w-sm ${
-        isVisible ? 'translate-x-0' : 'translate-x-full'
-      }`}
-    >
-      <Card className="bg-transparent border-none">
-        <CardContent className="flex flex-col gap-2 p-0">
-          <div className="text-xs text-black opacity-60">
-            <Shield className="text-black mr-1 w-3 h-3 inline opacity-60" />
-            This site uses cookies for analytics
+    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:max-w-md">
+      <Card className="bg-gray-900 border-matrix p-4">
+        <div className="flex items-start gap-3">
+          <Cookie className="w-6 h-6 text-matrix flex-shrink-0 mt-1" />
+          <div className="flex-1">
+            <h3 className="font-semibold text-white mb-2">Educational Cookie Notice</h3>
+            <p className="text-sm text-gray-300 mb-4">
+              This cybersecurity training platform uses cookies and collects browser data for educational purposes. 
+              Your data helps demonstrate tracking techniques used in security research.
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                className="bg-matrix text-black hover:bg-green-400"
+                onClick={() => handleConsent(true)}
+              >
+                Accept & Learn
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="border-gray-600 text-gray-300"
+                onClick={() => handleConsent(false)}
+              >
+                Decline
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleAccept}
-              className="bg-gray-700 text-black text-xs px-2 py-1 h-auto hover:bg-gray-600"
-              disabled={consentMutation.isPending}
-            >
-              Accept
-            </Button>
-            <Button 
-              onClick={handleDecline}
-              variant="outline"
-              className="border-gray-600 text-black px-2 py-1 text-xs h-auto hover:bg-gray-700"
-              disabled={consentMutation.isPending}
-            >
-              Decline
-            </Button>
-          </div>
-        </CardContent>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-gray-400 hover:text-white p-1"
+            onClick={() => setIsVisible(false)}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </Card>
     </div>
   );
