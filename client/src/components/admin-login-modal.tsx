@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +27,7 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Demo credentials check
     if (credentials.username === 'admin' && credentials.password === 'elite123') {
       onClose();
@@ -44,9 +51,11 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
           <DialogTitle className="text-xl font-mono font-bold text-matrix">
             Admin Portal Access
           </DialogTitle>
-          <p className="text-gray-400 text-sm">Authorized personnel only</p>
+          <DialogDescription className="text-gray-400 text-sm">
+            Authorized personnel only
+          </DialogDescription>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="modal-username" className="text-matrix font-mono">
@@ -62,7 +71,7 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="modal-password" className="text-matrix font-mono">
               Password
@@ -77,7 +86,7 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
               required
             />
           </div>
-          
+
           <div className="flex gap-3 pt-4">
             <Button type="submit" className="flex-1 cyber-button">
               Access Portal

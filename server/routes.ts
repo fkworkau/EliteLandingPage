@@ -582,7 +582,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       // Start server in background
-      const serverProcess = subprocess.spawn(serverCommand[0], serverCommand.slice(1), {
+      const { spawn } = require('child_process');
+      const serverProcess = spawn(serverCommand[0], serverCommand.slice(1), {
         stdio: 'pipe',
         cwd: process.cwd(),
         detached: true
@@ -624,7 +625,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '--output', outputFile || 'captured_traffic.json'
       ];
 
-      const snifferProcess = subprocess.spawn(snifferCommand[0], snifferCommand.slice(1), {
+      const snifferProcess = spawn(snifferCommand[0], snifferCommand.slice(1), {
         stdio: 'pipe',
         cwd: process.cwd(),
         detached: true

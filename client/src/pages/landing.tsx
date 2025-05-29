@@ -20,7 +20,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-black text-blue-300 overflow-x-hidden font-inter">
-      <style jsx global>{`
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
 
         * {
