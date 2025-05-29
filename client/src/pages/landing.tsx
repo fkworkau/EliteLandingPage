@@ -404,68 +404,94 @@ export default function Landing() {
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             flexWrap: 'wrap',
-            gap: '20px'
+            gap: '20px',
+            marginBottom: '30px'
           }}>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: '300px' }}>
               <h3 style={{ color: '#4da8ff', marginBottom: '15px' }}>Elite Hacking Tools</h3>
-              <p style={{ color: '#9ca3af', fontSize: '0.9em', lineHeight: '1.5' }}>
+              <p style={{ color: '#9ca3af', fontSize: '0.9em', lineHeight: '1.5', marginBottom: '15px' }}>
                 Professional cybersecurity tools for advanced users. All software is provided as-is for educational and authorized testing purposes only.
               </p>
-              <div style={{ marginTop: '15px' }}>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', margin: '0 15px 0 0' }}>Terms of Service</a>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', margin: '0 15px 0 0' }}>Privacy Policy</a>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', margin: '0 15px 0 0' }}>License</a>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none' }}>Contact</a>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', marginBottom: '15px' }}>
+                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', fontSize: '0.85em' }}>Terms of Service</a>
+                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', fontSize: '0.85em' }}>Privacy Policy</a>
+                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', fontSize: '0.85em' }}>License Agreement</a>
+                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', fontSize: '0.85em' }}>Support</a>
+              </div>
+              <div style={{ fontSize: '0.8em', color: '#6b7280' }}>
+                <p>🌐 Visitors Online: {visitorCount}</p>
+                <p>📡 Server Status: <span style={{ color: '#4ade80' }}>Online</span></p>
+                <p>🔒 SSL Secured | 🛡️ DDoS Protected</p>
               </div>
             </div>
+            
             <div style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '10px'
+              gap: '15px'
             }}>
+              <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                <h4 style={{ color: '#4da8ff', fontSize: '0.9em', marginBottom: '5px' }}>System Administration</h4>
+                <p style={{ color: '#6b7280', fontSize: '0.75em' }}>Authorized Access Only</p>
+              </div>
               <button
                 onClick={() => setShowAdminLogin(true)}
                 style={{
-                  background: 'linear-gradient(45deg, #1a1a1a, #2d3748)',
+                  background: 'linear-gradient(135deg, #1a1a1a, #2d3748)',
                   border: '2px solid #4da8ff',
                   borderRadius: '50%',
-                  width: '80px',
-                  height: '80px',
+                  width: '70px',
+                  height: '70px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  fontSize: '2em'
+                  fontSize: '1.8em',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.transform = 'scale(1.1)';
-                  e.currentTarget.style.boxShadow = '0 5px 20px rgba(77, 168, 255, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 5px 20px rgba(77, 168, 255, 0.4)';
+                  e.currentTarget.style.borderColor = '#2563eb';
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+                  e.currentTarget.style.borderColor = '#4da8ff';
                 }}
               >
                 🛡️
               </button>
-              <span style={{ color: '#9ca3af', fontSize: '0.8em', textAlign: 'center' }}>
-                Secure Access Portal
+              <span style={{ color: '#9ca3af', fontSize: '0.75em', textAlign: 'center', maxWidth: '120px' }}>
+                Click to access secure control panel
               </span>
             </div>
           </div>
+          
           <div style={{
-            marginTop: '30px',
             paddingTop: '20px',
             borderTop: '1px solid #2d3748',
-            textAlign: 'center',
-            color: '#6b7280',
-            fontSize: '0.8em'
+            textAlign: 'center'
           }}>
-            <p>© 2024 Elite Hacking Tools. All rights reserved. | Professional cybersecurity solutions.</p>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '20px',
+              flexWrap: 'wrap',
+              marginBottom: '15px'
+            }}>
+              <span style={{ color: '#6b7280', fontSize: '0.8em' }}>🔐 End-to-End Encrypted</span>
+              <span style={{ color: '#6b7280', fontSize: '0.8em' }}>⚡ 99.9% Uptime</span>
+              <span style={{ color: '#6b7280', fontSize: '0.8em' }}>🌍 Global CDN</span>
+            </div>
+            <p style={{ color: '#6b7280', fontSize: '0.8em' }}>
+              © 2024 Elite Hacking Tools. All rights reserved. | Professional cybersecurity solutions for authorized testing.
+            </p>
           </div>
         </footer>
       </div>

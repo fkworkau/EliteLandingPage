@@ -7,12 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield } from "lucide-react";
 
 interface AdminLoginModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function AdminLoginModal({ open, onOpenChange, onSuccess }: AdminLoginModalProps) {
+export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   const { toast } = useToast();
   const [credentials, setCredentials] = useState({
     username: "",
@@ -24,10 +23,10 @@ export default function AdminLoginModal({ open, onOpenChange, onSuccess }: Admin
     
     // Demo credentials check
     if (credentials.username === 'admin' && credentials.password === 'elite123') {
-      onOpenChange(false);
-      onSuccess();
+      onClose();
       setCredentials({ username: "", password: "" });
-      console.log('Admin session started - monitoring interface active');
+      window.location.href = '/admin-dashboard';
+      console.log('Admin session started - redirecting to dashboard');
     } else {
       toast({
         title: "Access Denied",
@@ -38,7 +37,7 @@ export default function AdminLoginModal({ open, onOpenChange, onSuccess }: Admin
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-panel border-matrix/30 text-matrix max-w-md">
         <DialogHeader className="text-center space-y-4">
           <Shield className="w-12 h-12 text-matrix mx-auto" />
@@ -87,7 +86,7 @@ export default function AdminLoginModal({ open, onOpenChange, onSuccess }: Admin
               type="button" 
               variant="outline"
               className="flex-1 border-matrix text-matrix hover:bg-matrix/10"
-              onClick={() => onOpenChange(false)}
+              onClick={onClose}
             >
               Cancel
             </Button>
