@@ -13,6 +13,7 @@ import VisitorTracking from "@/components/visitor-tracking";
 import GroqAIAnalysis from "@/components/groq-ai-analysis";
 import MillenniumBuilder from "@/components/millennium-builder";
 import PythonToolkitManager from "@/components/python-toolkit-manager";
+import UserManagement from "@/components/user-management";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { 
   Shield, 
@@ -276,12 +277,18 @@ export default function AdminDashboard() {
         <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
           <Tabs defaultValue="monitoring" className="w-full">
             <div className="border-b border-gray-800">
-              <TabsList className="grid w-full grid-cols-3 bg-transparent h-16">
+              <TabsList className="grid w-full grid-cols-4 bg-transparent h-16">
                 <TabsTrigger 
                   value="monitoring" 
                   className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-800 h-full text-lg font-medium"
                 >
                   Network Monitoring
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="users" 
+                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-800 h-full text-lg font-medium"
+                >
+                  User Management
                 </TabsTrigger>
                 <TabsTrigger 
                   value="builder" 
@@ -297,6 +304,10 @@ export default function AdminDashboard() {
                 </TabsTrigger>
               </TabsList>
             </div>
+
+            <TabsContent value="users" className="p-6">
+              <UserManagement />
+            </TabsContent>
 
             <TabsContent value="monitoring" className="p-6">
               <div className="space-y-6">

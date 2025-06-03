@@ -198,3 +198,54 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+// User Management Methods
+  async createAdminUser(userData: {
+    username: string;
+    password: string;
+    role?: string;
+    telegramBotToken?: string | null;
+    active?: boolean;
+  }) {
+    const [user] = await this.db.insert(schema.adminUsers).values({
+      username: userData.username,
+      password: userData.password,
+      role: userData.role || 'operator',
+      telegramBotToken: userData.telegramBotToken,
+      active: userData.active !== false,
+      createdAt: new Date(),
+      lastLogin: null
+    }).returning();
+    return user;
+  }
+
+  async getAllAdminUsers() {
+    return await this.db.select().from(schema.adminUsers).orderBy(schema.adminUsers.createdAt);
+  }
+
+  async updateAdminUser(userId: number, updateData: any) {
+    const [user] = await this.db.update(schema.adminUsers)
+      .set(updateData)
+      .where(eq(schema.adminUsers.id, userId))
+      .returning();
+    return user;
+  }
+
+  async deleteAdminUser(userId: number) {
+    await this.db.delete(schema.adminUsers).where(eq(schema.adminUsers.id, userId));
+  }
+
+  async getTelegramUsers() {
+    return await this.db.select().from(schema.adminUsers)
+      .where(and(
+        eq(schema.adminUsers.active, true),
+        isNotNull(schema.adminUsers.telegramBotToken)
+      ));
+  }
+
+  async updateUserTelegramInfo(userId: number, chatId: number) {
+    const [user] = await this.db.update(schema.adminUsers)
+      .set({ telegramChatId: chatId })
+      .where(eq(schema.adminUsers.id, userId))
+      .returning();
+    return user;
+  }

