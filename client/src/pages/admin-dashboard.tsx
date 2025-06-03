@@ -12,6 +12,7 @@ import PacketCapture from "@/components/packet-capture";
 import VisitorTracking from "@/components/visitor-tracking";
 import GroqAIAnalysis from "@/components/groq-ai-analysis";
 import MillenniumBuilder from "@/components/millennium-builder";
+import PythonToolkitManager from "@/components/python-toolkit-manager";
 import { useRealTimeData } from "@/hooks/useRealTimeData";
 import { 
   Shield, 
@@ -259,9 +260,10 @@ export default function AdminDashboard() {
 
         {/* Tabbed Dashboard */}
         <Tabs defaultValue="monitoring" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-panel border-matrix/30">
+          <TabsList className="grid w-full grid-cols-3 bg-panel border-matrix/30">
             <TabsTrigger value="monitoring" className="text-matrix">Network Monitoring</TabsTrigger>
             <TabsTrigger value="builder" className="text-matrix">Millennium Builder</TabsTrigger>
+            <TabsTrigger value="python" className="text-matrix">Python Toolkit</TabsTrigger>
           </TabsList>
           
           <TabsContent value="monitoring" className="mt-6">
@@ -282,6 +284,10 @@ export default function AdminDashboard() {
           
           <TabsContent value="builder" className="mt-6">
             <MillenniumBuilder />
+          </TabsContent>
+          
+          <TabsContent value="python" className="mt-6">
+            <PythonToolkitManager />
           </TabsContent>
         </Tabs>
       </div>
