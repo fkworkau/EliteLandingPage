@@ -204,7 +204,7 @@ export default function Landing() {
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
             <CardHeader className="text-center">
               <img 
-                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADgAOADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAP..." 
+                src="https://i.ibb.co/W4H9wHJd/image-26.jpg" 
                 alt="Millennium RAT" 
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
@@ -236,7 +236,7 @@ export default function Landing() {
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
             <CardHeader className="text-center">
               <img 
-                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADgAOADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oADAMBAAIRAxEAP..." 
+                src="https://i.ibb.co/Xr9y4QB1/image-12.jpg" 
                 alt="Dot Stealer" 
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
@@ -273,70 +273,185 @@ export default function Landing() {
           </div>
 
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur">
-            <CardContent className="p-6">
-              <Tabs value={selectedTool} onValueChange={setSelectedTool}>
-                <TabsList className="grid w-full grid-cols-4 bg-gray-800">
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-6">
+                {/* Tool Selection - Mobile Responsive */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {scriptTools.map(tool => (
-                    <TabsTrigger key={tool.id} value={tool.id} className="data-[state=active]:bg-cyan-600">
-                      <tool.icon className="w-4 h-4 mr-2" />
-                      {tool.label}
-                    </TabsTrigger>
+                    <Button
+                      key={tool.id}
+                      onClick={() => setSelectedTool(tool.id)}
+                      variant={selectedTool === tool.id ? "default" : "outline"}
+                      className={`p-4 h-auto flex flex-col items-center space-y-2 ${
+                        selectedTool === tool.id 
+                          ? 'bg-cyan-600 hover:bg-cyan-700 border-cyan-500' 
+                          : 'border-gray-600 hover:border-cyan-500'
+                      }`}
+                    >
+                      <tool.icon className="w-6 h-6" />
+                      <div className="text-center">
+                        <div className="font-medium text-sm">{tool.label}</div>
+                        <div className="text-xs text-gray-400 mt-1">{tool.description}</div>
+                      </div>
+                    </Button>
                   ))}
-                </TabsList>
+                </div>
 
-                {scriptTools.map(tool => (
-                  <TabsContent key={tool.id} value={tool.id} className="mt-6">
-                    <div className="space-y-4">
-                      <p className="text-gray-300">{tool.description}</p>
+                {/* Processing Chain */}
+                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3">Processing Chain</h3>
+                  <div className="text-sm text-gray-300 mb-3">
+                    Apply multiple tools in sequence for advanced obfuscation
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {scriptTools.map(tool => (
+                      <Button
+                        key={`chain-${tool.id}`}
+                        size="sm"
+                        variant="outline"
+                        className="border-gray-600 text-xs"
+                        onClick={() => {
+                          // Add to processing chain logic here
+                        }}
+                      >
+                        <tool.icon className="w-3 h-3 mr-1" />
+                        {tool.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
 
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Input Script</label>
-                          <Textarea
-                            placeholder="Paste your script here or upload a file..."
-                            value={scriptInput}
-                            onChange={(e) => setScriptInput(e.target.value)}
-                            className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">Processed Output</label>
-                          <Textarea
-                            value={scriptOutput}
-                            readOnly
-                            className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
-                            placeholder="Processed script will appear here..."
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex space-x-4">
-                        <Button
-                          onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
-                          disabled={scriptProcessor.isPending || !scriptInput.trim()}
-                          className="bg-cyan-600 hover:bg-cyan-700"
-                        >
-                          <tool.icon className="w-4 h-4 mr-2" />
-                          {scriptProcessor.isPending ? 'Processing...' : `Apply ${tool.label}`}
-                        </Button>
-
-                        <Button variant="outline" className="border-gray-600">
-                          <Upload className="w-4 h-4 mr-2" />
-                          Upload File
-                        </Button>
-
-                        {scriptOutput && (
-                          <Button variant="outline" className="border-gray-600">
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
-                          </Button>
-                        )}
-                      </div>
+                {/* Script Input/Output - Responsive Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-300">Input Script</label>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-gray-600 text-xs"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = '.js,.py,.php,.ps1,.bat,.sh';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (e) => setScriptInput(e.target?.result as string);
+                              reader.readAsText(file);
+                            }
+                          };
+                          input.click();
+                        }}
+                      >
+                        <Upload className="w-3 h-3 mr-1" />
+                        Upload
+                      </Button>
                     </div>
-                  </TabsContent>
-                ))}
-              </Tabs>
+                    <Textarea
+                      placeholder="Paste your script here or upload a file..."
+                      value={scriptInput}
+                      onChange={(e) => setScriptInput(e.target.value)}
+                      className="bg-gray-800 border-gray-600 text-white h-64 sm:h-80 font-mono text-xs sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-300">Processed Output</label>
+                      {scriptOutput && (
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-gray-600 text-xs"
+                          onClick={() => {
+                            const blob = new Blob([scriptOutput], { type: 'text/plain' });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `processed_${selectedTool}_${Date.now()}.txt`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Download
+                        </Button>
+                      )}
+                    </div>
+                    <Textarea
+                      value={scriptOutput}
+                      readOnly
+                      className="bg-gray-800 border-gray-600 text-white h-64 sm:h-80 font-mono text-xs sm:text-sm"
+                      placeholder="Processed script will appear here..."
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons - Mobile Responsive */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
+                    disabled={scriptProcessor.isPending || !scriptInput.trim()}
+                    className="bg-cyan-600 hover:bg-cyan-700 flex-1"
+                  >
+                    {scriptTools.find(t => t.id === selectedTool)?.icon && (
+                      <>{React.createElement(scriptTools.find(t => t.id === selectedTool)!.icon, { className: "w-4 h-4 mr-2" })}</>
+                    )}
+                    {scriptProcessor.isPending ? 'Processing...' : `Apply ${scriptTools.find(t => t.id === selectedTool)?.label}`}
+                  </Button>
+
+                  <Button 
+                    variant="outline" 
+                    className="border-gray-600"
+                    onClick={() => {
+                      setScriptInput('');
+                      setScriptOutput('');
+                    }}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Clear
+                  </Button>
+
+                  <Select value={selectedTool} onValueChange={setSelectedTool}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600 w-full sm:w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {scriptTools.map(tool => (
+                        <SelectItem key={tool.id} value={tool.id}>
+                          {tool.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Real-time Processing Stats */}
+                {scriptInput && (
+                  <div className="bg-blue-900/20 border border-blue-500/30 rounded p-3">
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div className="text-blue-400">
+                        Input: {scriptInput.length} characters
+                      </div>
+                      <div className="text-blue-400">
+                        Lines: {scriptInput.split('\n').length}
+                      </div>
+                      {scriptOutput && (
+                        <>
+                          <div className="text-green-400">
+                            Output: {scriptOutput.length} characters
+                          </div>
+                          <div className="text-green-400">
+                            Reduction: {((scriptInput.length - scriptOutput.length) / scriptInput.length * 100).toFixed(1)}%
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </section>

