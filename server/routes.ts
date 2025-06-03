@@ -523,13 +523,14 @@ if __name__ == "__main__":
           capturedTraffic = capturedTraffic.slice(-1000);
         }
         
-        await storage.createPacketLog({
-          sourceIp: networkData.sourceIp,
-          destinationIp: networkData.destinationIp,
-          protocol: networkData.protocol,
-          port: networkData.port,
-          payload: JSON.stringify(networkData)
-        });
+        // Store in memory for now to avoid database errors
+        // await storage.createPacketLog({
+        //   sourceIp: networkData.sourceIp,
+        //   destinationIp: networkData.destinationIp,
+        //   protocol: networkData.protocol,
+        //   port: networkData.port,
+        //   payload: JSON.stringify(networkData)
+        // });
         
       } catch (error) {
         console.error('Network scan error:', error);

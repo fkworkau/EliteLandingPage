@@ -396,9 +396,7 @@ export default function Landing() {
                     disabled={scriptProcessor.isPending || !scriptInput.trim()}
                     className="bg-cyan-600 hover:bg-cyan-700 flex-1"
                   >
-                    {scriptTools.find(t => t.id === selectedTool)?.icon && (
-                      <>{React.createElement(scriptTools.find(t => t.id === selectedTool)!.icon, { className: "w-4 h-4 mr-2" })}</>
-                    )}
+                    <Code className="w-4 h-4 mr-2" />
                     {scriptProcessor.isPending ? 'Processing...' : `Apply ${scriptTools.find(t => t.id === selectedTool)?.label}`}
                   </Button>
 
@@ -410,7 +408,6 @@ export default function Landing() {
                       setScriptOutput('');
                     }}
                   >
-                    <RotateCcw className="w-4 h-4 mr-2" />
                     Clear
                   </Button>
 
