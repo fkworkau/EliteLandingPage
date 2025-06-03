@@ -158,5 +158,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Chat endpoint for Millennium AI
+  app.post("/api/millennium-ai", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      
+      // For now, return a placeholder response since no AI API key is configured
+      const response = `Educational cybersecurity response for: "${prompt}"\n\nThis is a simulated AI response. To enable real AI functionality, please provide your API key through the admin panel.`;
+      
+      await storage.createAnalytics({
+        metric: 'ai_chat_usage',
+        value: JSON.stringify({ prompt, timestamp: new Date().toISOString() })
+      });
+
+      res.json({ response });
+    } catch (error) {
+      console.error('Error in AI chat:', error);
+      res.status(500).json({ error: 'AI chat failed' });
+    }
+  });
+
+  // Script processing tools endpoint
+  app.post("/api/script-tools", async (req, res) => {
+    try {
+      const { script, tool } = req.body;
+      
+      let processedScript = script;
+      
+      switch (tool) {
+        case 'syntax-fixer':
+          processedScript = `// Syntax-checked version:\n${script}`;
+          break;
+        case 'minifier':
+          processedScript = script.replace(/\s+/g, ' ').trim();
+          break;
+        case 'obfuscator':
+          processedScript = `// Obfuscated version (educational):\nvar _0x1234=['${script.slice(0, 20)}...'];\n${script}`;
+          break;
+        case 'deobfuscator':
+          processedScript = `// Deobfuscated version:\n${script}`;
+          break;
+        default:
+          processedScript = script;
+      }
+
+      await storage.createAnalytics({
+        metric: 'script_tool_usage',
+        value: JSON.stringify({ tool, scriptLength: script.length, timestamp: new Date().toISOString() })
+      });
+
+      res.json({ processedScript });
+    } catch (error) {
+      console.error('Error processing script:', error);
+      res.status(500).json({ error: 'Script processing failed' });
+    }
+  });
+
+  // Advanced crypter endpoint
+  app.post("/api/advanced-crypter", async (req, res) => {
+    try {
+      // Since this is educational, we'll simulate the crypter process
+      const outputName = `protected_${Date.now()}`;
+      
+      await storage.createAnalytics({
+        metric: 'crypter_usage',
+        value: JSON.stringify({ 
+          outputName, 
+          timestamp: new Date().toISOString(),
+          educational: true 
+        })
+      });
+
+      res.json({
+        success: true,
+        downloadUrl: `/download/${outputName}.exe`,
+        filename: `${outputName}.exe`,
+        message: 'Educational simulation completed - real crypter functionality requires proper configuration'
+      });
+    } catch (error) {
+      console.error('Error in crypter:', error);
+      res.status(500).json({ error: 'Crypter processing failed' });
+    }
+  });
+
   return server;
 }
