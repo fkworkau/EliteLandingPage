@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +23,8 @@ import {
   AlertTriangle,
   Power,
   RotateCcw,
-  TrendingUp
+  TrendingUp,
+  Code
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -81,7 +82,7 @@ export default function AdminDashboard() {
       ...prev,
       [type]: !prev[type]
     }));
-    
+
     toast({
       title: "Simulation Updated",
       description: `${type} ${simulationStates[type] ? 'disabled' : 'enabled'}`,
@@ -94,7 +95,7 @@ export default function AdminDashboard() {
       packetCapture: false,
       ipGeolocation: false,
     });
-    
+
     toast({
       title: "EMERGENCY STOP",
       description: "All monitoring systems disabled",
@@ -163,7 +164,7 @@ export default function AdminDashboard() {
               <Activity className="text-green-400 w-8 h-8" />
             </div>
           </div>
-          
+
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -173,7 +174,7 @@ export default function AdminDashboard() {
               <Users className="text-blue-400 w-8 h-8" />
             </div>
           </div>
-          
+
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -183,7 +184,7 @@ export default function AdminDashboard() {
               <Globe className="text-purple-400 w-8 h-8" />
             </div>
           </div>
-          
+
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -296,24 +297,121 @@ export default function AdminDashboard() {
                 </TabsTrigger>
               </TabsList>
             </div>
-            
+
             <TabsContent value="monitoring" className="p-6">
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <PacketCapture 
-                  packets={packets} 
-                  isActive={simulationStates.packetCapture}
-                />
-                <VisitorTracking 
-                  visitors={visitors} 
-                  isActive={simulationStates.ipGeolocation}
-                />
-              </div>
+              <div className="space-y-6">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Visitors</CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.visitors?.total || '0'}</div>
+                  <p className="text-xs text-muted-foreground">
+                    +{stats?.visitors?.unique || '0'} unique today
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">AI Analysis Requests</CardTitle>
+                  <Activity className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.analysis?.total || '0'}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {stats?.analysis?.today || '0'} today
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Python Tools</CardTitle>
+                  <Code className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.tools?.count || '0'}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Educational scripts
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">System Status</CardTitle>
+                  <Shield className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">Secure</div>
+                  <p className="text-xs text-muted-foreground">
+                    All systems operational
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Tools Stack */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Real-time Traffic Monitor</CardTitle>
+                  <CardDescription>
+                    Live visitor activity and security analysis
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <VisitorTracking />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>AI Analysis Engine</CardTitle>
+                  <CardDescription>
+                    Advanced cybersecurity analysis powered by Groq AI
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <GroqAIAnalysis />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Educational Python Toolkit</CardTitle>
+                  <CardDescription>
+                    Manage red team educational scripts and tools
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PythonToolkitManager />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Network Packet Capture</CardTitle>
+                  <CardDescription>
+                    Educational packet analysis for cybersecurity training
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PacketCapture />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
             </TabsContent>
-            
+
             <TabsContent value="builder" className="p-6">
               <MillenniumBuilder />
             </TabsContent>
-            
+
             <TabsContent value="python" className="p-6">
               <PythonToolkitManager />
             </TabsContent>
