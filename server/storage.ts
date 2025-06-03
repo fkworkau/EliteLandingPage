@@ -16,7 +16,7 @@ import {
   type InsertContentModification,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, gte, sql } from "drizzle-orm";
+import { eq, desc, and, gte, sql, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   // Admin user operations
@@ -186,19 +186,16 @@ export class DatabaseStorage implements IStorage {
 
   async getContentModifications(section?: string): Promise<ContentModification[]> {
     const query = db.select().from(contentModifications);
-    
+
     if (section) {
       return await query
         .where(eq(contentModifications.section, section))
         .orderBy(desc(contentModifications.timestamp));
     }
-    
+
     return await query.orderBy(desc(contentModifications.timestamp));
   }
-}
-
-export const storage = new DatabaseStorage();
-// User Management Methods
+  // User Management Methods
   async createAdminUser(userData: {
     username: string;
     password: string;
@@ -206,7 +203,7 @@ export const storage = new DatabaseStorage();
     telegramBotToken?: string | null;
     active?: boolean;
   }) {
-    const [user] = await this.db.insert(schema.adminUsers).values({
+    const [user] = await db.insert(adminUsers).values({
       username: userData.username,
       password: userData.password,
       role: userData.role || 'operator',
@@ -219,33 +216,36 @@ export const storage = new DatabaseStorage();
   }
 
   async getAllAdminUsers() {
-    return await this.db.select().from(schema.adminUsers).orderBy(schema.adminUsers.createdAt);
+    return await db.select().from(adminUsers).orderBy(adminUsers.createdAt);
   }
 
   async updateAdminUser(userId: number, updateData: any) {
-    const [user] = await this.db.update(schema.adminUsers)
+    const [user] = await db.update(adminUsers)
       .set(updateData)
-      .where(eq(schema.adminUsers.id, userId))
+      .where(eq(adminUsers.id, userId))
       .returning();
     return user;
   }
 
   async deleteAdminUser(userId: number) {
-    await this.db.delete(schema.adminUsers).where(eq(schema.adminUsers.id, userId));
+    await db.delete(adminUsers).where(eq(adminUsers.id, userId));
   }
 
   async getTelegramUsers() {
-    return await this.db.select().from(schema.adminUsers)
+    return await db.select().from(adminUsers)
       .where(and(
-        eq(schema.adminUsers.active, true),
-        isNotNull(schema.adminUsers.telegramBotToken)
+        eq(adminUsers.active, true),
+        isNotNull(adminUsers.telegramBotToken)
       ));
   }
 
   async updateUserTelegramInfo(userId: number, chatId: number) {
-    const [user] = await this.db.update(schema.adminUsers)
+    const [user] = await db.update(adminUsers)
       .set({ telegramChatId: chatId })
-      .where(eq(schema.adminUsers.id, userId))
+      .where(eq(adminUsers.id, userId))
       .returning();
     return user;
   }
+}
+
+export const storage = new DatabaseStorage();
