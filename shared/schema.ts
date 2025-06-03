@@ -22,6 +22,7 @@ export const adminUsers = pgTable("admin_users", {
   telegramBotToken: varchar("telegram_bot_token", { length: 255 }),
   telegramChatId: bigint("telegram_chat_id", { mode: "number" }),
   active: boolean("active").default(true),
+  approved: boolean("approved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login"),
 });

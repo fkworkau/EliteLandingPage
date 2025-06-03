@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,11 +109,11 @@ export default function Landing() {
 
   const handleCrypterSubmit = () => {
     if (!crypterConfig.inputFile) return;
-    
+
     const formData = new FormData();
     formData.append('file', crypterConfig.inputFile);
     formData.append('config', JSON.stringify(crypterConfig));
-    
+
     crypterProcessor.mutate(formData);
   };
 
@@ -136,14 +135,8 @@ export default function Landing() {
           </h1>
         </div>
         <p className="text-xl text-gray-300 mb-8">Advanced Cybersecurity Framework</p>
+
         
-        <Button 
-          onClick={() => setShowAdminModal(true)}
-          className="absolute top-4 right-4 bg-gray-800 hover:bg-gray-700"
-        >
-          <Settings className="w-4 h-4 mr-2" />
-          Admin
-        </Button>
       </header>
 
       <div className="container mx-auto px-6 space-y-12">
@@ -154,7 +147,7 @@ export default function Landing() {
             <h2 className="text-4xl font-bold text-cyan-400">Millennium AI</h2>
           </div>
           <p className="text-lg text-gray-300 mb-8">AI-powered cybersecurity assistant for script generation and security analysis</p>
-          
+
           <Card className="max-w-4xl mx-auto bg-gray-900/50 border-cyan-500/30 backdrop-blur">
             <CardContent className="p-6">
               <div className="space-y-4">
@@ -172,7 +165,7 @@ export default function Landing() {
                   <MessageSquare className="w-4 h-4 mr-2" />
                   {aiChat.isPending ? 'Processing...' : 'Ask Millennium AI'}
                 </Button>
-                
+
                 {aiResponse && (
                   <div className="mt-4 p-4 bg-gray-800 rounded border border-cyan-500/30">
                     <pre className="whitespace-pre-wrap text-sm text-gray-200">{aiResponse}</pre>
@@ -221,7 +214,7 @@ export default function Landing() {
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
             <CardHeader className="text-center">
               <img 
-                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADgAOADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAP..." 
+                src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCADgAOADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oADAMBAAIRAxEAP..." 
                 alt="Dot Stealer" 
                 className="w-full h-48 object-cover rounded-lg mb-4"
               />
@@ -273,7 +266,7 @@ export default function Landing() {
                   <TabsContent key={tool.id} value={tool.id} className="mt-6">
                     <div className="space-y-4">
                       <p className="text-gray-300">{tool.description}</p>
-                      
+
                       <div className="grid md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">Input Script</label>
@@ -284,7 +277,7 @@ export default function Landing() {
                             className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">Processed Output</label>
                           <Textarea
@@ -305,12 +298,12 @@ export default function Landing() {
                           <tool.icon className="w-4 h-4 mr-2" />
                           {scriptProcessor.isPending ? 'Processing...' : `Apply ${tool.label}`}
                         </Button>
-                        
+
                         <Button variant="outline" className="border-gray-600">
                           <Upload className="w-4 h-4 mr-2" />
                           Upload File
                         </Button>
-                        
+
                         {scriptOutput && (
                           <Button variant="outline" className="border-gray-600">
                             <Download className="w-4 h-4 mr-2" />
@@ -386,7 +379,7 @@ export default function Landing() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-cyan-400">Protection Features</h3>
-                  
+
                   <div className="space-y-3">
                     <label className="flex items-center space-x-3">
                       <input
@@ -468,6 +461,18 @@ export default function Landing() {
         </footer>
       </div>
 
+      
+
+      {/* Hidden Admin Access - Shield Icon */}
+      <div 
+        className="fixed bottom-4 right-4 z-50 cursor-pointer opacity-30 hover:opacity-100 transition-opacity duration-300"
+        onClick={() => setShowAdminModal(true)}
+        title="Admin Access"
+      >
+        <Shield className="w-8 h-8 text-gray-500 hover:text-cyan-400 transition-colors duration-300" />
+      </div>
+
+      {/* Admin Login Modal */}
       <AdminLoginModal 
         isOpen={showAdminModal} 
         onClose={() => setShowAdminModal(false)} 

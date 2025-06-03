@@ -255,6 +255,26 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+
+  async createAdminUser(userData: typeof insertAdminUserSchema._type) {
+    const [user] = await db.insert(adminUsers).values({
+      ...userData,
+      approved: userData.role === 'admin' ? true : false // Auto-approve admins
+    }).returning();
+    return user;
+  }
+
+  async approveUser(userId: number) {
+    const [user] = await db.update(adminUsers)
+      .set({ approved: true })
+      .where(eq(adminUsers.id, userId))
+      .returning();
+    return user;
+  }
+
+  async getPendingUsers() {
+    return await db.select().from(adminUsers).where(eq(adminUsers.approved, false));
+  }
 }
 
 export const storage = new DatabaseStorage();
