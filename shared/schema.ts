@@ -21,6 +21,7 @@ export const adminUsers = pgTable("admin_users", {
   role: varchar("role", { length: 50 }).default("operator"),
   telegramBotToken: varchar("telegram_bot_token", { length: 255 }),
   telegramChatId: bigint("telegram_chat_id", { mode: "number" }),
+  telegramUserId: bigint("telegram_user_id", { mode: "number" }),
   active: boolean("active").default(true),
   approved: boolean("approved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -74,6 +75,22 @@ export const contentModifications = pgTable("content_modifications", {
   adminUserId: integer("admin_user_id").references(() => adminUsers.id),
 });
 
+// Telegram registration requests table
+export const registrationRequests = pgTable("registration_requests", {
+  id: serial("id").primaryKey(),
+  telegramUserId: bigint("telegram_user_id", { mode: "number" }).notNull(),
+  telegramUsername: varchar("telegram_username", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  chatId: bigint("chat_id", { mode: "number" }).notNull(),
+  registrationToken: varchar("registration_token", { length: 50 }).notNull(),
+  telegramData: jsonb("telegram_data"),
+  approved: boolean("approved").default(false),
+  approvedBy: integer("approved_by").references(() => adminUsers.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Schema exports
 export const insertAdminUserSchema = createInsertSchema(adminUsers).pick({
   username: true,
@@ -101,6 +118,11 @@ export const insertContentModificationSchema = createInsertSchema(contentModific
   timestamp: true,
 });
 
+export const insertRegistrationRequestSchema = createInsertSchema(registrationRequests).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Type exports
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
@@ -112,3 +134,5 @@ export type Analytics = typeof analytics.$inferSelect;
 export type InsertAnalytics = z.infer<typeof insertAnalyticsSchema>;
 export type ContentModification = typeof contentModifications.$inferSelect;
 export type InsertContentModification = z.infer<typeof insertContentModificationSchema>;
+export type RegistrationRequest = typeof registrationRequests.$inferSelect;
+export type InsertRegistrationRequest = z.infer<typeof insertRegistrationRequestSchema>;

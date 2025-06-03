@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
@@ -19,7 +20,11 @@ import {
   UserCheck, 
   UserX,
   Bot,
-  Key
+  Key,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle
 } from "lucide-react";
 
 interface User {
@@ -29,6 +34,19 @@ interface User {
   active: boolean;
   lastLogin: string | null;
   hasTelegramBot: boolean;
+  createdAt: string;
+}
+
+interface RegistrationRequest {
+  id: number;
+  telegramUserId: number;
+  telegramUsername: string;
+  firstName: string;
+  lastName: string;
+  chatId: number;
+  registrationToken: string;
+  telegramData: any;
+  approved: boolean;
   createdAt: string;
 }
 
@@ -49,6 +67,12 @@ export default function UserManagement() {
   const { data: users, refetch: refetchUsers } = useQuery({
     queryKey: ["/api/admin/users"],
     refetchInterval: 10000
+  });
+
+  // Fetch pending registrations
+  const { data: pendingRegistrations, refetch: refetchRegistrations } = useQuery({
+    queryKey: ["/api/admin/registrations"],
+    refetchInterval: 5000 // Check more frequently for new registrations
   });
 
   // Create user mutation
@@ -128,6 +152,51 @@ export default function UserManagement() {
     }
   });
 
+  // Approve registration mutation
+  const approveRegistrationMutation = useMutation({
+    mutationFn: async ({ registrationId, role }: { registrationId: number; role: string }) => {
+      const response = await apiRequest("POST", `/api/admin/registrations/${registrationId}/approve`, { role });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Registration Approved",
+        description: "User has been approved and notified via Telegram",
+      });
+      refetchRegistrations();
+      refetchUsers();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Approval Failed",
+        description: error.message || "Failed to approve registration",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Reject registration mutation
+  const rejectRegistrationMutation = useMutation({
+    mutationFn: async (registrationId: number) => {
+      const response = await apiRequest("DELETE", `/api/admin/registrations/${registrationId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Registration Rejected",
+        description: "User has been notified of rejection via Telegram",
+      });
+      refetchRegistrations();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject registration",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleCreateUser = () => {
     if (!newUser.username || !newUser.password) {
       toast({
@@ -170,14 +239,113 @@ export default function UserManagement() {
           <Users className="text-blue-400 w-6 h-6" />
           <h2 className="text-xl font-bold text-white">User Management</h2>
         </div>
-        <Button
-          onClick={() => setShowAddUser(true)}
-          className="bg-green-600 hover:bg-green-700 text-white"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex items-center space-x-3">
+          {pendingRegistrations?.length > 0 && (
+            <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+              <Clock className="w-3 h-3 mr-1" />
+              {pendingRegistrations.length} Pending
+            </Badge>
+          )}
+          <Button
+            onClick={() => setShowAddUser(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
+        </div>
       </div>
+
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-800">
+          <TabsTrigger value="users" className="text-white data-[state=active]:bg-gray-700">
+            Active Users ({users?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="registrations" className="text-white data-[state=active]:bg-gray-700">
+            Pending Registrations ({pendingRegistrations?.length || 0})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="registrations" className="space-y-4">
+          {/* Pending Registrations */}
+          {pendingRegistrations?.map((registration: RegistrationRequest) => (
+            <Card key={registration.id} className="bg-gray-900 border-gray-800">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-3">
+                        <h3 className="text-white font-medium">
+                          {registration.firstName} {registration.lastName} (@{registration.telegramUsername})
+                        </h3>
+                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pending
+                        </Badge>
+                      </div>
+                      <div className="text-gray-400 text-sm space-y-1">
+                        <p>Telegram ID: {registration.telegramUserId}</p>
+                        <p>Token: {registration.registrationToken}</p>
+                        <p>Requested: {new Date(registration.createdAt).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Select defaultValue="operator">
+                      <SelectTrigger className="w-32 bg-gray-800 border-gray-700 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="operator">Operator</SelectItem>
+                        <SelectItem value="analyst">Analyst</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => {
+                        const roleElement = document.querySelector(`[data-registration-id="${registration.id}"] select`) as HTMLSelectElement;
+                        const role = roleElement?.value || 'operator';
+                        approveRegistrationMutation.mutate({ registrationId: registration.id, role });
+                      }}
+                      disabled={approveRegistrationMutation.isPending}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
+                      onClick={() => rejectRegistrationMutation.mutate(registration.id)}
+                      disabled={rejectRegistrationMutation.isPending}
+                    >
+                      <XCircle className="w-4 h-4 mr-1" />
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {(!pendingRegistrations || pendingRegistrations.length === 0) && (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="p-12 text-center">
+                <Clock className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-gray-400 text-lg mb-2">No Pending Registrations</h3>
+                <p className="text-gray-500">All registration requests have been processed</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
 
       {/* Add User Form */}
       {showAddUser && (
@@ -337,21 +505,23 @@ export default function UserManagement() {
       </div>
 
       {users?.length === 0 && (
-        <Card className="bg-gray-900 border-gray-800">
-          <CardContent className="p-12 text-center">
-            <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-gray-400 text-lg mb-2">No Users Found</h3>
-            <p className="text-gray-500 mb-4">Create your first user to start managing access</p>
-            <Button
-              onClick={() => setShowAddUser(true)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add First User
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="p-12 text-center">
+                <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-gray-400 text-lg mb-2">No Users Found</h3>
+                <p className="text-gray-500 mb-4">Create your first user to start managing access</p>
+                <Button
+                  onClick={() => setShowAddUser(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First User
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

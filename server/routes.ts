@@ -393,6 +393,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Registration Management Routes
+  app.get("/api/admin/registrations", requireAuth, async (req, res) => {
+    try {
+      const pendingRegistrations = await storage.getPendingRegistrations();
+      res.json(pendingRegistrations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch registrations" });
+    }
+  });
+
+  app.post("/api/admin/registrations/:registrationId/approve", requireAuth, async (req: any, res) => {
+    try {
+      const { registrationId } = req.params;
+      const { role } = req.body;
+      
+      const newUser = await telegramC2.approveUserRegistration(
+        parseInt(registrationId), 
+        req.session.adminId, 
+        role || 'operator'
+      );
+      
+      res.json({ 
+        success: true, 
+        message: "User approved successfully",
+        user: newUser
+      });
+    } catch (error) {
+      console.error("Approval error:", error);
+      res.status(500).json({ message: "Failed to approve user" });
+    }
+  });
+
+  app.delete("/api/admin/registrations/:registrationId", requireAuth, async (req: any, res) => {
+    try {
+      const { registrationId } = req.params;
+      
+      // Get registration details for notification
+      const registration = await storage.getRegistrationRequest(parseInt(registrationId));
+      if (registration) {
+        // Send rejection notification
+        const rejectionMessage = `
+❌ **REGISTRATION REJECTED** ❌
+
+Your registration request for the Millennium Cybersecurity Platform has been rejected by system administrators.
+
+**Registration Token:** \`${registration.registrationToken}\`
+**Reason:** Access denied by security policy
+
+If you believe this is an error, please contact your system administrator.
+        `;
+
+        try {
+          const tempBot = new TelegramBot(process.env.MASTER_BOT_TOKEN || '', { polling: false });
+          await tempBot.sendMessage(registration.chatId, rejectionMessage, { parse_mode: 'Markdown' });
+        } catch (botError) {
+          console.error('Failed to send rejection notification:', botError);
+        }
+      }
+
+      // Delete registration request
+      await storage.deleteRegistrationRequest(parseInt(registrationId));
+      
+      res.json({ success: true, message: "Registration rejected" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to reject registration" });
+    }
+  });
+
   // Telegram Integration Routes
   app.post("/api/admin/telegram/test", requireAuth, async (req: any, res) => {
     try {

@@ -4,6 +4,7 @@ import {
   packetLogs,
   analytics,
   contentModifications,
+  registrationRequests,
   type AdminUser,
   type InsertAdminUser,
   type Visitor,
@@ -14,6 +15,8 @@ import {
   type InsertAnalytics,
   type ContentModification,
   type InsertContentModification,
+  type RegistrationRequest,
+  type InsertRegistrationRequest,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, gte, sql, isNotNull } from "drizzle-orm";
@@ -44,6 +47,13 @@ export interface IStorage {
   // Content modification operations
   createContentModification(modification: InsertContentModification): Promise<ContentModification>;
   getContentModifications(section?: string): Promise<ContentModification[]>;
+
+  // Registration request operations
+  createRegistrationRequest(request: InsertRegistrationRequest): Promise<RegistrationRequest>;
+  getRegistrationRequest(id: number): Promise<RegistrationRequest | undefined>;
+  getPendingRegistrations(): Promise<RegistrationRequest[]>;
+  updateRegistrationRequest(id: number, updates: Partial<InsertRegistrationRequest>): Promise<RegistrationRequest | undefined>;
+  getAdminUsers(): Promise<AdminUser[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -256,10 +266,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createAdminUser(userData: typeof insertAdminUserSchema._type) {
+  async createAdminUser(userData: any) {
     const [user] = await db.insert(adminUsers).values({
       ...userData,
-      approved: userData.role === 'admin' ? true : false // Auto-approve admins
+      approved: userData.role === 'admin' ? true : userData.approved || false
     }).returning();
     return user;
   }
@@ -274,6 +284,53 @@ export class DatabaseStorage implements IStorage {
 
   async getPendingUsers() {
     return await db.select().from(adminUsers).where(eq(adminUsers.approved, false));
+  }
+
+  // Registration request operations
+  async createRegistrationRequest(request: InsertRegistrationRequest): Promise<RegistrationRequest> {
+    const [newRequest] = await db
+      .insert(registrationRequests)
+      .values(request)
+      .returning();
+    return newRequest;
+  }
+
+  async getRegistrationRequest(id: number): Promise<RegistrationRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(registrationRequests)
+      .where(eq(registrationRequests.id, id));
+    return request || undefined;
+  }
+
+  async getPendingRegistrations(): Promise<RegistrationRequest[]> {
+    return await db
+      .select()
+      .from(registrationRequests)
+      .where(eq(registrationRequests.approved, false))
+      .orderBy(desc(registrationRequests.createdAt));
+  }
+
+  async updateRegistrationRequest(id: number, updates: Partial<InsertRegistrationRequest>): Promise<RegistrationRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(registrationRequests)
+      .set(updates)
+      .where(eq(registrationRequests.id, id))
+      .returning();
+    return updatedRequest || undefined;
+  }
+
+  async getAdminUsers(): Promise<AdminUser[]> {
+    return await db
+      .select()
+      .from(adminUsers)
+      .orderBy(adminUsers.createdAt);
+  }
+
+  async deleteRegistrationRequest(id: number): Promise<void> {
+    await db
+      .delete(registrationRequests)
+      .where(eq(registrationRequests.id, id));
   }
 }
 

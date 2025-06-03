@@ -4,6 +4,7 @@ import { spawn, exec } from 'child_process';
 import { Server as SocketIOServer } from 'socket.io';
 import fs from 'fs/promises';
 import path from 'path';
+import bcrypt from 'bcrypt';
 
 interface BotUser {
   id: number;
@@ -94,9 +95,13 @@ Type /help for command reference
     }
   }
 
-  async handleStart(msg: any, user: BotUser) {
+  async handleStart(msg: any, user?: BotUser) {
     const chatId = msg.chat.id;
-    const welcomeMessage = `
+    const username = msg.from.username || `user_${msg.from.id}`;
+    
+    // Check if user is already registered
+    if (user) {
+      const welcomeMessage = `
 🛡️ **MILLENNIUM C2 COMMAND CENTER** 🛡️
 
 **Operator:** ${user.username}
@@ -126,11 +131,206 @@ Type /help for command reference
 
 **SECURE CHANNEL ESTABLISHED** ✅
 **All operations logged and encrypted** 🔐
-    `;
+      `;
 
-    const bot = this.bots.get(user.id);
-    if (bot) {
-      await bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
+      const bot = this.bots.get(user.id);
+      if (bot) {
+        await bot.sendMessage(chatId, welcomeMessage, { parse_mode: 'Markdown' });
+      }
+    } else {
+      // Handle new user registration
+      await this.handleUserRegistration(msg);
+    }
+  }
+
+  async handleUserRegistration(msg: any) {
+    const chatId = msg.chat.id;
+    const telegramUser = msg.from;
+    
+    try {
+      // Create pending registration request
+      const registrationData = {
+        telegramUserId: telegramUser.id,
+        telegramUsername: telegramUser.username || `user_${telegramUser.id}`,
+        firstName: telegramUser.first_name,
+        lastName: telegramUser.last_name,
+        chatId: chatId,
+        registrationToken: this.generateRegistrationToken(),
+        telegramData: JSON.stringify({
+          id: telegramUser.id,
+          is_bot: telegramUser.is_bot,
+          first_name: telegramUser.first_name,
+          last_name: telegramUser.last_name,
+          username: telegramUser.username,
+          language_code: telegramUser.language_code,
+          is_premium: telegramUser.is_premium
+        })
+      };
+
+      // Store registration request
+      await storage.createRegistrationRequest(registrationData);
+
+      const registrationMessage = `
+🔐 **MILLENNIUM SYSTEM REGISTRATION** 🔐
+
+**Welcome to the Elite Cybersecurity Training Platform**
+
+**Registration Details:**
+👤 Telegram ID: ${telegramUser.id}
+📝 Username: @${telegramUser.username || 'N/A'}
+🆔 Registration Token: \`${registrationData.registrationToken}\`
+
+**Status:** 🟡 PENDING APPROVAL
+
+Your registration request has been submitted to system administrators. You will receive a notification once your account is approved and your security clearance level is assigned.
+
+**⚠️ SECURITY NOTICE ⚠️**
+• All communications are monitored and logged
+• This system is for authorized educational use only
+• Misuse will result in immediate termination
+
+**Please wait for admin approval...**
+      `;
+
+      // Send registration confirmation to user
+      const tempBot = new TelegramBot(process.env.MASTER_BOT_TOKEN || '', { polling: false });
+      await tempBot.sendMessage(chatId, registrationMessage, { parse_mode: 'Markdown' });
+
+      // Notify all admins about new registration
+      await this.notifyAdminsNewRegistration(registrationData);
+
+    } catch (error) {
+      console.error('Registration error:', error);
+      
+      const errorMessage = `
+❌ **REGISTRATION FAILED** ❌
+
+An error occurred during registration. Please try again later or contact system administrators.
+
+Error: ${error.message}
+      `;
+
+      const tempBot = new TelegramBot(process.env.MASTER_BOT_TOKEN || '', { polling: false });
+      await tempBot.sendMessage(chatId, errorMessage, { parse_mode: 'Markdown' });
+    }
+  }
+
+  generateRegistrationToken(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let token = '';
+    for (let i = 0; i < 12; i++) {
+      token += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return token;
+  }
+
+  async notifyAdminsNewRegistration(registrationData: any) {
+    try {
+      const admins = await storage.getAdminUsers();
+      
+      const notificationMessage = `
+🚨 **NEW REGISTRATION REQUEST** 🚨
+
+**User Details:**
+👤 Telegram ID: ${registrationData.telegramUserId}
+📝 Username: @${registrationData.telegramUsername}
+🔤 Name: ${registrationData.firstName} ${registrationData.lastName || ''}
+🆔 Token: \`${registrationData.registrationToken}\`
+
+**Review and approve this user in the admin panel:**
+• Access /admin-dashboard
+• Navigate to User Management
+• Review pending registrations
+
+**⚠️ Action required by system administrator**
+      `;
+
+      for (const admin of admins) {
+        if (admin.telegramBotToken && admin.telegramChatId && admin.role === 'admin') {
+          try {
+            const adminBot = new TelegramBot(admin.telegramBotToken, { polling: false });
+            await adminBot.sendMessage(admin.telegramChatId, notificationMessage, { parse_mode: 'Markdown' });
+          } catch (error) {
+            console.error(`Failed to notify admin ${admin.username}:`, error);
+          }
+        }
+      }
+
+      // Emit to web panel
+      this.io.to('admin').emit('newRegistration', registrationData);
+
+    } catch (error) {
+      console.error('Error notifying admins:', error);
+    }
+  }
+
+  async approveUserRegistration(registrationId: number, approvedBy: number, role: string = 'operator') {
+    try {
+      const registration = await storage.getRegistrationRequest(registrationId);
+      if (!registration) {
+        throw new Error('Registration not found');
+      }
+
+      // Create admin user account
+      const hashedPassword = await bcrypt.hash(registration.registrationToken, 12);
+      const newUser = await storage.createAdminUser({
+        username: registration.telegramUsername,
+        password: hashedPassword,
+        role: role,
+        telegramBotToken: null, // Will be set when they connect their bot
+        telegramChatId: registration.chatId,
+        telegramUserId: registration.telegramUserId,
+        approved: true,
+        active: true
+      });
+
+      // Create bot instance for approved user
+      const userData: BotUser = {
+        id: newUser.id,
+        username: newUser.username,
+        chatId: registration.chatId,
+        botToken: process.env.MASTER_BOT_TOKEN || '',
+        role: role as 'admin' | 'operator' | 'analyst',
+        active: true
+      };
+
+      await this.createBotInstance(userData);
+
+      // Send approval notification to user
+      const approvalMessage = `
+✅ **REGISTRATION APPROVED** ✅
+
+**Welcome to the Millennium Cybersecurity Platform**
+
+**Account Details:**
+👤 Username: ${newUser.username}
+🔐 Password: \`${registration.registrationToken}\`
+🛡️ Security Clearance: ${role.toUpperCase()}
+🆔 User ID: ${newUser.id}
+
+**Next Steps:**
+1. Visit the admin portal: /admin-portal
+2. Login with your credentials
+3. Configure your personal bot token (optional)
+4. Access advanced cybersecurity tools
+
+**🎯 YOUR MISSION BEGINS NOW 🎯**
+
+Type /help to see all available commands
+Type /status to check system status
+      `;
+
+      const tempBot = new TelegramBot(process.env.MASTER_BOT_TOKEN || '', { polling: false });
+      await tempBot.sendMessage(registration.chatId, approvalMessage, { parse_mode: 'Markdown' });
+
+      // Mark registration as approved
+      await storage.updateRegistrationRequest(registrationId, { approved: true, approvedBy, approvedAt: new Date() });
+
+      return newUser;
+
+    } catch (error) {
+      console.error('Error approving registration:', error);
+      throw error;
     }
   }
 
