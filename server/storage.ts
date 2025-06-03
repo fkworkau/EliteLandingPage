@@ -232,11 +232,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTelegramUsers() {
-    return await db.select().from(adminUsers)
-      .where(and(
-        eq(adminUsers.active, true),
-        isNotNull(adminUsers.telegramBotToken)
-      ));
+    try {
+      const users = await db.select().from(adminUsers).where(eq(adminUsers.active, true));
+      return users.map(user => ({
+        id: user.id,
+        username: user.username,
+        chatId: 0, // Will be set when user starts bot
+        botToken: user.telegramBotToken || '',
+        role: (user.role || 'operator') as 'admin' | 'operator' | 'analyst',
+        active: user.active
+      }));
+    } catch (error) {
+      console.error('Error fetching Telegram users:', error);
+      return [];
+    }
   }
 
   async updateUserTelegramInfo(userId: number, chatId: number) {
