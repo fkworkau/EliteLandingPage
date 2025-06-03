@@ -119,24 +119,28 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-terminal">
+    <div className="min-h-screen bg-black">
       {/* Admin Header */}
-      <header className="bg-panel border-b border-matrix/30 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Shield className="text-matrix text-xl" />
-            <span className="font-mono text-lg font-bold text-matrix">ADMIN CONTROL PANEL</span>
-            <Badge className={`${isConnected ? 'bg-matrix/20 text-matrix' : 'bg-danger/20 text-danger'} px-3 py-1 text-sm font-mono`}>
+      <header className="bg-black border-b border-gray-800 p-6 shadow-lg">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <Shield className="text-green-400 w-8 h-8" />
+            <h1 className="text-2xl font-bold text-white">Admin Control Panel</h1>
+            <Badge className={`px-4 py-2 text-sm font-semibold rounded-full ${
+              isConnected 
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                : 'bg-red-500/20 text-red-400 border border-red-500/30'
+            }`}>
               {isConnected ? 'LIVE' : 'OFFLINE'}
             </Badge>
           </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-gray-400 font-mono text-sm">
-              Welcome, {adminUser.username}
+          <div className="flex items-center space-x-6">
+            <span className="text-gray-300">
+              Welcome, <span className="text-white font-medium">{adminUser.username}</span>
             </span>
             <Button
               onClick={handleLogout}
-              className="cyber-button-danger text-sm"
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium"
               disabled={logoutMutation.isPending}
             >
               <LogOut className="w-4 h-4 mr-2" />
@@ -146,150 +150,175 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Admin Content */}
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Real-time Stats */}
-          <Card className="bg-panel border-matrix/20">
-            <CardHeader>
-              <CardTitle className="font-mono text-matrix text-lg flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2" />
-                Live Analytics
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Active Sessions:</span>
-                <span className="font-mono text-matrix">{stats?.activeSessions || 0}</span>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Active Sessions</p>
+                <p className="text-2xl font-bold text-white">{stats?.activeSessions || 0}</p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total Visitors:</span>
-                <span className="font-mono text-matrix">{stats?.visitors?.total || 0}</span>
+              <Activity className="text-green-400 w-8 h-8" />
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Total Visitors</p>
+                <p className="text-2xl font-bold text-white">{stats?.visitors?.total || 0}</p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Unique IPs:</span>
-                <span className="font-mono text-matrix">{stats?.visitors?.unique || 0}</span>
+              <Users className="text-blue-400 w-8 h-8" />
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Unique IPs</p>
+                <p className="text-2xl font-bold text-white">{stats?.visitors?.unique || 0}</p>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Countries:</span>
-                <span className="font-mono text-matrix">{stats?.visitors?.countries || 0}</span>
+              <Globe className="text-purple-400 w-8 h-8" />
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-sm">Countries</p>
+                <p className="text-2xl font-bold text-white">{stats?.visitors?.countries || 0}</p>
               </div>
-            </CardContent>
-          </Card>
+              <TrendingUp className="text-yellow-400 w-8 h-8" />
+            </div>
+          </div>
+        </div>
 
-          {/* Threat Simulation Controls */}
-          <Card className="bg-panel border-matrix/20">
-            <CardHeader>
-              <CardTitle className="font-mono text-matrix text-lg flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2" />
-                Simulation Controls
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-sm">Session Hijacking:</span>
+        {/* Control Panels */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Simulation Controls */}
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <AlertTriangle className="text-yellow-400 w-6 h-6 mr-3" />
+              Simulation Controls
+            </h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <span className="text-gray-300 font-medium">Session Hijacking</span>
                 <Button
-                  size="sm"
-                  className={`px-3 py-1 text-xs font-mono ${
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                     simulationStates.sessionHijacking 
-                      ? 'cyber-button' 
-                      : 'cyber-button-danger'
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-red-600 hover:bg-red-700 text-white'
                   }`}
                   onClick={() => toggleSimulation('sessionHijacking')}
                 >
                   {simulationStates.sessionHijacking ? 'ON' : 'OFF'}
                 </Button>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-sm">Packet Capture:</span>
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <span className="text-gray-300 font-medium">Packet Capture</span>
                 <Button
-                  size="sm"
-                  className={`px-3 py-1 text-xs font-mono ${
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                     simulationStates.packetCapture 
-                      ? 'cyber-button' 
-                      : 'cyber-button-danger'
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-red-600 hover:bg-red-700 text-white'
                   }`}
                   onClick={() => toggleSimulation('packetCapture')}
                 >
                   {simulationStates.packetCapture ? 'ON' : 'OFF'}
                 </Button>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-sm">IP Geolocation:</span>
+              <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                <span className="text-gray-300 font-medium">IP Geolocation</span>
                 <Button
-                  size="sm"
-                  className={`px-3 py-1 text-xs font-mono ${
+                  className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                     simulationStates.ipGeolocation 
-                      ? 'cyber-button' 
-                      : 'cyber-button-danger'
+                      ? 'bg-green-600 hover:bg-green-700 text-white' 
+                      : 'bg-red-600 hover:bg-red-700 text-white'
                   }`}
                   onClick={() => toggleSimulation('ipGeolocation')}
                 >
                   {simulationStates.ipGeolocation ? 'ON' : 'OFF'}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Master Controls */}
-          <Card className="bg-panel border-danger/20">
-            <CardHeader>
-              <CardTitle className="font-mono text-danger text-lg flex items-center">
-                <Power className="w-5 h-5 mr-2" />
-                Master Controls
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center">
+              <Power className="text-red-400 w-6 h-6 mr-3" />
+              Master Controls
+            </h2>
+            <div className="space-y-4">
               <Button 
-                className="w-full cyber-button-danger text-sm"
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-lg font-medium text-lg"
                 onClick={handleEmergencyStop}
               >
-                <Power className="w-4 h-4 mr-2" />
+                <Power className="w-5 h-5 mr-3" />
                 EMERGENCY STOP
               </Button>
               <Button 
-                className="w-full bg-warning text-terminal hover:bg-warning/80 font-mono text-sm"
+                className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-4 rounded-lg font-medium text-lg"
                 onClick={handleResetTracking}
               >
-                <RotateCcw className="w-4 h-4 mr-2" />
+                <RotateCcw className="w-5 h-5 mr-3" />
                 RESET TRACKING
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Tabbed Dashboard */}
-        <Tabs defaultValue="monitoring" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-panel border-matrix/30">
-            <TabsTrigger value="monitoring" className="text-matrix">Network Monitoring</TabsTrigger>
-            <TabsTrigger value="builder" className="text-matrix">Millennium Builder</TabsTrigger>
-            <TabsTrigger value="python" className="text-matrix">Python Toolkit</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="monitoring" className="mt-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* Packet Capture */}
-              <PacketCapture 
-                packets={packets} 
-                isActive={simulationStates.packetCapture}
-              />
-
-              {/* Visitor Tracking */}
-              <VisitorTracking 
-                visitors={visitors} 
-                isActive={simulationStates.ipGeolocation}
-              />
+        <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+          <Tabs defaultValue="monitoring" className="w-full">
+            <div className="border-b border-gray-800">
+              <TabsList className="grid w-full grid-cols-3 bg-transparent h-16">
+                <TabsTrigger 
+                  value="monitoring" 
+                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-800 h-full text-lg font-medium"
+                >
+                  Network Monitoring
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="builder" 
+                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-800 h-full text-lg font-medium"
+                >
+                  Millennium Builder
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="python" 
+                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-gray-800 h-full text-lg font-medium"
+                >
+                  Python Toolkit
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="builder" className="mt-6">
-            <MillenniumBuilder />
-          </TabsContent>
-          
-          <TabsContent value="python" className="mt-6">
-            <PythonToolkitManager />
-          </TabsContent>
-        </Tabs>
+            
+            <TabsContent value="monitoring" className="p-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <PacketCapture 
+                  packets={packets} 
+                  isActive={simulationStates.packetCapture}
+                />
+                <VisitorTracking 
+                  visitors={visitors} 
+                  isActive={simulationStates.ipGeolocation}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="builder" className="p-6">
+              <MillenniumBuilder />
+            </TabsContent>
+            
+            <TabsContent value="python" className="p-6">
+              <PythonToolkitManager />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

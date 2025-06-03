@@ -75,10 +75,10 @@
   }
 
   body {
-    @apply font-mono antialiased;
-    background-color: hsl(var(--terminal));
-    color: hsl(var(--matrix));
-    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    @apply antialiased;
+    background-color: #000000;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -382,6 +382,62 @@
   color: var(--danger);
 }
 
+/* Improved admin panel styling */
+.admin-card {
+  background: #111111;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.admin-card:hover {
+  border-color: #4b5563;
+  background: #1a1a1a;
+}
+
+.admin-button-primary {
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.admin-button-primary:hover {
+  background: #047857;
+}
+
+.admin-button-danger {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.admin-button-danger:hover {
+  background: #b91c1c;
+}
+
+.admin-stat-card {
+  background: #111111;
+  border: 1px solid #374151;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+}
+
+.admin-stat-card:hover {
+  border-color: #4b5563;
+  transform: translateY(-1px);
+}
+
 /* Scrollbar styling for dark theme */
 ::-webkit-scrollbar {
   width: 8px;
@@ -389,14 +445,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--terminal));
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--matrix) / 0.3);
+  background: #374151;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--matrix) / 0.5);
+  background: #4b5563;
 }
