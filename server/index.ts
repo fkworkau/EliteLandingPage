@@ -39,12 +39,25 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Enhanced error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Log error in development
+    if (app.get("env") === "development") {
+      console.error("Error:", err);
+    }
+
+    res.status(status).json({ 
+      message,
+      ...(app.get("env") === "development" && { stack: err.stack })
+    });
+  });
+
+  // 404 handler
+  app.use("*", (req, res) => {
+    res.status(404).json({ message: "Route not found" });
   });
 
   // importantly only setup vite in development and after
@@ -54,6 +67,12 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+  }
+
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, "0.0.0.0", () => {
+    log(`Server running on http://0.0.0.0:${PORT}`);
+  });
   }
 
   // ALWAYS serve the app on port 5000
