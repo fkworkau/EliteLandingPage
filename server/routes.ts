@@ -229,9 +229,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const config = JSON.parse(req.body.config || '{}');
-      const fs = require('fs');
-      const path = require('path');
-      const crypto = require('crypto');
       
       // Read the uploaded file
       const inputPath = req.file.path;
@@ -396,9 +393,6 @@ if __name__ == "__main__":
   app.post("/api/compile-executable", async (req, res) => {
     try {
       const { filename, compileOptions } = req.body;
-      const fs = require('fs');
-      const path = require('path');
-      const { spawn } = require('child_process');
       
       const pythonFile = path.join(process.cwd(), 'builds', filename);
       if (!fs.existsSync(pythonFile)) {
@@ -491,8 +485,6 @@ if __name__ == "__main__":
   app.get("/download/:filename", (req, res) => {
     try {
       const filename = req.params.filename;
-      const fs = require('fs');
-      const path = require('path');
       
       const filePath = path.join(process.cwd(), 'builds', filename);
       
