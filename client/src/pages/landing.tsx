@@ -82,6 +82,9 @@ export default function Landing() {
   });
 
   // Advanced Crypter
+  const [compileStep, setCompileStep] = useState<'encrypt' | 'compile'>('encrypt');
+  const [cryptedFilename, setCryptedFilename] = useState('');
+  
   const crypterProcessor = useMutation({
     mutationFn: async (formData: FormData) => {
       const response = await fetch('/api/advanced-crypter', {
@@ -92,11 +95,30 @@ export default function Landing() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Trigger download of crypted executable
+      setCryptedFilename(data.filename);
+      setCompileStep('compile');
+    }
+  });
+
+  // Executable Compiler
+  const executableCompiler = useMutation({
+    mutationFn: async (data: { filename: string; compileOptions: any }) => {
+      const response = await fetch('/api/compile-executable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Compilation failed');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Trigger download of compiled executable
       const link = document.createElement('a');
       link.href = data.downloadUrl;
       link.download = data.filename;
       link.click();
+      setCompileStep('encrypt');
+      setCryptedFilename('');
     }
   });
 
@@ -422,14 +444,61 @@ export default function Landing() {
                     </label>
                   </div>
 
-                  <Button
-                    onClick={handleCrypterSubmit}
-                    disabled={crypterProcessor.isPending || !crypterConfig.inputFile}
-                    className="w-full bg-cyan-600 hover:bg-cyan-700 mt-4"
-                  >
-                    <Package className="w-4 h-4 mr-2" />
-                    {crypterProcessor.isPending ? 'Processing...' : 'Generate Protected Executable'}
-                  </Button>
+                  {compileStep === 'encrypt' ? (
+                    <Button
+                      onClick={handleCrypterSubmit}
+                      disabled={crypterProcessor.isPending || !crypterConfig.inputFile}
+                      className="w-full bg-cyan-600 hover:bg-cyan-700 mt-4"
+                    >
+                      <Package className="w-4 h-4 mr-2" />
+                      {crypterProcessor.isPending ? 'Encrypting...' : 'Step 1: Encrypt & Generate Stub'}
+                    </Button>
+                  ) : (
+                    <div className="space-y-4 mt-4">
+                      <div className="p-4 bg-green-900/20 border border-green-500/30 rounded">
+                        <p className="text-green-400 font-medium">✓ Python stub generated: {cryptedFilename}</p>
+                        <p className="text-gray-300 text-sm mt-1">Ready for compilation to Windows executable</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <label className="flex items-center space-x-2">
+                          <input type="checkbox" defaultChecked className="w-4 h-4 text-cyan-600" />
+                          <span className="text-gray-300 text-sm">Hidden Imports</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input type="checkbox" className="w-4 h-4 text-cyan-600" />
+                          <span className="text-gray-300 text-sm">UPX Compression</span>
+                        </label>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => executableCompiler.mutate({ 
+                            filename: cryptedFilename, 
+                            compileOptions: { hiddenImports: true } 
+                          })}
+                          disabled={executableCompiler.isPending}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          {executableCompiler.isPending ? 'Compiling...' : 'Step 2: Compile to EXE'}
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = `/download/${cryptedFilename}`;
+                            link.download = cryptedFilename;
+                            link.click();
+                          }}
+                          variant="outline"
+                          className="border-gray-600"
+                        >
+                          <FileCode className="w-4 h-4 mr-2" />
+                          Download Python
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
