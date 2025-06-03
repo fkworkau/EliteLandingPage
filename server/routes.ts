@@ -518,6 +518,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/build-executable", requireAuth, async (req: any, res) => {
+    try {
+      const { scriptName, outputName, options } = req.body;
+      const { spawn } = require('child_process');
+      const fs = require('fs');
+      const path = require('path');
+      
+      if (!scriptName) {
+        return res.status(400).json({ success: false, error: "Script name is required" });
+      }
+
+      const scriptPath = path.join(process.cwd(), 'python_tools', scriptName);
+      if (!fs.existsSync(scriptPath)) {
+        return res.status(404).json({ success: false, error: "Script not found" });
+      }
+
+      // Create builds directory if it doesn't exist
+      const buildsDir = path.join(process.cwd(), 'builds');
+      if (!fs.existsSync(buildsDir)) {
+        fs.mkdirSync(buildsDir, { recursive: true });
+      }
+
+      const args = [
+        '-m', 'PyInstaller',
+        '--distpath', buildsDir,
+        '--workpath', path.join(buildsDir, 'temp'),
+        '--specpath', path.join(buildsDir, 'specs')
+      ];
+
+      // Add PyInstaller options based on user selection
+      if (options?.onefile) args.push('--onefile');
+      if (options?.windowed) args.push('--windowed');
+      if (options?.noconsole) args.push('--noconsole');
+      if (options?.hiddenImports) {
+        options.hiddenImports.split(',').forEach((imp: string) => {
+          args.push('--hidden-import', imp.trim());
+        });
+      }
+      
+      // Add output name if specified
+      if (outputName) {
+        args.push('--name', outputName);
+      }
+
+      // Add the script path
+      args.push(scriptPath);
+
+      const buildProcess = spawn('python3', args, {
+        cwd: process.cwd(),
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      let output = '';
+      let error = '';
+
+      buildProcess.stdout.on('data', (data: any) => {
+        output += data.toString();
+      });
+
+      buildProcess.stderr.on('data', (data: any) => {
+        error += data.toString();
+      });
+
+      buildProcess.on('close', (code: number) => {
+        if (code === 0) {
+          const executableName = outputName || scriptName.replace('.py', '');
+          const executablePath = path.join(buildsDir, executableName + (process.platform === 'win32' ? '.exe' : ''));
+          
+          res.json({ 
+            success: true, 
+            output: output,
+            executablePath: executablePath,
+            message: `Executable built successfully: ${executableName}`
+          });
+        } else {
+          res.json({ 
+            success: false, 
+            error: error || 'Build failed',
+            output: output
+          });
+        }
+      });
+
+      // Set timeout for build process
+      setTimeout(() => {
+        buildProcess.kill();
+        res.json({ success: false, error: 'Build process timeout (5 minutes)' });
+      }, 300000); // 5 minute timeout
+
+    } catch (error) {
+      console.error("Executable build error:", error);
+      res.status(500).json({ success: false, error: "Failed to build executable" });
+    }
+  });
+
   // Cookie consent tracking
   app.post("/api/cookie-consent", async (req: any, res) => {
     try {
