@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { Shield } from "lucide-react";
 
 interface AdminLoginModalProps {
@@ -25,22 +27,32 @@ export default function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProp
     password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Demo credentials check
-    if (credentials.username === 'admin' && credentials.password === 'elite123') {
+  const loginMutation = useMutation({
+    mutationFn: async (data: { username: string; password: string }) => {
+      const response = await apiRequest("POST", "/api/admin/login", data);
+      return response.json();
+    },
+    onSuccess: (data) => {
       onClose();
       setCredentials({ username: "", password: "" });
+      toast({
+        title: "Access Granted",
+        description: "Welcome to the Admin Control Panel",
+      });
       window.location.href = '/admin-dashboard';
-      console.log('Admin session started - redirecting to dashboard');
-    } else {
+    },
+    onError: (error: any) => {
       toast({
         title: "Access Denied",
-        description: "Invalid credentials",
+        description: error.message || "Invalid credentials",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate(credentials);
   };
 
   return (
