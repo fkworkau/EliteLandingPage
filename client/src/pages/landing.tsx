@@ -170,7 +170,8 @@ export default function Landing() {
         }}></div>
 
         {/* Screenshots Grid */}
-        <div className="container mx-auto px-4 mb-16"></old_str>
+        <div className="container mx-auto px-4 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"></old_str>
 
           {/* Screenshots Grid */}
           <div className="container mx-auto px-4 mb-16">
