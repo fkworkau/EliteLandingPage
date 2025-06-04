@@ -228,7 +228,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Security Events</p>
-                <p className="text-2xl font-bold text-red-400">{stats?.events || 0}</p>
+                <p className="text-2xl font-bold text-red-400">{(stats as any)?.events || 0}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-400" />
             </div>
