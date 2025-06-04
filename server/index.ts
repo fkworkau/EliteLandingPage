@@ -39,8 +39,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  let server;
+  
   try {
-    const server = await registerRoutes(app);
+    server = await registerRoutes(app);
 
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route
@@ -51,34 +53,33 @@ app.use((req, res, next) => {
       serveStatic(app);
     }
 
-    // Enhanced error handling middleware - moved to be a global handler
+    // Global error handler
+    app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+      console.error('Global error handler:', err);
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+
+      // Log error in development
+      if (app.get("env") === "development") {
+        console.error("Error:", err);
+      }
+
+      res.status(status).json({
+        message,
+        ...(app.get("env") === "development" && { stack: err.stack })
+      });
+    });
+
+    // ALWAYS serve the app on port 5000
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = 5000;
+    server.listen(port, "0.0.0.0", () => {
+      log(`Server running on http://0.0.0.0:${port}`);
+    });
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);
   }
-
-  // Global error handler
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('Global error handler:', err);
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    // Log error in development
-    if (app.get("env") === "development") {
-      console.error("Error:", err);
-    }
-
-    res.status(status).json({
-      message,
-      ...(app.get("env") === "development" && { stack: err.stack })
-    });
-  });
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen(port, "0.0.0.0", () => {
-    log(`Server running on http://0.0.0.0:${port}`);
-  });
 })();
