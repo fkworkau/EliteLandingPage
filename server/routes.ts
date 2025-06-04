@@ -21,7 +21,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
+    try {
+      res.json({ status: "ok", timestamp: new Date().toISOString() });
+    } catch (error) {
+      res.status(500).json({ status: "error", message: "Health check failed" });
+    }
   });
 
   // Visitor tracking endpoint
