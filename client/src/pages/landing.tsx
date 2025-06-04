@@ -171,11 +171,7 @@ export default function Landing() {
 
         {/* Screenshots Grid */}
         <div className="container mx-auto px-4 mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"></old_str>
-
-          {/* Screenshots Grid */}
-          <div className="container mx-auto px-4 mb-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               <div className="bg-gray-800/50 rounded-lg p-4 border border-cyan-500/30">
                 <img 
                   src="/attached_assets/screenshot-1748942482391.png" 
@@ -565,7 +561,7 @@ export default function Landing() {
                         </>
                       )}
                     </div>
-                    
+
                     {/* Processing Metadata */}
                     {scriptProcessor.data?.metadata && (
                       <div className="mt-3 p-2 bg-gray-800/50 rounded border border-cyan-500/20">
