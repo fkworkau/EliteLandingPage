@@ -35,8 +35,11 @@ import {
   Package,
   FileCode,
   Bot,
-  Zap
+  Zap,
+  Network
 } from "lucide-react";
+import NetworkSniffer from "@/components/network-sniffer";
+import ExecutableBuilder from "@/components/executable-builder";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
@@ -235,9 +238,11 @@ export default function AdminDashboard() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 bg-gray-800">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 bg-gray-800">
           <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
           <TabsTrigger value="packets" className="text-xs sm:text-sm">Traffic</TabsTrigger>
+          <TabsTrigger value="sniffer" className="text-xs sm:text-sm">Sniffer</TabsTrigger>
+          <TabsTrigger value="builder" className="text-xs sm:text-sm">Builder</TabsTrigger>
           <TabsTrigger value="rats" className="text-xs sm:text-sm">RATs</TabsTrigger>
           <TabsTrigger value="tools" className="text-xs sm:text-sm">Tools</TabsTrigger>
           <TabsTrigger value="users" className="text-xs sm:text-sm">Users</TabsTrigger>
@@ -292,6 +297,16 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Network Sniffer Tab */}
+        <TabsContent value="sniffer" className="space-y-6">
+          <NetworkSniffer />
+        </TabsContent>
+
+        {/* Executable Builder Tab */}
+        <TabsContent value="builder" className="space-y-6">
+          <ExecutableBuilder />
         </TabsContent>
 
         {/* Packet Capture Tab */}
