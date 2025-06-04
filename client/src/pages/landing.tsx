@@ -30,6 +30,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import AdminLoginModal from "@/components/admin-login-modal";
 import CookieBanner from "@/components/cookie-banner";
+import { Network, Key } from "lucide-react";
 
 export default function Landing() {
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -84,7 +85,7 @@ export default function Landing() {
   // Advanced Crypter
   const [compileStep, setCompileStep] = useState<'encrypt' | 'compile'>('encrypt');
   const [cryptedFilename, setCryptedFilename] = useState('');
-  
+
   const crypterProcessor = useMutation({
     mutationFn: async (formData: FormData) => {
       const response = await fetch('/api/advanced-crypter', {
@@ -158,8 +159,56 @@ export default function Landing() {
         </div>
         <p className="text-xl text-gray-300 mb-8">Advanced Cybersecurity Framework</p>
 
-        
+
       </header>
+{/* Hero Section */}
+        <section className="relative py-20 bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+
+          {/* Screenshots Grid */}
+          <div className="container mx-auto px-4 mb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-cyan-500/30">
+                <img 
+                  src="/attached_assets/screenshot-1748942482391.png" 
+                  alt="Admin Dashboard Interface" 
+                  className="w-full h-32 object-cover rounded mb-3"
+                />
+                <h3 className="text-cyan-400 font-semibold text-sm">Admin Control Panel</h3>
+                <p className="text-gray-300 text-xs">Comprehensive monitoring dashboard</p>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-green-500/30">
+                <img 
+                  src="/attached_assets/screenshot-1748942488659.png" 
+                  alt="RAT Builder Interface" 
+                  className="w-full h-32 object-cover rounded mb-3"
+                />
+                <h3 className="text-green-400 font-semibold text-sm">RAT Builder</h3>
+                <p className="text-gray-300 text-xs">Advanced payload generation</p>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-yellow-500/30">
+                <img 
+                  src="/attached_assets/screenshot-1748942540883.png" 
+                  alt="Network Sniffer" 
+                  className="w-full h-32 object-cover rounded mb-3"
+                />
+                <h3 className="text-yellow-400 font-semibold text-sm">Network Analysis</h3>
+                <p className="text-gray-300 text-xs">Real-time traffic monitoring</p>
+              </div>
+
+              <div className="bg-gray-800/50 rounded-lg p-4 border border-red-500/30">
+                <img 
+                  src="/attached_assets/screenshot-1748942549503.png" 
+                  alt="Executable Builder" 
+                  className="w-full h-32 object-cover rounded mb-3"
+                />
+                <h3 className="text-red-400 font-semibold text-sm">Tool Compilation</h3>
+                <p className="text-gray-300 text-xs">Portable executable creation</p>
+              </div>
+            </div>
+          </div>
 
       <div className="container mx-auto px-6 space-y-12">
         {/* Millennium AI Section */}
@@ -262,6 +311,68 @@ export default function Landing() {
             </CardContent>
           </Card>
         </section>
+
+{/* Features Section */}
+        <section className="py-20 bg-gray-900">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12 text-cyan-400">
+              Professional Cybersecurity Toolkit
+            </h2>
+
+            {/* Main Feature Showcase */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-cyan-500/30">
+                <div className="flex items-center mb-6">
+                  <Bot className="w-8 h-8 text-cyan-400 mr-3" />
+                  <h3 className="text-2xl font-bold text-cyan-400">Millennium RAT System</h3>
+                </div>
+                <img 
+                  src="/attached_assets/image-12.jpg" 
+                  alt="Millennium RAT Interface" 
+                  className="w-full h-48 object-cover rounded-lg mb-4 border border-cyan-500/20"
+                />
+                <p className="text-gray-300 mb-4">
+                  Advanced remote access tool with comprehensive C&C capabilities, 
+                  Telegram integration, and real-time monitoring.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-700/50 p-3 rounded border border-cyan-500/20">
+                    <Shield className="w-5 h-5 text-cyan-400 mb-2" />
+                    <p className="text-xs text-gray-300">Stealth Operations</p>
+                  </div>
+                  <div className="bg-gray-700/50 p-3 rounded border border-cyan-500/20">
+                    <Network className="w-5 h-5 text-cyan-400 mb-2" />
+                    <p className="text-xs text-gray-300">C&C Server</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-green-500/30">
+                <div className="flex items-center mb-6">
+                  <Zap className="w-8 h-8 text-green-400 mr-3" />
+                  <h3 className="text-2xl font-bold text-green-400">Data Stealer Suite</h3>
+                </div>
+                <img 
+                  src="/attached_assets/image-26.jpg" 
+                  alt="Data Stealer Interface" 
+                  className="w-full h-48 object-cover rounded-lg mb-4 border border-green-500/20"
+                />
+                <p className="text-gray-300 mb-4">
+                  Comprehensive data collection system similar to Redline, 
+                  with encrypted reporting to Telegram in ZIP format.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-700/50 p-3 rounded border border-green-500/20">
+                    <Key className="w-5 h-5 text-green-400 mb-2" />
+                    <p className="text-xs text-gray-300">Password Extraction</p>
+                  </div>
+                  <div className="bg-gray-700/50 p-3 rounded border border-green-500/20">
+                    <FileCode className="w-5 h-5 text-green-400 mb-2" />
+                    <p className="text-xs text-gray-300">Crypto Wallets</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
         {/* Script Tools Section */}
         <section className="mb-16">
@@ -571,7 +682,7 @@ export default function Landing() {
                         <p className="text-green-400 font-medium">✓ Python stub generated: {cryptedFilename}</p>
                         <p className="text-gray-300 text-sm mt-1">Ready for compilation to Windows executable</p>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4">
                         <label className="flex items-center space-x-2">
                           <input type="checkbox" defaultChecked className="w-4 h-4 text-cyan-600" />
@@ -582,7 +693,7 @@ export default function Landing() {
                           <span className="text-gray-300 text-sm">UPX Compression</span>
                         </label>
                       </div>
-                      
+
                       <div className="flex space-x-2">
                         <Button
                           onClick={() => executableCompiler.mutate({ 
@@ -642,7 +753,7 @@ export default function Landing() {
         </footer>
       </div>
 
-      
+
 
       {/* Hidden Admin Access - Shield Icon */}
       <div 

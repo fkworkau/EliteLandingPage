@@ -517,46 +517,257 @@ export default function AdminDashboard() {
 
         {/* Tools Tab */}
         <TabsContent value="tools" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="bg-gray-900/50 border-cyan-500/30">
               <CardHeader>
-                <CardTitle className="text-cyan-400">Advanced Crypter</CardTitle>
+                <CardTitle className="text-cyan-400 flex items-center">
+                  <Lock className="w-5 h-5 mr-2" />
+                  Advanced Crypter
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 text-sm mb-4">Multi-layer encryption with anti-detection</p>
-                <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
-                  <Lock className="w-4 h-4 mr-2" />
-                  Launch Crypter
-                </Button>
+                <div className="space-y-3">
+                  <img 
+                    src="/attached_assets/screenshot-1748942482391.png" 
+                    alt="Crypter Interface" 
+                    className="w-full h-24 object-cover rounded border border-cyan-500/20"
+                  />
+                  <p className="text-gray-300 text-sm">Multi-layer encryption with anti-detection and FUD capabilities</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-cyan-600 hover:bg-cyan-700 text-xs">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Launch Crypter
+                    </Button>
+                    <Button variant="outline" className="w-full border-cyan-500 text-cyan-400 hover:bg-cyan-950 text-xs">
+                      <Eye className="w-3 h-3 mr-1" />
+                      View Features
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gray-900/50 border-green-500/30">
               <CardHeader>
-                <CardTitle className="text-green-400">Script Processor</CardTitle>
+                <CardTitle className="text-green-400 flex items-center">
+                  <Package className="w-5 h-5 mr-2" />
+                  File Binder
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 text-sm mb-4">Obfuscation and optimization tools</p>
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  <Code className="w-4 h-4 mr-2" />
-                  Process Scripts
-                </Button>
+                <div className="space-y-3">
+                  <img 
+                    src="/attached_assets/screenshot-1748942488659.png" 
+                    alt="Binder Interface" 
+                    className="w-full h-24 object-cover rounded border border-green-500/20"
+                  />
+                  <p className="text-gray-300 text-sm">Bind multiple executables into single package with steganography</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-green-600 hover:bg-green-700 text-xs">
+                      <Package className="w-3 h-3 mr-1" />
+                      Launch Binder
+                    </Button>
+                    <Button variant="outline" className="w-full border-green-500 text-green-400 hover:bg-green-950 text-xs">
+                      <FileCode className="w-3 h-3 mr-1" />
+                      Configure
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
             <Card className="bg-gray-900/50 border-yellow-500/30">
               <CardHeader>
-                <CardTitle className="text-yellow-400">Payload Generator</CardTitle>
+                <CardTitle className="text-yellow-400 flex items-center">
+                  <Network className="w-5 h-5 mr-2" />
+                  Network Sniffer
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-300 text-sm mb-4">Custom payload creation toolkit</p>
-                <Button className="w-full bg-yellow-600 hover:bg-yellow-700">
-                  <Zap className="w-4 h-4 mr-2" />
-                  Generate Payload
-                </Button>
+                <div className="space-y-3">
+                  <img 
+                    src="/attached_assets/screenshot-1748942540883.png" 
+                    alt="Sniffer Interface" 
+                    className="w-full h-24 object-cover rounded border border-yellow-500/20"
+                  />
+                  <p className="text-gray-300 text-sm">Advanced traffic analysis with credential extraction</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-yellow-600 hover:bg-yellow-700 text-xs">
+                      <Wifi className="w-3 h-3 mr-1" />
+                      Start Sniffer
+                    </Button>
+                    <Button variant="outline" className="w-full border-yellow-500 text-yellow-400 hover:bg-yellow-950 text-xs">
+                      <Monitor className="w-3 h-3 mr-1" />
+                      Live View
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-900/50 border-red-500/30">
+              <CardHeader>
+                <CardTitle className="text-red-400 flex items-center">
+                  <Download className="w-5 h-5 mr-2" />
+                  Data Stealer
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <img 
+                    src="/attached_assets/screenshot-1748942549503.png" 
+                    alt="Stealer Interface" 
+                    className="w-full h-24 object-cover rounded border border-red-500/20"
+                  />
+                  <p className="text-gray-300 text-sm">Comprehensive data collection like Redline with Telegram reporting</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-red-600 hover:bg-red-700 text-xs">
+                      <Download className="w-3 h-3 mr-1" />
+                      Deploy Stealer
+                    </Button>
+                    <Button variant="outline" className="w-full border-red-500 text-red-400 hover:bg-red-950 text-xs">
+                      <Bot className="w-3 h-3 mr-1" />
+                      Telegram Config
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-900/50 border-purple-500/30">
+              <CardHeader>
+                <CardTitle className="text-purple-400 flex items-center">
+                  <Bot className="w-5 h-5 mr-2" />
+                  RAT Controller
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="w-full h-24 bg-purple-900/20 rounded border border-purple-500/20 flex items-center justify-center">
+                    <Bot className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <p className="text-gray-300 text-sm">Advanced remote access with Telegram C2 integration</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-purple-600 hover:bg-purple-700 text-xs">
+                      <Terminal className="w-3 h-3 mr-1" />
+                      Launch RAT
+                    </Button>
+                    <Button variant="outline" className="w-full border-purple-500 text-purple-400 hover:bg-purple-950 text-xs">
+                      <Users className="w-3 h-3 mr-1" />
+                      Manage Clients
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-900/50 border-blue-500/30">
+              <CardHeader>
+                <CardTitle className="text-blue-400 flex items-center">
+                  <Wrench className="w-5 h-5 mr-2" />
+                  Payload Builder
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="w-full h-24 bg-blue-900/20 rounded border border-blue-500/20 flex items-center justify-center">
+                    <Wrench className="w-8 h-8 text-blue-400" />
+                  </div>
+                  <p className="text-gray-300 text-sm">Custom payload generation with advanced evasion techniques</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-xs">
+                      <Code className="w-3 h-3 mr-1" />
+                      Build Payload
+                    </Button>
+                    <Button variant="outline" className="w-full border-blue-500 text-blue-400 hover:bg-blue-950 text-xs">
+                      <Settings className="w-3 h-3 mr-1" />
+                      Advanced Options
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-900/50 border-orange-500/30">
+              <CardHeader>
+                <CardTitle className="text-orange-400 flex items-center">
+                  <Zap className="w-5 h-5 mr-2" />
+                  EXE Compiler
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="w-full h-24 bg-orange-900/20 rounded border border-orange-500/20 flex items-center justify-center">
+                    <Zap className="w-8 h-8 text-orange-400" />
+                  </div>
+                  <p className="text-gray-300 text-sm">Compile Python tools to portable executables with PyInstaller</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-orange-600 hover:bg-orange-700 text-xs">
+                      <Play className="w-3 h-3 mr-1" />
+                      Compile EXE
+                    </Button>
+                    <Button variant="outline" className="w-full border-orange-500 text-orange-400 hover:bg-orange-950 text-xs">
+                      <FileCode className="w-3 h-3 mr-1" />
+                      Build Options
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-900/50 border-pink-500/30">
+              <CardHeader>
+                <CardTitle className="text-pink-400 flex items-center">
+                  <Shield className="w-5 h-5 mr-2" />
+                  Telegram Integration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="w-full h-24 bg-pink-900/20 rounded border border-pink-500/20 flex items-center justify-center">
+                    <MessageSquare className="w-8 h-8 text-pink-400" />
+                  </div>
+                  <p className="text-gray-300 text-sm">Comprehensive Telegram C2 and reporting system</p>
+                  <div className="space-y-2">
+                    <Button className="w-full bg-pink-600 hover:bg-pink-700 text-xs">
+                      <MessageSquare className="w-3 h-3 mr-1" />
+                      Setup Bot
+                    </Button>
+                    <Button variant="outline" className="w-full border-pink-500 text-pink-400 hover:bg-pink-950 text-xs">
+                      <Settings className="w-3 h-3 mr-1" />
+                      Configure C2
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
+
+          {/* Quick Action Panel */}
+          <Card className="bg-gradient-to-r from-gray-800 to-gray-900 border-cyan-500/30">
+            <CardHeader>
+              <CardTitle className="text-cyan-400 flex items-center">
+                <Terminal className="w-5 h-5 mr-2" />
+                Quick Deployment Panel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700">
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Deploy Full Suite
+                </Button>
+                <Button className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                  <Package className="w-4 h-4 mr-2" />
+                  Build All Tools
+                </Button>
+                <Button className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700">
+                  <Bot className="w-4 h-4 mr-2" />
+                  Start Telegram C2
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Users Tab */}

