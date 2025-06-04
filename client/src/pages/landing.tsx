@@ -79,6 +79,7 @@ export default function Landing() {
     },
     onSuccess: (data) => {
       setScriptOutput(data.processedScript);
+      // Store metadata for display
     }
   });
 
@@ -254,7 +255,7 @@ export default function Landing() {
             <CardHeader className="text-center p-4">
               <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
                 <img 
-                  src="/attached_assets/image-26.jpg" 
+                  src="https://i.ibb.co/v65ppyX/rat-interface.png" 
                   alt="Millennium RAT" 
                   className="w-full h-full object-contain bg-gray-800"
                 />
@@ -285,7 +286,7 @@ export default function Landing() {
             <CardHeader className="text-center p-4">
               <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
                 <img 
-                  src="/attached_assets/image-12.jpg" 
+                  src="https://i.ibb.co/FkRMZ6B/dot-stealer.png" 
                   alt="Dot Stealer" 
                   className="w-full h-full object-contain bg-gray-800"
                 />
@@ -327,7 +328,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold text-cyan-400">Millennium RAT System</h3>
                 </div>
                 <img 
-                  src="/attached_assets/image-12.jpg" 
+                  src="https://i.ibb.co/v65ppyX/rat-interface.png" 
                   alt="Millennium RAT Interface" 
                   className="w-full h-48 object-cover rounded-lg mb-4 border border-cyan-500/20"
                 />
@@ -353,7 +354,7 @@ export default function Landing() {
                   <h3 className="text-2xl font-bold text-green-400">Data Stealer Suite</h3>
                 </div>
                 <img 
-                  src="/attached_assets/image-26.jpg" 
+                  src="https://i.ibb.co/FkRMZ6B/dot-stealer.png" 
                   alt="Data Stealer Interface" 
                   className="w-full h-48 object-cover rounded-lg mb-4 border border-green-500/20"
                 />
@@ -555,6 +556,19 @@ export default function Landing() {
                         </>
                       )}
                     </div>
+                    
+                    {/* Processing Metadata */}
+                    {scriptProcessor.data?.metadata && (
+                      <div className="mt-3 p-2 bg-gray-800/50 rounded border border-cyan-500/20">
+                        <div className="text-xs text-cyan-400 font-semibold mb-1">Processing Details:</div>
+                        <div className="text-xs text-gray-300">
+                          Tool: {scriptProcessor.data.metadata.tool} | 
+                          {scriptProcessor.data.metadata.reduction && ` Size Reduction: ${scriptProcessor.data.metadata.reduction}`}
+                          {scriptProcessor.data.metadata.method && ` Method: ${scriptProcessor.data.metadata.method}`}
+                          {scriptProcessor.data.metadata.protection && ` Protection: ${scriptProcessor.data.metadata.protection}`}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
