@@ -153,8 +153,8 @@ export default function AdminDashboard() {
   // Update traffic data when available
   useEffect(() => {
     if (trafficData) {
-      setCapturedTraffic(trafficData.traffic || []);
-      setPacketCaptureActive(trafficData.active || false);
+      setCapturedTraffic((trafficData as any)?.traffic || []);
+      setPacketCaptureActive((trafficData as any)?.active || false);
     }
   }, [trafficData]);
 
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Active Sessions</p>
-                <p className="text-2xl font-bold text-cyan-400">{stats?.sessions || 0}</p>
+                <p className="text-2xl font-bold text-cyan-400">{(stats as any)?.sessions || 0}</p>
               </div>
               <Users className="w-8 h-8 text-cyan-400" />
             </div>

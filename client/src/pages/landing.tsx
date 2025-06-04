@@ -202,65 +202,63 @@ export default function Landing() {
         <section className="grid md:grid-cols-2 gap-8 mb-16">
           {/* Millennium RAT */}
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
-            <CardHeader className="text-center">
-              <img 
-                src="https://i.ibb.co/W4H9wHJd/image-26.jpg" 
-                alt="Millennium RAT" 
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-              <CardTitle className="text-2xl text-cyan-400">Millennium RAT</CardTitle>
-              <p className="text-gray-300">Advanced Remote Access Tool with Telegram C2</p>
+            <CardHeader className="text-center p-4">
+              <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
+                <img 
+                  src="/attached_assets/image-26.jpg" 
+                  alt="Millennium RAT" 
+                  className="w-full h-full object-contain bg-gray-800"
+                />
+              </div>
+              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Millennium RAT</CardTitle>
+              <p className="text-sm sm:text-base text-gray-300">Advanced Remote Access Tool with Telegram C2</p>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-300 mb-4">
+            <CardContent className="p-4">
+              <ul className="space-y-1 text-xs sm:text-sm text-gray-300 mb-4">
                 <li>• Telegram-based command & control</li>
                 <li>• Advanced persistence mechanisms</li>
                 <li>• Real-time screen capture</li>
                 <li>• Keylogger & data exfiltration</li>
                 <li>• Anti-detection techniques</li>
               </ul>
-              <div className="flex space-x-2">
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-                <Button variant="outline" className="border-cyan-500 text-cyan-400">
-                  <Send className="w-4 h-4 mr-2" />
-                  Telegram
-                </Button>
-              </div>
+              <Button 
+                onClick={() => window.open('https://t.me/milleniumrat', '_blank')}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Contact on Telegram
+              </Button>
             </CardContent>
           </Card>
 
           {/* Dot Stealer */}
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
-            <CardHeader className="text-center">
-              <img 
-                src="https://i.ibb.co/Xr9y4QB1/image-12.jpg" 
-                alt="Dot Stealer" 
-                className="w-full h-48 object-cover rounded-lg mb-4"
-              />
-              <CardTitle className="text-2xl text-cyan-400">Dot Stealer</CardTitle>
-              <p className="text-gray-300">Advanced Data Extraction Framework</p>
+            <CardHeader className="text-center p-4">
+              <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
+                <img 
+                  src="/attached_assets/image-12.jpg" 
+                  alt="Dot Stealer" 
+                  className="w-full h-full object-contain bg-gray-800"
+                />
+              </div>
+              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Dot Stealer</CardTitle>
+              <p className="text-sm sm:text-base text-gray-300">Advanced Data Extraction Framework</p>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-300 mb-4">
+            <CardContent className="p-4">
+              <ul className="space-y-1 text-xs sm:text-sm text-gray-300 mb-4">
                 <li>• Browser credentials & cookies</li>
                 <li>• Discord & Telegram sessions</li>
                 <li>• Cryptocurrency wallets</li>
                 <li>• System information gathering</li>
                 <li>• Anti-VM & debugging protection</li>
               </ul>
-              <div className="flex space-x-2">
-                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </Button>
-                <Button variant="outline" className="border-cyan-500 text-cyan-400">
-                  <Send className="w-4 h-4 mr-2" />
-                  Telegram
-                </Button>
-              </div>
+              <Button 
+                onClick={() => window.open('https://t.me/milleniumrat', '_blank')}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Contact on Telegram
+              </Button>
             </CardContent>
           </Card>
         </section>
@@ -456,16 +454,16 @@ export default function Landing() {
         {/* Advanced Polymorphic Crypter */}
         <section className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-cyan-400 mb-4">Advanced Polymorphic Crypter</h2>
-            <p className="text-gray-300">Military-grade executable protection for .NET and native binaries</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-4">Advanced Polymorphic Crypter</h2>
+            <p className="text-sm sm:text-base text-gray-300">Military-grade executable protection for .NET and native binaries</p>
           </div>
 
           <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur">
-            <CardContent className="p-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Upload Executable</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Upload Executable</label>
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -476,30 +474,32 @@ export default function Landing() {
                     <Button
                       onClick={() => fileInputRef.current?.click()}
                       variant="outline"
-                      className="w-full border-gray-600 text-gray-300"
+                      className="w-full border-gray-600 text-gray-300 text-xs sm:text-sm py-2 px-3"
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {crypterConfig.inputFile ? crypterConfig.inputFile.name : 'Select File'}
+                      <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      <span className="truncate">
+                        {crypterConfig.inputFile ? crypterConfig.inputFile.name : 'Select File'}
+                      </span>
                     </Button>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Output Name</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Output Name</label>
                     <Input
                       value={crypterConfig.outputName}
                       onChange={(e) => setCrypterConfig(prev => ({ ...prev, outputName: e.target.value }))}
-                      className="bg-gray-800 border-gray-600 text-white"
+                      className="bg-gray-800 border-gray-600 text-white text-xs sm:text-sm"
                       placeholder="protected_executable"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Compression Level</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Compression Level</label>
                     <Select 
                       value={crypterConfig.compressionLevel} 
                       onValueChange={(value) => setCrypterConfig(prev => ({ ...prev, compressionLevel: value }))}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -511,48 +511,48 @@ export default function Landing() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-cyan-400">Protection Features</h3>
+                <div className="space-y-3 sm:space-y-4">
+                  <h3 className="text-sm sm:text-lg font-semibold text-cyan-400">Protection Features</h3>
 
-                  <div className="space-y-3">
-                    <label className="flex items-center space-x-3">
+                  <div className="space-y-2 sm:space-y-3">
+                    <label className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
                         checked={crypterConfig.antiDebug}
                         onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiDebug: e.target.checked }))}
-                        className="w-4 h-4 text-cyan-600 rounded"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
                       />
-                      <span className="text-gray-300">Anti-Debug Protection</span>
+                      <span className="text-gray-300 text-xs sm:text-sm">Anti-Debug Protection</span>
                     </label>
 
-                    <label className="flex items-center space-x-3">
+                    <label className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
                         checked={crypterConfig.antiVM}
                         onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiVM: e.target.checked }))}
-                        className="w-4 h-4 text-cyan-600 rounded"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
                       />
-                      <span className="text-gray-300">Anti-VM Detection</span>
+                      <span className="text-gray-300 text-xs sm:text-sm">Anti-VM Detection</span>
                     </label>
 
-                    <label className="flex items-center space-x-3">
+                    <label className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
                         checked={crypterConfig.polymorphic}
                         onChange={(e) => setCrypterConfig(prev => ({ ...prev, polymorphic: e.target.checked }))}
-                        className="w-4 h-4 text-cyan-600 rounded"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
                       />
-                      <span className="text-gray-300">Polymorphic Engine</span>
+                      <span className="text-gray-300 text-xs sm:text-sm">Polymorphic Engine</span>
                     </label>
 
-                    <label className="flex items-center space-x-3">
+                    <label className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
                         checked={crypterConfig.dotNetSupport}
                         onChange={(e) => setCrypterConfig(prev => ({ ...prev, dotNetSupport: e.target.checked }))}
-                        className="w-4 h-4 text-cyan-600 rounded"
+                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
                       />
-                      <span className="text-gray-300">.NET Assembly Support</span>
+                      <span className="text-gray-300 text-xs sm:text-sm">.NET Assembly Support</span>
                     </label>
                   </div>
 
