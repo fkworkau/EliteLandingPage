@@ -507,7 +507,7 @@ export default function Landing() {
                 {/* Action Buttons - Mobile Responsive */}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
-                    onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
+                    onClick={()={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
                     disabled={scriptProcessor.isPending || !scriptInput.trim()}
                     className="bg-cyan-600 hover:bg-cyan-700 flex-1"
                   >
@@ -771,8 +771,6 @@ export default function Landing() {
           </p>
         </footer>
       </div>
-
-
 
       {/* Hidden Admin Access - Shield Icon */}
       <div 
