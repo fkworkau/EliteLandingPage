@@ -1645,13 +1645,8 @@ if __name__ == "__main__":
           size: Math.floor(Math.random() * 1024) + 64
         };
 
-        // Simulate credential extraction
-        if (Math.random() > 0.8) {
-          networkData.credentials = {
-            username: `user${Math.floor(Math.random() * 1000)}`,
-            password: `pass${Math.floor(Math.random() * 1000)}`
-          };
-        }
+        // Store packet log data
+        await storage.createPacketLog(networkData);
 
         capturedTraffic.push(networkData);
 
@@ -1693,12 +1688,12 @@ if __name__ == "__main__":
 
       // HTTP traffic interception
       const originalRequest = http.request;
-      http.request = function(options, callback) {
+      http.request = function(options: any, callback?: any) {
         const req = originalRequest.call(this, options, callback);
 
-        req.on('response', (res) => {
+        req.on('response', (res: any) => {
           let data = '';
-          res.on('data', (chunk) => {
+          res.on('data', (chunk: any) => {
             data += chunk;
           });
 

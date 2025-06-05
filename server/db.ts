@@ -8,11 +8,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Configure connection with better error handling
-const sql = neon(process.env.DATABASE_URL, {
-  connectionTimeoutMillis: 5000,
-  idleTimeoutMillis: 30000,
-});
+const sql = neon(process.env.DATABASE_URL);
 
-export const db = drizzle(sql, {
-  logger: process.env.NODE_ENV === "development",
-});
+export const db = drizzle(sql);

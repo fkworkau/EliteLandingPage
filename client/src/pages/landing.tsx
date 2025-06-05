@@ -172,7 +172,7 @@ export default function Landing() {
         {/* Screenshots Grid */}
         <div className="container mx-auto px-4 mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-cyan-500/30">
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-cyan-500/30">
                 <img 
                   src="/attached_assets/screenshot-1748942482391.png" 
                   alt="Admin Dashboard Interface" 
@@ -507,7 +507,7 @@ export default function Landing() {
                 {/* Action Buttons - Mobile Responsive */}
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
-                    onClick={()={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
+                    onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
                     disabled={scriptProcessor.isPending || !scriptInput.trim()}
                     className="bg-cyan-600 hover:bg-cyan-700 flex-1"
                   >
