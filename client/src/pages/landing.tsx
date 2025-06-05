@@ -783,8 +783,6 @@ export default function Landing() {
         <Shield className="w-8 h-8 text-gray-500 hover:text-cyan-400 transition-colors duration-300" />
       </div>
 
-      </div>
-
       {/* Admin Login Modal */}
       <AdminLoginModal 
         isOpen={showAdminModal} 
