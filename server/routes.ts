@@ -235,7 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'obfuscator':
           const obfuscated = script
             .split('')
-            .map(char => `\\x${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
+            .map((char: string) => `\\x${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
             .join('');
           processedScript = `eval(unescape("${obfuscated}"))`;
           metadata = { tool: 'Obfuscator', method: 'Hex encoding + eval', protection: 'Level 1' };

@@ -206,24 +206,6 @@ export class DatabaseStorage implements IStorage {
     return await query.orderBy(desc(contentModifications.timestamp));
   }
   // User Management Methods
-  async createAdminUser(userData: {
-    username: string;
-    password: string;
-    role?: string;
-    telegramBotToken?: string | null;
-    active?: boolean;
-  }) {
-    const [user] = await db.insert(adminUsers).values({
-      username: userData.username,
-      password: userData.password,
-      role: userData.role || 'operator',
-      telegramBotToken: userData.telegramBotToken,
-      active: userData.active !== false,
-      createdAt: new Date(),
-      lastLogin: null
-    }).returning();
-    return user;
-  }
 
   async getAllAdminUsers() {
     return await db.select().from(adminUsers).orderBy(adminUsers.createdAt);
@@ -266,13 +248,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createAdminUser(userData: any) {
-    const [user] = await db.insert(adminUsers).values({
-      ...userData,
-      approved: userData.role === 'admin' ? true : userData.approved || false
-    }).returning();
-    return user;
-  }
+
 
   async approveUser(userId: number) {
     const [user] = await db.update(adminUsers)
