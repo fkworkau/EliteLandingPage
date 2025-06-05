@@ -102,7 +102,7 @@ export default function Landing() {
 
   const handleCrypterSubmit = () => {
     if (!crypterConfig.inputFile) return;
-    
+
     const formData = new FormData();
     formData.append('file', crypterConfig.inputFile);
     formData.append('config', JSON.stringify(crypterConfig));
@@ -207,6 +207,17 @@ export default function Landing() {
                   Anti-detection features
                 </div>
               </div>
+              <div className="mt-4">
+                <a 
+                  href="https://t.me/milleniumrat" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  <Bot className="w-4 h-4 mr-2" />
+                  Buy Millennium RAT
+                </a>
+              </div>
             </div>
 
             {/* Dot Stealer */}
@@ -247,7 +258,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-white mb-4">Script Processing Tools</h2>
             <p className="text-gray-300">Professional code optimization and obfuscation utilities</p>
           </div>
-          
+
           <Card className="bg-gray-900/50 border-gray-700">
             <CardContent className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -296,7 +307,7 @@ export default function Landing() {
                   <Code className="w-4 h-4 mr-2" />
                   {scriptProcessor.isPending ? 'Processing...' : `Apply ${scriptTools.find(t => t.id === selectedTool)?.label}`}
                 </Button>
-                
+
                 <Button 
                   variant="outline" 
                   className="border-gray-600"
@@ -318,7 +329,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-white mb-4">Advanced Polymorphic Crypter</h2>
             <p className="text-gray-300">Professional executable protection and obfuscation</p>
           </div>
-          
+
           <Card className="bg-gray-900/50 border-gray-700">
             <CardContent className="p-6">
               <div className="space-y-6">
