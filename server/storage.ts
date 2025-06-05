@@ -18,8 +18,10 @@ import {
   type RegistrationRequest,
   type InsertRegistrationRequest,
 } from "@shared/schema";
-import { db } from "./db";
+import { db, testConnection } from './db';
+import { visitorLogs, securityEvents, analyticsEvents } from '../shared/schema';
 import { eq, desc, and, gte, sql, isNotNull } from "drizzle-orm";
+import bcrypt from 'bcrypt';
 
 export interface IStorage {
   // Admin user operations
@@ -56,258 +58,198 @@ export interface IStorage {
   getAdminUsers(): Promise<AdminUser[]>;
 }
 
-export class DatabaseStorage implements IStorage {
-  // Admin user operations
-  async getAdminUser(id: number): Promise<AdminUser | undefined> {
-    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
-    return user || undefined;
-  }
-
-  async getAdminUserByUsername(username: string): Promise<AdminUser | undefined> {
-    const [user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
-    return user || undefined;
-  }
-
-  async createAdminUser(insertUser: InsertAdminUser): Promise<AdminUser> {
-    const [user] = await db
-      .insert(adminUsers)
-      .values(insertUser)
-      .returning();
-    return user;
-  }
-
-  async updateAdminLastLogin(id: number): Promise<void> {
-    await db
-      .update(adminUsers)
-      .set({ lastLogin: new Date() })
-      .where(eq(adminUsers.id, id));
-  }
-
-  // Visitor tracking operations
-  async createVisitor(visitor: InsertVisitor): Promise<Visitor> {
-    const [newVisitor] = await db
-      .insert(visitors)
-      .values(visitor)
-      .returning();
-    return newVisitor;
-  }
-
-  async updateVisitor(id: number, updates: Partial<InsertVisitor>): Promise<Visitor | undefined> {
-    const [updatedVisitor] = await db
-      .update(visitors)
-      .set({ ...updates, lastSeen: new Date() })
-      .where(eq(visitors.id, id))
-      .returning();
-    return updatedVisitor || undefined;
-  }
-
-  async getRecentVisitors(limit: number): Promise<Visitor[]> {
-    return await db
-      .select()
-      .from(visitors)
-      .orderBy(desc(visitors.lastSeen))
-      .limit(limit);
-  }
-
-  async getVisitorStats(): Promise<{ total: number; unique: number; countries: number }> {
-    const [totalResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(visitors);
-
-    const [uniqueResult] = await db
-      .select({ count: sql<number>`count(distinct ${visitors.ipAddress})` })
-      .from(visitors);
-
-    const [countriesResult] = await db
-      .select({ count: sql<number>`count(distinct ${visitors.country})` })
-      .from(visitors)
-      .where(sql`${visitors.country} is not null`);
-
-    return {
-      total: totalResult?.count || 0,
-      unique: uniqueResult?.count || 0,
-      countries: countriesResult?.count || 0,
-    };
-  }
-
-  // Packet capture operations
-  async createPacketLog(log: InsertPacketLog): Promise<PacketLog> {
-    const [newLog] = await db
-      .insert(packetLogs)
-      .values(log)
-      .returning();
-    return newLog;
-  }
-
-  async getRecentPacketLogs(limit: number): Promise<PacketLog[]> {
-    return await db
-      .select()
-      .from(packetLogs)
-      .orderBy(desc(packetLogs.timestamp))
-      .limit(limit);
-  }
-
-  async getPacketLogsByTimeRange(startTime: Date, endTime: Date): Promise<PacketLog[]> {
-    return await db
-      .select()
-      .from(packetLogs)
-      .where(
-        and(
-          gte(packetLogs.timestamp, startTime),
-          sql`${packetLogs.timestamp} <= ${endTime}`
-        )
-      )
-      .orderBy(desc(packetLogs.timestamp));
-  }
-
-  // Analytics operations
-  async createAnalytics(analyticsData: InsertAnalytics): Promise<Analytics> {
-    const [newAnalytics] = await db
-      .insert(analytics)
-      .values(analyticsData)
-      .returning();
-    return newAnalytics;
-  }
-
-  async getAnalyticsByMetric(metric: string): Promise<Analytics[]> {
-    return await db
-      .select()
-      .from(analytics)
-      .where(eq(analytics.metric, metric))
-      .orderBy(desc(analytics.timestamp));
-  }
-
-  async getLatestAnalytics(): Promise<Analytics[]> {
-    return await db
-      .select()
-      .from(analytics)
-      .orderBy(desc(analytics.timestamp))
-      .limit(100);
-  }
-
-  // Content modification operations
-  async createContentModification(modification: InsertContentModification): Promise<ContentModification> {
-    const [newModification] = await db
-      .insert(contentModifications)
-      .values(modification)
-      .returning();
-    return newModification;
-  }
-
-  async getContentModifications(section?: string): Promise<ContentModification[]> {
-    const query = db.select().from(contentModifications);
-
-    if (section) {
-      return await query
-        .where(eq(contentModifications.section, section))
-        .orderBy(desc(contentModifications.timestamp));
+export const storage = {
+  // Initialize storage and test connection
+  async initialize() {
+    const connected = await testConnection();
+    if (!connected) {
+      throw new Error('Failed to connect to database');
     }
+    console.log('✅ Storage initialized successfully');
+  },
 
-    return await query.orderBy(desc(contentModifications.timestamp));
-  }
-  // User Management Methods
+  // Security event logging
+  async logSecurityEvent(event: { event: string; data: string; timestamp: Date; source: string }) {
+    try {
+      await db.insert(securityEvents).values(event);
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
+  },
 
-  async getAllAdminUsers() {
-    return await db.select().from(adminUsers).orderBy(adminUsers.createdAt);
-  }
+  // Analytics logging
+  async logAnalyticsEvent(event: { metric: string; value: string; timestamp?: Date }) {
+    try {
+      await db.insert(analyticsEvents).values({
+        ...event,
+        timestamp: event.timestamp || new Date()
+      });
+    } catch (error) {
+      console.error('Failed to log analytics event:', error);
+    }
+  },
 
-  async updateAdminUser(userId: number, updateData: any) {
-    const [user] = await db.update(adminUsers)
-      .set(updateData)
-      .where(eq(adminUsers.id, userId))
-      .returning();
-    return user;
-  }
+  // Visitor management
+  async logVisitor(visitor: { ipAddress: string; userAgent: string; country?: string; city?: string; timestamp?: Date }) {
+    try {
+      await db.insert(visitorLogs).values({
+        ...visitor,
+        timestamp: visitor.timestamp || new Date()
+      });
+    } catch (error) {
+      console.error('Failed to log visitor:', error);
+    }
+  },
 
-  async deleteAdminUser(userId: number) {
-    await db.delete(adminUsers).where(eq(adminUsers.id, userId));
-  }
+  async getVisitorStats() {
+    try {
+      const total = await db.select({ count: sql<number>`count(*)` }).from(visitorLogs);
+      const unique = await db.select({ count: sql<number>`count(distinct ${visitorLogs.ipAddress})` }).from(visitorLogs);
+      const countries = await db.select({ count: sql<number>`count(distinct ${visitorLogs.country})` }).from(visitorLogs);
+
+      return {
+        total: total[0]?.count || 0,
+        unique: unique[0]?.count || 0,
+        countries: countries[0]?.count || 0
+      };
+    } catch (error) {
+      console.error('Failed to get visitor stats:', error);
+      return { total: 0, unique: 0, countries: 0 };
+    }
+  },
+
+  async getRecentVisitors(limit = 10) {
+    try {
+      return await db.select().from(visitorLogs).orderBy(desc(visitorLogs.timestamp)).limit(limit);
+    } catch (error) {
+      console.error('Failed to get recent visitors:', error);
+      return [];
+    }
+  },
+
+  // Packet logging
+  async logPacket(packet: { sourceIp: string; destIp: string; protocol: string; port: number; data?: string; timestamp?: Date }) {
+    try {
+      await db.insert(packetLogs).values({
+        ...packet,
+        timestamp: packet.timestamp || new Date()
+      });
+    } catch (error) {
+      console.error('Failed to log packet:', error);
+    }
+  },
+
+  async getRecentPacketLogs(limit = 50) {
+    try {
+      return await db.select().from(packetLogs).orderBy(desc(packetLogs.timestamp)).limit(limit);
+    } catch (error) {
+      console.error('Failed to get packet logs:', error);
+      return [];
+    }
+  },
+
+  // User management
+  async createAdminUser(userData: {
+    username: string;
+    password: string;
+    role: string;
+    telegramBotToken?: string;
+    telegramChatId?: number;
+    telegramUserId?: number;
+    approved?: boolean;
+    active?: boolean;
+  }) {
+    try {
+      const hashedPassword = await bcrypt.hash(userData.password, 12);
+      const [user] = await db.insert(adminUsers).values({
+        ...userData,
+        password: hashedPassword,
+        createdAt: new Date(),
+        lastLogin: new Date()
+      }).returning();
+      return user;
+    } catch (error) {
+      console.error('Failed to create admin user:', error);
+      throw error;
+    }
+  },
+
+  async findAdminUser(username: string) {
+    try {
+      const [user] = await db.select().from(adminUsers).where(eq(adminUsers.username, username));
+      return user;
+    } catch (error) {
+      console.error('Failed to find admin user:', error);
+      return null;
+    }
+  },
+
+  async getAdminUsers() {
+    try {
+      return await db.select().from(adminUsers);
+    } catch (error) {
+      console.error('Failed to get admin users:', error);
+      return [];
+    }
+  },
 
   async getTelegramUsers() {
     try {
-      const users = await db.select().from(adminUsers).where(eq(adminUsers.active, true));
-      return users.map(user => ({
-        id: user.id,
-        username: user.username,
-        chatId: 0, // Will be set when user starts bot
-        botToken: user.telegramBotToken || '',
-        role: (user.role || 'operator') as 'admin' | 'operator' | 'analyst',
-        active: user.active
-      }));
+      return await db.select().from(adminUsers).where(eq(adminUsers.approved, true));
     } catch (error) {
-      console.error('Error fetching Telegram users:', error);
+      console.error('Failed to get telegram users:', error);
       return [];
     }
+  },
+
+  async findTelegramUser(telegramUserId: number) {
+    try {
+      const [user] = await db.select().from(adminUsers).where(eq(adminUsers.telegramUserId, telegramUserId));
+      return user;
+    } catch (error) {
+      console.error('Failed to find telegram user:', error);
+      return null;
+    }
+  },
+
+  // Registration management
+  async createRegistrationRequest(data: {
+    telegramUserId: number;
+    telegramUsername: string;
+    firstName: string;
+    lastName?: string;
+    chatId: number;
+    registrationToken: string;
+    telegramData: string;
+  }) {
+    try {
+      const [request] = await db.insert(registrationRequests).values({
+        ...data,
+        createdAt: new Date()
+      }).returning();
+      return request;
+    } catch (error) {
+      console.error('Failed to create registration request:', error);
+      throw error;
+    }
+  },
+
+  async getRegistrationRequest(id: number) {
+    try {
+      const [request] = await db.select().from(registrationRequests).where(eq(registrationRequests.id, id));
+      return request;
+    } catch (error) {
+      console.error('Failed to get registration request:', error);
+      return null;
+    }
+  },
+
+  async updateRegistrationRequest(id: number, data: { approved?: boolean; approvedBy?: number; approvedAt?: Date }) {
+    try {
+      await db.update(registrationRequests).set(data).where(eq(registrationRequests.id, id));
+    } catch (error) {
+      console.error('Failed to update registration request:', error);
+      throw error;
+    }
   }
-
-  async updateUserTelegramInfo(userId: number, chatId: number) {
-    const [user] = await db.update(adminUsers)
-      .set({ telegramChatId: chatId })
-      .where(eq(adminUsers.id, userId))
-      .returning();
-    return user;
-  }
-
-
-
-  async approveUser(userId: number) {
-    const [user] = await db.update(adminUsers)
-      .set({ approved: true })
-      .where(eq(adminUsers.id, userId))
-      .returning();
-    return user;
-  }
-
-  async getPendingUsers() {
-    return await db.select().from(adminUsers).where(eq(adminUsers.approved, false));
-  }
-
-  // Registration request operations
-  async createRegistrationRequest(request: InsertRegistrationRequest): Promise<RegistrationRequest> {
-    const [newRequest] = await db
-      .insert(registrationRequests)
-      .values(request)
-      .returning();
-    return newRequest;
-  }
-
-  async getRegistrationRequest(id: number): Promise<RegistrationRequest | undefined> {
-    const [request] = await db
-      .select()
-      .from(registrationRequests)
-      .where(eq(registrationRequests.id, id));
-    return request || undefined;
-  }
-
-  async getPendingRegistrations(): Promise<RegistrationRequest[]> {
-    return await db
-      .select()
-      .from(registrationRequests)
-      .where(eq(registrationRequests.approved, false))
-      .orderBy(desc(registrationRequests.createdAt));
-  }
-
-  async updateRegistrationRequest(id: number, updates: Partial<InsertRegistrationRequest>): Promise<RegistrationRequest | undefined> {
-    const [updatedRequest] = await db
-      .update(registrationRequests)
-      .set(updates)
-      .where(eq(registrationRequests.id, id))
-      .returning();
-    return updatedRequest || undefined;
-  }
-
-  async getAdminUsers(): Promise<AdminUser[]> {
-    return await db
-      .select()
-      .from(adminUsers)
-      .orderBy(adminUsers.createdAt);
-  }
-
-  async deleteRegistrationRequest(id: number): Promise<void> {
-    await db
-      .delete(registrationRequests)
-      .where(eq(registrationRequests.id, id));
-  }
-}
-
-export const storage = new DatabaseStorage();
+};

