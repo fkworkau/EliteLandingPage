@@ -173,49 +173,49 @@ export default function Landing() {
         <div className="container mx-auto px-4 mb-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <div className="bg-gray-800/50 rounded-lg p-4 border border-cyan-500/30">
-                <img 
-                  src="/attached_assets/screenshot-1748942482391.png" 
-                  alt="Admin Dashboard Interface" 
-                  className="w-full h-32 object-cover rounded mb-3"
-                />
-                <h3 className="text-cyan-400 font-semibold text-sm">Admin Control Panel</h3>
-                <p className="text-gray-300 text-xs">Comprehensive monitoring dashboard</p>
-              </div>
+              <img 
+                src="/attached_assets/screenshot-1748942482391.png" 
+                alt="Admin Dashboard Interface" 
+                className="w-full h-32 object-cover rounded mb-3"
+              />
+              <h3 className="text-cyan-400 font-semibold text-sm">Admin Control Panel</h3>
+              <p className="text-gray-300 text-xs">Comprehensive monitoring dashboard</p>
+            </div>
 
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-green-500/30">
-                <img 
-                  src="/attached_assets/screenshot-1748942488659.png" 
-                  alt="RAT Builder Interface" 
-                  className="w-full h-32 object-cover rounded mb-3"
-                />
-                <h3 className="text-green-400 font-semibold text-sm">RAT Builder</h3>
-                <p className="text-gray-300 text-xs">Advanced payload generation</p>
-              </div>
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-green-500/30">
+              <img 
+                src="/attached_assets/screenshot-1748942488659.png" 
+                alt="RAT Builder Interface" 
+                className="w-full h-32 object-cover rounded mb-3"
+              />
+              <h3 className="text-green-400 font-semibold text-sm">RAT Builder</h3>
+              <p className="text-gray-300 text-xs">Advanced payload generation</p>
+            </div>
 
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-yellow-500/30">
-                <img 
-                  src="/attached_assets/screenshot-1748942540883.png" 
-                  alt="Network Sniffer" 
-                  className="w-full h-32 object-cover rounded mb-3"
-                />
-                <h3 className="text-yellow-400 font-semibold text-sm">Network Analysis</h3>
-                <p className="text-gray-300 text-xs">Real-time traffic monitoring</p>
-              </div>
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-yellow-500/30">
+              <img 
+                src="/attached_assets/screenshot-1748942540883.png" 
+                alt="Network Sniffer" 
+                className="w-full h-32 object-cover rounded mb-3"
+              />
+              <h3 className="text-yellow-400 font-semibold text-sm">Network Analysis</h3>
+              <p className="text-gray-300 text-xs">Real-time traffic monitoring</p>
+            </div>
 
-              <div className="bg-gray-800/50 rounded-lg p-4 border border-red-500/30">
-                <img 
-                  src="/attached_assets/screenshot-1748942549503.png" 
-                  alt="Executable Builder" 
-                  className="w-full h-32 object-cover rounded mb-3"
-                />
-                <h3 className="text-red-400 font-semibold text-sm">Tool Compilation</h3>
-                <p className="text-gray-300 text-xs">Portable executable creation</p>
-              </div>
+            <div className="bg-gray-800/50 rounded-lg p-4 border border-red-500/30">
+              <img 
+                src="/attached_assets/screenshot-1748942549503.png" 
+                alt="Executable Builder" 
+                className="w-full h-32 object-cover rounded mb-3"
+              />
+              <h3 className="text-red-400 font-semibold text-sm">Tool Compilation</h3>
+              <p className="text-gray-300 text-xs">Portable executable creation</p>
             </div>
           </div>
         </div>
       </section>
 
+      
       <div className="container mx-auto px-6 space-y-12">
         {/* Millennium AI Section */}
         <section className="text-center mb-16">
@@ -754,6 +754,8 @@ export default function Landing() {
             </CardContent>
           </Card>
         </section>
+          </div>
+        </section>
 
         {/* Footer */}
         <footer className="text-center py-8 border-t border-gray-700">
@@ -779,6 +781,8 @@ export default function Landing() {
         title="Admin Access"
       >
         <Shield className="w-8 h-8 text-gray-500 hover:text-cyan-400 transition-colors duration-300" />
+      </div>
+
       </div>
 
       {/* Admin Login Modal */}
