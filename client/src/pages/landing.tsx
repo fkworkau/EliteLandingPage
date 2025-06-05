@@ -25,12 +25,13 @@ import {
   Bot,
   Eye,
   Settings,
-  Terminal
+  Terminal,
+  Network,
+  Key
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import AdminLoginModal from "@/components/admin-login-modal";
 import CookieBanner from "@/components/cookie-banner";
-import { Network, Key } from "lucide-react";
 
 export default function Landing() {
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -50,90 +51,58 @@ export default function Landing() {
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Millennium AI Chat
+  // AI Chat mutation
   const aiChat = useMutation({
     mutationFn: async (prompt: string) => {
-      const response = await fetch('/api/millennium-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+      const response = await fetch("/api/ai-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
-      if (!response.ok) throw new Error('AI request failed');
+      if (!response.ok) throw new Error("AI request failed");
       return response.json();
     },
     onSuccess: (data) => {
       setAiResponse(data.response);
-    }
+    },
   });
 
-  // Script Processing Tools
+  // Script processor mutation
   const scriptProcessor = useMutation({
     mutationFn: async ({ script, tool }: { script: string; tool: string }) => {
-      const response = await fetch('/api/script-tools', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ script, tool })
+      const response = await fetch("/api/script-tools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script, tool }),
       });
-      if (!response.ok) throw new Error('Script processing failed');
+      if (!response.ok) throw new Error("Script processing failed");
       return response.json();
     },
     onSuccess: (data) => {
       setScriptOutput(data.processedScript);
-      // Store metadata for display
-    }
+    },
   });
 
-  // Advanced Crypter
-  const [compileStep, setCompileStep] = useState<'encrypt' | 'compile'>('encrypt');
-  const [cryptedFilename, setCryptedFilename] = useState('');
-
+  // Crypter processor mutation
   const crypterProcessor = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await fetch('/api/advanced-crypter', {
-        method: 'POST',
-        body: formData
+      const response = await fetch("/api/crypter", {
+        method: "POST",
+        body: formData,
       });
-      if (!response.ok) throw new Error('Crypter processing failed');
+      if (!response.ok) throw new Error("Crypter processing failed");
       return response.json();
     },
-    onSuccess: (data) => {
-      setCryptedFilename(data.filename);
-      setCompileStep('compile');
-    }
   });
 
-  // Executable Compiler
-  const executableCompiler = useMutation({
-    mutationFn: async (data: { filename: string; compileOptions: any }) => {
-      const response = await fetch('/api/compile-executable', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error('Compilation failed');
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // Trigger download of compiled executable
-      const link = document.createElement('a');
-      link.href = data.downloadUrl;
-      link.download = data.filename;
-      link.click();
-      setCompileStep('encrypt');
-      setCryptedFilename('');
-    }
-  });
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setCrypterConfig(prev => ({ ...prev, inputFile: file }));
-    }
+  const handleAiSubmit = () => {
+    if (!aiPrompt.trim()) return;
+    aiChat.mutate(aiPrompt);
   };
 
   const handleCrypterSubmit = () => {
     if (!crypterConfig.inputFile) return;
-
+    
     const formData = new FormData();
     formData.append('file', crypterConfig.inputFile);
     formData.append('config', JSON.stringify(crypterConfig));
@@ -150,432 +119,194 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white">
-      {/* Header with Logo */}
-      <header className="relative py-8 px-6 text-center">
-        <div className="flex items-center justify-center mb-4">
-          <Triangle className="w-12 h-12 text-cyan-400 mr-4" style={{ filter: 'drop-shadow(0 0 10px #00bcd4)' }} />
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+      {/* Header with Logo - Mobile Optimized */}
+      <header className="relative py-4 sm:py-8 px-4 sm:px-6 text-center">
+        <div className="flex flex-col sm:flex-row items-center justify-center mb-4">
+          <Triangle className="w-8 sm:w-12 h-8 sm:h-12 text-cyan-400 mb-2 sm:mb-0 sm:mr-4" style={{ filter: 'drop-shadow(0 0 10px #00bcd4)' }} />
+          <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
             MILLENNIUM
           </h1>
         </div>
-        <p className="text-xl text-gray-300 mb-8">Advanced Cybersecurity Framework</p>
-
-
+        <p className="text-sm sm:text-xl text-gray-300 mb-4 sm:mb-8">Advanced Cybersecurity Framework</p>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-br from-black via-gray-900 to-blue-900 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
-
-        {/* Screenshots Grid */}
-        <div className="container mx-auto px-4 mb-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-cyan-500/30">
-              <img 
-                src="/attached_assets/screenshot-1748942482391.png" 
-                alt="Admin Dashboard Interface" 
-                className="w-full h-32 object-cover rounded mb-3"
-              />
-              <h3 className="text-cyan-400 font-semibold text-sm">Admin Control Panel</h3>
-              <p className="text-gray-300 text-xs">Comprehensive monitoring dashboard</p>
-            </div>
-
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-green-500/30">
-              <img 
-                src="/attached_assets/screenshot-1748942488659.png" 
-                alt="RAT Builder Interface" 
-                className="w-full h-32 object-cover rounded mb-3"
-              />
-              <h3 className="text-green-400 font-semibold text-sm">RAT Builder</h3>
-              <p className="text-gray-300 text-xs">Advanced payload generation</p>
-            </div>
-
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-yellow-500/30">
-              <img 
-                src="/attached_assets/screenshot-1748942540883.png" 
-                alt="Network Sniffer" 
-                className="w-full h-32 object-cover rounded mb-3"
-              />
-              <h3 className="text-yellow-400 font-semibold text-sm">Network Analysis</h3>
-              <p className="text-gray-300 text-xs">Real-time traffic monitoring</p>
-            </div>
-
-            <div className="bg-gray-800/50 rounded-lg p-4 border border-red-500/30">
-              <img 
-                src="/attached_assets/screenshot-1748942549503.png" 
-                alt="Executable Builder" 
-                className="w-full h-32 object-cover rounded mb-3"
-              />
-              <h3 className="text-red-400 font-semibold text-sm">Tool Compilation</h3>
-              <p className="text-gray-300 text-xs">Portable executable creation</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      
-      <div className="container mx-auto px-6 space-y-12">
-        {/* Millennium AI Section */}
+      <div className="container mx-auto px-4 sm:px-6 space-y-8 sm:space-y-12">
+        {/* Millennium AI Section - Enhanced */}
         <section className="text-center mb-16">
-          <div className="flex items-center justify-center mb-6">
-            <Brain className="w-8 h-8 text-cyan-400 mr-3" />
-            <h2 className="text-4xl font-bold text-cyan-400">Millennium AI</h2>
+          <div className="relative bg-gradient-to-r from-gray-900/80 to-gray-800/80 rounded-3xl p-8 sm:p-12 border border-cyan-500/30 backdrop-blur">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-3xl"></div>
+            <div className="relative z-10">
+              <div className="flex items-center justify-center mb-8">
+                <Brain className="w-12 sm:w-16 h-12 sm:h-16 text-cyan-400 mr-4" style={{ filter: 'drop-shadow(0 0 20px #00bcd4)' }} />
+                <h2 className="text-4xl sm:text-6xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                  Millennium AI
+                </h2>
+              </div>
+              <p className="text-lg sm:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto">
+                Advanced AI-powered cybersecurity assistant for script generation, payload optimization, and threat analysis
+              </p>
+
+              <Card className="max-w-4xl mx-auto bg-black/40 border-cyan-500/50 backdrop-blur">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <Textarea
+                      placeholder="Ask Millennium AI to write scripts, analyze code, or answer cybersecurity questions..."
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      className="bg-gray-800/50 border-gray-600 text-white min-h-[100px]"
+                    />
+                    <Button
+                      onClick={handleAiSubmit}
+                      disabled={aiChat.isPending || !aiPrompt.trim()}
+                      className="w-full bg-cyan-600 hover:bg-cyan-700"
+                    >
+                      <Brain className="w-4 h-4 mr-2" />
+                      {aiChat.isPending ? 'Processing...' : 'Ask Millennium AI'}
+                    </Button>
+                    {aiResponse && (
+                      <div className="mt-6 p-4 bg-gray-800/50 rounded-lg border border-cyan-500/30">
+                        <h4 className="text-cyan-400 font-semibold mb-2">AI Response:</h4>
+                        <pre className="text-gray-300 whitespace-pre-wrap text-sm">{aiResponse}</pre>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-          <p className="text-lg text-gray-300 mb-8">AI-powered cybersecurity assistant for script generation and security analysis</p>
-
-          <Card className="max-w-4xl mx-auto bg-gray-900/50 border-cyan-500/30 backdrop-blur">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                <Textarea
-                  placeholder="Ask Millennium AI to write scripts, analyze code, or answer cybersecurity questions..."
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  className="bg-gray-800 border-gray-600 text-white min-h-[100px]"
-                />
-                <Button 
-                  onClick={() => aiChat.mutate(aiPrompt)}
-                  disabled={aiChat.isPending || !aiPrompt.trim()}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700"
-                >
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  {aiChat.isPending ? 'Processing...' : 'Ask Millennium AI'}
-                </Button>
-
-                {aiResponse && (
-                  <div className="mt-4 p-4 bg-gray-800 rounded border border-cyan-500/30">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-200">{aiResponse}</pre>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </section>
 
-        {/* Products Section */}
-        <section className="grid md:grid-cols-2 gap-8 mb-16">
-          {/* Millennium RAT */}
-          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
-            <CardHeader className="text-center p-4">
-              <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
-                <img 
-                  src="https://i.ibb.co/v65ppyX/rat-interface.png" 
-                  alt="Millennium RAT" 
-                  className="w-full h-full object-contain bg-gray-800"
-                />
+        {/* RAT & Stealer Showcase */}
+        <section className="mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Millennium RAT */}
+            <div className="bg-gradient-to-br from-green-900/20 to-gray-900/80 rounded-2xl p-6 border border-green-500/30">
+              <div className="text-center mb-6">
+                <Bot className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-green-400 mb-2">Millennium RAT</h3>
+                <p className="text-gray-300">Advanced Remote Access Tool with stealth capabilities</p>
               </div>
-              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Millennium RAT</CardTitle>
-              <p className="text-sm sm:text-base text-gray-300">Advanced Remote Access Tool with Telegram C2</p>
-            </CardHeader>
-            <CardContent className="p-4">
-              <ul className="space-y-1 text-xs sm:text-sm text-gray-300 mb-4">
-                <li>• Telegram-based command & control</li>
-                <li>• Advanced persistence mechanisms</li>
-                <li>• Real-time screen capture</li>
-                <li>• Keylogger & data exfiltration</li>
-                <li>• Anti-detection techniques</li>
-              </ul>
-              <Button 
-                onClick={() => window.open('https://t.me/milleniumrat', '_blank')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Contact on Telegram
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Dot Stealer */}
-          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur overflow-hidden">
-            <CardHeader className="text-center p-4">
-              <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden">
+              <div className="bg-black/40 rounded-lg p-4 mb-4">
                 <img 
-                  src="https://i.ibb.co/FkRMZ6B/dot-stealer.png" 
-                  alt="Dot Stealer" 
-                  className="w-full h-full object-contain bg-gray-800"
-                />
-              </div>
-              <CardTitle className="text-xl sm:text-2xl text-cyan-400">Dot Stealer</CardTitle>
-              <p className="text-sm sm:text-base text-gray-300">Advanced Data Extraction Framework</p>
-            </CardHeader>
-            <CardContent className="p-4">
-              <ul className="space-y-1 text-xs sm:text-sm text-gray-300 mb-4">
-                <li>• Browser credentials & cookies</li>
-                <li>• Discord & Telegram sessions</li>
-                <li>• Cryptocurrency wallets</li>
-                <li>• System information gathering</li>
-                <li>• Anti-VM & debugging protection</li>
-              </ul>
-              <Button 
-                onClick={() => window.open('https://t.me/milleniumrat', '_blank')}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-sm"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                Contact on Telegram
-              </Button>
-            </CardContent>
-          </Card>
-        </section>
-
-{/* Features Section */}
-        <section className="py-20 bg-gray-900">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 text-cyan-400">
-              Professional Cybersecurity Toolkit
-            </h2>
-
-            {/* Main Feature Showcase */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-cyan-500/30">
-                <div className="flex items-center mb-6">
-                  <Bot className="w-8 h-8 text-cyan-400 mr-3" />
-                  <h3 className="text-2xl font-bold text-cyan-400">Millennium RAT System</h3>
-                </div>
-                <img 
-                  src="https://i.ibb.co/v65ppyX/rat-interface.png" 
+                  src="https://i.imgur.com/g6sSZy3.jpeg" 
                   alt="Millennium RAT Interface" 
-                  className="w-full h-48 object-cover rounded-lg mb-4 border border-cyan-500/20"
+                  className="w-full h-48 object-cover rounded"
                 />
-                <p className="text-gray-300 mb-4">
-                  Advanced remote access tool with comprehensive C&C capabilities, 
-                  Telegram integration, and real-time monitoring.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-700/50 p-3 rounded border border-cyan-500/20">
-                    <Shield className="w-5 h-5 text-cyan-400 mb-2" />
-                    <p className="text-xs text-gray-300">Stealth Operations</p>
-                  </div>
-                  <div className="bg-gray-700/50 p-3 rounded border border-cyan-500/20">
-                    <Network className="w-5 h-5 text-cyan-400 mb-2" />
-                    <p className="text-xs text-gray-300">C&C Server</p>
-                  </div>
-                </div>
               </div>
-
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-8 border border-green-500/30">
-                <div className="flex items-center mb-6">
-                  <Zap className="w-8 h-8 text-green-400 mr-3" />
-                  <h3 className="text-2xl font-bold text-green-400">Data Stealer Suite</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center text-green-400">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Real-time remote control
                 </div>
-                <img 
-                  src="https://i.ibb.co/FkRMZ6B/dot-stealer.png" 
-                  alt="Data Stealer Interface" 
-                  className="w-full h-48 object-cover rounded-lg mb-4 border border-green-500/20"
-                />
-                <p className="text-gray-300 mb-4">
-                  Comprehensive data collection system similar to Redline, 
-                  with encrypted reporting to Telegram in ZIP format.
-                </p>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-700/50 p-3 rounded border border-green-500/20">
-                    <Key className="w-5 h-5 text-green-400 mb-2" />
-                    <p className="text-xs text-gray-300">Password Extraction</p>
-                  </div>
-                  <div className="bg-gray-700/50 p-3 rounded border border-green-500/20">
-                    <FileCode className="w-5 h-5 text-green-400 mb-2" />
-                    <p className="text-xs text-gray-300">Crypto Wallets</p>
-                  </div>
+                <div className="flex items-center text-green-400">
+                  <Eye className="w-4 h-4 mr-2" />
+                  Advanced persistence mechanisms
+                </div>
+                <div className="flex items-center text-green-400">
+                  <Shield className="w-4 h-4 mr-2" />
+                  Anti-detection features
                 </div>
               </div>
             </div>
+
+            {/* Dot Stealer */}
+            <div className="bg-gradient-to-br from-red-900/20 to-gray-900/80 rounded-2xl p-6 border border-red-500/30">
+              <div className="text-center mb-6">
+                <Key className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-red-400 mb-2">Dot Stealer</h3>
+                <p className="text-gray-300">Professional data extraction and credential harvesting</p>
+              </div>
+              <div className="bg-black/40 rounded-lg p-4 mb-4">
+                <img 
+                  src="https://i.imgur.com/zJmEvwQ.jpeg" 
+                  alt="Dot Stealer Interface" 
+                  className="w-full h-48 object-cover rounded"
+                />
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center text-red-400">
+                  <Download className="w-4 h-4 mr-2" />
+                  Browser credential extraction
+                </div>
+                <div className="flex items-center text-red-400">
+                  <Network className="w-4 h-4 mr-2" />
+                  Cryptocurrency wallet detection
+                </div>
+                <div className="flex items-center text-red-400">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Discord/Telegram token harvesting
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Script Tools Section */}
         <section className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-cyan-400 mb-4">Script Processing Tools</h2>
-            <p className="text-gray-300">Advanced tools for script analysis, optimization, and protection</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Script Processing Tools</h2>
+            <p className="text-gray-300">Professional code optimization and obfuscation utilities</p>
           </div>
-
-          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur">
-            <CardContent className="p-4 sm:p-6">
-              <div className="space-y-6">
-                {/* Tool Selection - Mobile Responsive */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {scriptTools.map(tool => (
-                    <Button
-                      key={tool.id}
-                      onClick={() => setSelectedTool(tool.id)}
-                      variant={selectedTool === tool.id ? "default" : "outline"}
-                      className={`p-4 h-auto flex flex-col items-center space-y-2 ${
-                        selectedTool === tool.id 
-                          ? 'bg-cyan-600 hover:bg-cyan-700 border-cyan-500' 
-                          : 'border-gray-600 hover:border-cyan-500'
-                      }`}
-                    >
-                      <tool.icon className="w-6 h-6" />
-                      <div className="text-center">
-                        <div className="font-medium text-sm">{tool.label}</div>
-                        <div className="text-xs text-gray-400 mt-1">{tool.description}</div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-
-                {/* Processing Chain */}
-                <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-600">
-                  <h3 className="text-lg font-semibold text-cyan-400 mb-3">Processing Chain</h3>
-                  <div className="text-sm text-gray-300 mb-3">
-                    Apply multiple tools in sequence for advanced obfuscation
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {scriptTools.map(tool => (
-                      <Button
-                        key={`chain-${tool.id}`}
-                        size="sm"
-                        variant="outline"
-                        className="border-gray-600 text-xs"
-                        onClick={() => {
-                          // Add to processing chain logic here
-                        }}
-                      >
-                        <tool.icon className="w-3 h-3 mr-1" />
-                        {tool.label}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Script Input/Output - Responsive Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-300">Input Script</label>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="border-gray-600 text-xs"
-                        onClick={() => {
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = '.js,.py,.php,.ps1,.bat,.sh';
-                          input.onchange = (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onload = (e) => setScriptInput(e.target?.result as string);
-                              reader.readAsText(file);
-                            }
-                          };
-                          input.click();
-                        }}
-                      >
-                        <Upload className="w-3 h-3 mr-1" />
-                        Upload
-                      </Button>
-                    </div>
-                    <Textarea
-                      placeholder="Paste your script here or upload a file..."
-                      value={scriptInput}
-                      onChange={(e) => setScriptInput(e.target.value)}
-                      className="bg-gray-800 border-gray-600 text-white h-64 sm:h-80 font-mono text-xs sm:text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-300">Processed Output</label>
-                      {scriptOutput && (
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="border-gray-600 text-xs"
-                          onClick={() => {
-                            const blob = new Blob([scriptOutput], { type: 'text/plain' });
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `processed_${selectedTool}_${Date.now()}.txt`;
-                            link.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Download
-                        </Button>
-                      )}
-                    </div>
-                    <Textarea
-                      value={scriptOutput}
-                      readOnly
-                      className="bg-gray-800 border-gray-600 text-white h-64 sm:h-80 font-mono text-xs sm:text-sm"
-                      placeholder="Processed script will appear here..."
-                    />
-                  </div>
-                </div>
-
-                {/* Action Buttons - Mobile Responsive */}
-                <div className="flex flex-col sm:flex-row gap-3">
+          
+          <Card className="bg-gray-900/50 border-gray-700">
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {scriptTools.map((tool) => (
                   <Button
-                    onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
-                    disabled={scriptProcessor.isPending || !scriptInput.trim()}
-                    className="bg-cyan-600 hover:bg-cyan-700 flex-1"
+                    key={tool.id}
+                    variant={selectedTool === tool.id ? "default" : "outline"}
+                    onClick={() => setSelectedTool(tool.id)}
+                    className={`h-auto p-4 flex flex-col items-center space-y-2 ${
+                      selectedTool === tool.id ? 'bg-cyan-600 border-cyan-500' : 'border-gray-600'
+                    }`}
                   >
-                    <Code className="w-4 h-4 mr-2" />
-                    {scriptProcessor.isPending ? 'Processing...' : `Apply ${scriptTools.find(t => t.id === selectedTool)?.label}`}
+                    <tool.icon className="w-6 h-6" />
+                    <span className="text-xs text-center">{tool.label}</span>
                   </Button>
+                ))}
+              </div>
 
-                  <Button 
-                    variant="outline" 
-                    className="border-gray-600"
-                    onClick={() => {
-                      setScriptInput('');
-                      setScriptOutput('');
-                    }}
-                  >
-                    Clear
-                  </Button>
-
-                  <Select value={selectedTool} onValueChange={setSelectedTool}>
-                    <SelectTrigger className="bg-gray-800 border-gray-600 w-full sm:w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {scriptTools.map(tool => (
-                        <SelectItem key={tool.id} value={tool.id}>
-                          {tool.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Input Script</label>
+                  <Textarea
+                    placeholder="Paste your script here for processing..."
+                    value={scriptInput}
+                    onChange={(e) => setScriptInput(e.target.value)}
+                    className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
+                  />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Processed Output</label>
+                  <Textarea
+                    value={scriptOutput}
+                    readOnly
+                    className="bg-gray-800 border-gray-600 text-white h-64 font-mono text-sm"
+                    placeholder="Processed script will appear here..."
+                  />
+                </div>
+              </div>
 
-                {/* Real-time Processing Stats */}
-                {scriptInput && (
-                  <div className="bg-blue-900/20 border border-blue-500/30 rounded p-3">
-                    <div className="flex flex-wrap gap-4 text-sm">
-                      <div className="text-blue-400">
-                        Input: {scriptInput.length} characters
-                      </div>
-                      <div className="text-blue-400">
-                        Lines: {scriptInput.split('\n').length}
-                      </div>
-                      {scriptOutput && (
-                        <>
-                          <div className="text-green-400">
-                            Output: {scriptOutput.length} characters
-                          </div>
-                          <div className="text-green-400">
-                            Reduction: {((scriptInput.length - scriptOutput.length) / scriptInput.length * 100).toFixed(1)}%
-                          </div>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Processing Metadata */}
-                    {scriptProcessor.data?.metadata && (
-                      <div className="mt-3 p-2 bg-gray-800/50 rounded border border-cyan-500/20">
-                        <div className="text-xs text-cyan-400 font-semibold mb-1">Processing Details:</div>
-                        <div className="text-xs text-gray-300">
-                          Tool: {scriptProcessor.data.metadata.tool} | 
-                          {scriptProcessor.data.metadata.reduction && ` Size Reduction: ${scriptProcessor.data.metadata.reduction}`}
-                          {scriptProcessor.data.metadata.method && ` Method: ${scriptProcessor.data.metadata.method}`}
-                          {scriptProcessor.data.metadata.protection && ` Protection: ${scriptProcessor.data.metadata.protection}`}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+              <div className="flex gap-4 mt-6">
+                <Button
+                  onClick={() => scriptProcessor.mutate({ script: scriptInput, tool: selectedTool })}
+                  disabled={scriptProcessor.isPending || !scriptInput.trim()}
+                  className="bg-cyan-600 hover:bg-cyan-700 flex-1"
+                >
+                  <Code className="w-4 h-4 mr-2" />
+                  {scriptProcessor.isPending ? 'Processing...' : `Apply ${scriptTools.find(t => t.id === selectedTool)?.label}`}
+                </Button>
+                
+                <Button 
+                  variant="outline" 
+                  className="border-gray-600"
+                  onClick={() => {
+                    setScriptInput("");
+                    setScriptOutput("");
+                  }}
+                >
+                  Clear
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -584,177 +315,123 @@ export default function Landing() {
         {/* Advanced Polymorphic Crypter */}
         <section className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-cyan-400 mb-4">Advanced Polymorphic Crypter</h2>
-            <p className="text-sm sm:text-base text-gray-300">Military-grade executable protection for .NET and native binaries</p>
+            <h2 className="text-3xl font-bold text-white mb-4">Advanced Polymorphic Crypter</h2>
+            <p className="text-gray-300">Professional executable protection and obfuscation</p>
           </div>
-
-          <Card className="bg-gray-900/50 border-cyan-500/30 backdrop-blur">
-            <CardContent className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="space-y-3 sm:space-y-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Upload Executable</label>
+          
+          <Card className="bg-gray-900/50 border-gray-700">
+            <CardContent className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Upload Executable</label>
+                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
                     <input
-                      type="file"
                       ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      accept=".exe,.dll,.net"
+                      type="file"
+                      accept=".exe,.dll,.bin"
+                      onChange={(e) => setCrypterConfig({...crypterConfig, inputFile: e.target.files?.[0] || null})}
                       className="hidden"
                     />
-                    <Button
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-300 mb-2">
+                      {crypterConfig.inputFile ? crypterConfig.inputFile.name : "Drop your executable here or click to browse"}
+                    </p>
+                    <Button 
+                      variant="outline" 
                       onClick={() => fileInputRef.current?.click()}
-                      variant="outline"
-                      className="w-full border-gray-600 text-gray-300 text-xs sm:text-sm py-2 px-3"
+                      className="border-gray-600"
                     >
-                      <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                      <span className="truncate">
-                        {crypterConfig.inputFile ? crypterConfig.inputFile.name : 'Select File'}
-                      </span>
+                      Choose File
                     </Button>
                   </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Output Name</label>
+                    <label className="block text-sm font-medium mb-2">Output Name</label>
                     <Input
                       value={crypterConfig.outputName}
                       onChange={(e) => setCrypterConfig(prev => ({ ...prev, outputName: e.target.value }))}
-                      className="bg-gray-800 border-gray-600 text-white text-xs sm:text-sm"
+                      className="bg-gray-800 border-gray-600 text-white"
                       placeholder="protected_executable"
                     />
                   </div>
-
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-300 mb-2">Compression Level</label>
+                    <label className="block text-sm font-medium mb-2">Compression Level</label>
                     <Select 
                       value={crypterConfig.compressionLevel} 
                       onValueChange={(value) => setCrypterConfig(prev => ({ ...prev, compressionLevel: value }))}
                     >
-                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white text-xs sm:text-sm">
+                      <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">Low (Fast)</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High (Best)</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="maximum">Maximum</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4">
-                  <h3 className="text-sm sm:text-lg font-semibold text-cyan-400">Protection Features</h3>
-
-                  <div className="space-y-2 sm:space-y-3">
-                    <label className="flex items-center space-x-2 sm:space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={crypterConfig.antiDebug}
-                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiDebug: e.target.checked }))}
-                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
-                      />
-                      <span className="text-gray-300 text-xs sm:text-sm">Anti-Debug Protection</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2 sm:space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={crypterConfig.antiVM}
-                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiVM: e.target.checked }))}
-                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
-                      />
-                      <span className="text-gray-300 text-xs sm:text-sm">Anti-VM Detection</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2 sm:space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={crypterConfig.polymorphic}
-                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, polymorphic: e.target.checked }))}
-                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
-                      />
-                      <span className="text-gray-300 text-xs sm:text-sm">Polymorphic Engine</span>
-                    </label>
-
-                    <label className="flex items-center space-x-2 sm:space-x-3">
-                      <input
-                        type="checkbox"
-                        checked={crypterConfig.dotNetSupport}
-                        onChange={(e) => setCrypterConfig(prev => ({ ...prev, dotNetSupport: e.target.checked }))}
-                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 rounded"
-                      />
-                      <span className="text-gray-300 text-xs sm:text-sm">.NET Assembly Support</span>
-                    </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm">Anti-Debug Protection</label>
+                    <input 
+                      type="checkbox" 
+                      checked={crypterConfig.antiDebug}
+                      onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiDebug: e.target.checked }))}
+                      className="rounded"
+                    />
                   </div>
-
-                  {compileStep === 'encrypt' ? (
-                    <Button
-                      onClick={handleCrypterSubmit}
-                      disabled={crypterProcessor.isPending || !crypterConfig.inputFile}
-                      className="w-full bg-cyan-600 hover:bg-cyan-700 mt-4"
-                    >
-                      <Package className="w-4 h-4 mr-2" />
-                      {crypterProcessor.isPending ? 'Encrypting...' : 'Step 1: Encrypt & Generate Stub'}
-                    </Button>
-                  ) : (
-                    <div className="space-y-4 mt-4">
-                      <div className="p-4 bg-green-900/20 border border-green-500/30 rounded">
-                        <p className="text-green-400 font-medium">✓ Python stub generated: {cryptedFilename}</p>
-                        <p className="text-gray-300 text-sm mt-1">Ready for compilation to Windows executable</p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" defaultChecked className="w-4 h-4 text-cyan-600" />
-                          <span className="text-gray-300 text-sm">Hidden Imports</span>
-                        </label>
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" className="w-4 h-4 text-cyan-600" />
-                          <span className="text-gray-300 text-sm">UPX Compression</span>
-                        </label>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={() => executableCompiler.mutate({ 
-                            filename: cryptedFilename, 
-                            compileOptions: { hiddenImports: true } 
-                          })}
-                          disabled={executableCompiler.isPending}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          {executableCompiler.isPending ? 'Compiling...' : 'Step 2: Compile to EXE'}
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = `/download/${cryptedFilename}`;
-                            link.download = cryptedFilename;
-                            link.click();
-                          }}
-                          variant="outline"
-                          className="border-gray-600"
-                        >
-                          <FileCode className="w-4 h-4 mr-2" />
-                          Download Python
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm">Anti-VM Detection</label>
+                    <input 
+                      type="checkbox" 
+                      checked={crypterConfig.antiVM}
+                      onChange={(e) => setCrypterConfig(prev => ({ ...prev, antiVM: e.target.checked }))}
+                      className="rounded"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm">Polymorphic Engine</label>
+                    <input 
+                      type="checkbox" 
+                      checked={crypterConfig.polymorphic}
+                      onChange={(e) => setCrypterConfig(prev => ({ ...prev, polymorphic: e.target.checked }))}
+                      className="rounded"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm">.NET Support</label>
+                    <input 
+                      type="checkbox" 
+                      checked={crypterConfig.dotNetSupport}
+                      onChange={(e) => setCrypterConfig(prev => ({ ...prev, dotNetSupport: e.target.checked }))}
+                      className="rounded"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <Alert className="mt-6 border-yellow-500/30 bg-yellow-500/10">
-                <Shield className="h-4 w-4" />
-                <AlertDescription className="text-yellow-200">
-                  <strong>Security Notice:</strong> This crypter generates FUD (Fully Undetectable) executables. 
-                  Use only for authorized penetration testing and security research.
-                </AlertDescription>
-              </Alert>
+                <Button
+                  onClick={handleCrypterSubmit}
+                  disabled={crypterProcessor.isPending || !crypterConfig.inputFile}
+                  className="w-full bg-red-600 hover:bg-red-700"
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  {crypterProcessor.isPending ? 'Encrypting...' : 'Generate Protected Executable'}
+                </Button>
+
+                <Alert className="border-yellow-500/30 bg-yellow-500/10">
+                  <AlertDescription className="text-yellow-200">
+                    <strong>Security Notice:</strong> This crypter generates FUD (Fully Undetectable) executables. 
+                    Use only for authorized penetration testing and security research.
+                  </AlertDescription>
+                </Alert>
+              </div>
             </CardContent>
           </Card>
-        </section>
-          </div>
         </section>
 
         {/* Footer */}
@@ -765,18 +442,18 @@ export default function Landing() {
               Join Telegram
             </Button>
             <Badge variant="outline" className="border-cyan-500 text-cyan-400">
-              Version 4.0 - Professional Edition
+              Educational Use Only
             </Badge>
           </div>
           <p className="text-gray-400 text-sm">
-            © 2025 Millennium Framework. For authorized cybersecurity research only.
+            © 2024 Millennium Framework. Advanced cybersecurity training platform.
           </p>
         </footer>
       </div>
 
-      {/* Hidden Admin Access - Shield Icon */}
+      {/* Admin Access Shield - Hidden in bottom right */}
       <div 
-        className="fixed bottom-4 right-4 z-50 cursor-pointer opacity-30 hover:opacity-100 transition-opacity duration-300"
+        className="fixed bottom-6 right-6 p-3 bg-gray-800/80 rounded-full cursor-pointer hover:bg-gray-700/80 transition-colors backdrop-blur border border-gray-600/30"
         onClick={() => setShowAdminModal(true)}
         title="Admin Access"
       >
